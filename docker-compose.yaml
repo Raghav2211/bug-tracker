@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  bug-tracker:
+    image: "bug-tracker:1.0.0"
+    container_name: bug-tracker
+    ports:
+      - "8080:8080"

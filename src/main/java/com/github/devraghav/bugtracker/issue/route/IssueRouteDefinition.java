@@ -1,5 +1,11 @@
 package com.github.devraghav.bugtracker.issue.route;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
+import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+
 import com.github.devraghav.bugtracker.issue.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,12 +25,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.reactive.function.server.RequestPredicates.*;
-import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
-import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
 @Slf4j
@@ -100,6 +100,16 @@ public class IssueRouteDefinition {
                           @Content(
                               mediaType = APPLICATION_JSON_VALUE,
                               array = @ArraySchema(schema = @Schema(implementation = Issue.class))))
+                },
+                parameters = {
+                  @Parameter(
+                      in = ParameterIn.QUERY,
+                      name = "projectId",
+                      schema = @Schema(type = "string")),
+                  @Parameter(
+                      in = ParameterIn.QUERY,
+                      name = "reportedBy",
+                      schema = @Schema(type = "string"))
                 })),
     @RouterOperation(
         path = "/api/rest/v1/issue/{id}/assign",
