@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.user.dto;
 
-import com.github.devraghav.bugtracker.user.repository.UserAlreadyExistsException;
-import com.github.devraghav.bugtracker.user.repository.UserNotFoundException;
+import com.github.devraghav.bugtracker.user.service.UserAlreadyExistsException;
+import com.github.devraghav.bugtracker.user.service.UserNotFoundException;
 import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.BodyInserters;

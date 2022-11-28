@@ -13,7 +13,6 @@ import com.github.devraghav.bugtracker.project.repository.ProjectVersionReposito
 import com.github.devraghav.bugtracker.project.service.ProjectService;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.repository.UserNotFoundException;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import com.github.devraghav.bugtracker.user.service.UserService;
 import java.time.LocalDateTime;

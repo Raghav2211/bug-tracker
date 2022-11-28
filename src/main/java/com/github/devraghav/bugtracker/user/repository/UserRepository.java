@@ -1,15 +1,8 @@
 package com.github.devraghav.bugtracker.user.repository;
 
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Repository;
 
-public interface UserRepository {
-  Mono<UserEntity> save(UserEntity entity);
-
-  Mono<UserEntity> findById(String userId);
-
-  Flux<UserEntity> findAll();
-
-  Mono<Boolean> exists(String userId);
-}
+@Repository
+public interface UserRepository extends ReactiveMongoRepository<UserEntity, String> {}

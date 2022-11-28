@@ -4,10 +4,9 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.dto.UserResponse;
-import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.repository.UserAlreadyExistsException;
-import com.github.devraghav.bugtracker.user.repository.UserNotFoundException;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
+import com.github.devraghav.bugtracker.user.service.UserAlreadyExistsException;
+import com.github.devraghav.bugtracker.user.service.UserNotFoundException;
 import com.github.devraghav.bugtracker.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -32,9 +31,7 @@ public class UserRouteHandler {
     return request
         .bodyToMono(UserRequest.class)
         .flatMap(userRequest -> userRequest.validate(userRequest))
-        .map(UserEntity::new)
-        .flatMap(userRepository::save)
-        .map(User::new)
+        .flatMap(userService::save)
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))
         .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception))

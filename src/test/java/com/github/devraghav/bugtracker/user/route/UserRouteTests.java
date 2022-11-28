@@ -8,8 +8,6 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.repository.UserAlreadyExistsException;
-import com.github.devraghav.bugtracker.user.repository.UserNotFoundException;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import com.github.devraghav.bugtracker.user.service.UserService;
 import java.util.UUID;

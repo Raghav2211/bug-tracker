@@ -1,5 +1,15 @@
 version: "3.9"
 services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:4.2.21
+    restart: always
+    environment:
+      #MONGO_INITDB_ROOT_USERNAME: admin
+      #ONGO_INITDB_ROOT_PASSWORD: pass
+      MONGO_INITDB_DATABASE: bug-tracker
+    ports:
+      - "27017:27017"
   bug-tracker:
     image: "bug-tracker:1.0.0"
     container_name: bug-tracker

@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.user.repository;
+package com.github.devraghav.bugtracker.user.service;
 
 import java.util.Map;
 import lombok.Getter;

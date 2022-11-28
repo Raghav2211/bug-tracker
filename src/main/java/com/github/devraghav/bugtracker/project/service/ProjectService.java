@@ -7,12 +7,13 @@ import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
 import com.github.devraghav.bugtracker.project.repository.ProjectVersionRepository;
-import com.github.devraghav.bugtracker.user.repository.UserNotFoundException;
+import com.github.devraghav.bugtracker.user.service.UserNotFoundException;
 import com.github.devraghav.bugtracker.user.service.UserService;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
