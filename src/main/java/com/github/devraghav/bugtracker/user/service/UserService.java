@@ -5,16 +5,13 @@ import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-@RequiredArgsConstructor
-public class UserService {
-
-  private final UserRepository userRepository;
+public record UserService(UserRepository userRepository) {
 
   public Mono<User> save(UserRequest userRequest) {
     return Mono.just(userRequest)
@@ -23,24 +20,17 @@ public class UserService {
         .map(User::new)
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> Mono.error(UserAlreadyExistsException.withEmail(userRequest.getEmail())));
+            exception -> Mono.error(UserException.alreadyExistsWithEmail(userRequest.getEmail())));
   }
 
-  public Mono<Boolean> exists(String userId) {
-    return userRepository
-        .existsById(userId)
-        .filter(Boolean::booleanValue)
-        .switchIfEmpty(Mono.error(UserException.notFound(userId)));
+  public Flux<User> findAll() {
+    return userRepository.findAll().map(User::new);
   }
 
   public Mono<User> findById(String userId) {
     return userRepository
         .findById(userId)
         .map(User::new)
-        .switchIfEmpty(Mono.error(() -> new UserNotFoundException(userId)));
-  }
-
-  public Mono<Boolean> hasUserWriteAccess(String userId) {
-    return findById(userId).map(User::isWriteAccess).map(Boolean::booleanValue);
+        .switchIfEmpty(Mono.error(() -> UserException.notFound(userId)));
   }
 }

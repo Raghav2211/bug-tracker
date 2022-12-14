@@ -5,10 +5,7 @@ import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.dto.UserResponse;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
-import com.github.devraghav.bugtracker.user.service.UserAlreadyExistsException;
-import com.github.devraghav.bugtracker.user.service.UserNotFoundException;
 import com.github.devraghav.bugtracker.user.service.UserService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -16,15 +13,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
-public class UserRouteHandler {
-  private final UserService userService;
-  private final UserRepository userRepository;
-
+public record UserRouteHandler(UserService userService, UserRepository userRepository) {
   public Mono<ServerResponse> getAll(ServerRequest request) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(userRepository.findAll().map(User::new), User.class);
+        .body(userService.findAll(), User.class);
   }
 
   public Mono<ServerResponse> create(ServerRequest request) {
@@ -34,18 +27,13 @@ public class UserRouteHandler {
         .flatMap(userService::save)
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))
-        .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception))
-        .onErrorResume(
-            UserAlreadyExistsException.class,
-            exception -> UserResponse.alreadyExists(request, exception));
+        .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception));
   }
 
   public Mono<ServerResponse> get(ServerRequest request) {
-    var userId = request.pathVariable("id");
     return userService
-        .findById(userId)
+        .findById(request.pathVariable("id"))
         .flatMap(UserResponse::found)
-        .onErrorResume(
-            UserNotFoundException.class, exception -> UserResponse.notFound(request, exception));
+        .onErrorResume(UserException.class, exception -> UserResponse.notFound(request, exception));
   }
 }

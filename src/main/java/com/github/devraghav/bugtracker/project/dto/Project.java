@@ -5,6 +5,7 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +28,8 @@ public class Project {
     this.enabled = entity.getEnabled();
     this.status = ProjectStatus.fromValue(entity.getStatus());
     this.author = author;
+    this.versions =
+        entity.getVersions().stream().map(ProjectVersion::new).collect(Collectors.toSet());
     this.createdAt = entity.getCreatedAt();
   }
 

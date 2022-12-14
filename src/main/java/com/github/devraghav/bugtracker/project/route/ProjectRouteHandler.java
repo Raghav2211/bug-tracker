@@ -1,14 +1,9 @@
 package com.github.devraghav.bugtracker.project.route;
 
 import com.github.devraghav.bugtracker.project.dto.*;
-import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
-import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
-import com.github.devraghav.bugtracker.project.repository.ProjectAlreadyExistsException;
-import com.github.devraghav.bugtracker.project.repository.ProjectNotFoundException;
-import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
-import com.github.devraghav.bugtracker.project.repository.ProjectVersionRepository;
+import com.github.devraghav.bugtracker.project.service.ProjectAlreadyExistsException;
+import com.github.devraghav.bugtracker.project.service.ProjectNotFoundException;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -17,25 +12,17 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
-public class ProjectRouteHandler {
-  private final ProjectService projectService;
-  private final ProjectRepository projectRepository;
-  private final ProjectVersionRepository projectVersionRepository;
-
+public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> getAll(ServerRequest request) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectRepository.findAll().flatMap(projectService::getProject), Project.class);
+        .body(projectService.findAll(), Project.class);
   }
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(ProjectRequest.class)
-        .flatMap(projectService::validate)
-        .map(ProjectEntity::new)
-        .flatMap(projectRepository::save)
-        .flatMap(projectService::getProject)
+        .flatMap(projectService::save)
         .flatMap(project -> ProjectResponse.create(request, project))
         .switchIfEmpty(ProjectResponse.noBody(request))
         .onErrorResume(
@@ -61,11 +48,7 @@ public class ProjectRouteHandler {
         .bodyToMono(ProjectVersionRequest.class)
         .flatMap(
             projectVersionRequest ->
-                projectService.exists(projectId).thenReturn(projectVersionRequest))
-        .map(ProjectVersionEntity::new)
-        .flatMap(
-            projectVersionEntity -> projectVersionRepository.save(projectId, projectVersionEntity))
-        .map(ProjectVersion::new)
+                projectService.addVersionToProjectId(projectId, projectVersionRequest))
         .flatMap(ProjectResponse::ok)
         .onErrorResume(
             ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
@@ -75,8 +58,6 @@ public class ProjectRouteHandler {
     var projectId = request.pathVariable("id");
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            projectVersionRepository.findAll(projectId).map(ProjectVersion::new),
-            ProjectVersion.class);
+        .body(projectService.findAllVersionByProjectId(projectId), ProjectVersion.class);
   }
 }

@@ -11,7 +11,7 @@ import com.github.devraghav.bugtracker.issue.repository.IssueCommentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
 import com.github.devraghav.bugtracker.issue.service.IssueCommentFetchService;
-import com.github.devraghav.bugtracker.issue.service.IssueCommentPersistService;
+import com.github.devraghav.bugtracker.issue.service.IssueCommentService;
 import com.github.devraghav.bugtracker.issue.service.IssueService;
 import com.github.devraghav.bugtracker.project.dto.Project;
 import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
@@ -46,7 +46,7 @@ import reactor.core.publisher.Mono;
       IssueRouteDefinition.class,
       IssueRouteHandler.class,
       IssueService.class,
-      IssueCommentPersistService.class,
+      IssueCommentService.class,
       IssueCommentFetchService.class,
       UserService.class,
       ProjectService.class
@@ -116,7 +116,8 @@ public class IssueRouteTests {
 
     when(userRepository.findById(anyString())).thenReturn(Mono.just(userEntity));
     when(projectRepository.findById(anyString())).thenReturn(Mono.just(projectEntity));
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.just(projectVersionEntity));
+    when(projectRepository.findAllVersionByProjectId(anyString()))
+        .thenReturn(Flux.just(projectVersionEntity));
     when(issueRepository.findAll()).thenReturn(issueEntityFlux);
     when(issueCommentRepository.findAllByIssueId(anyString())).thenReturn(Flux.empty());
 
@@ -137,7 +138,7 @@ public class IssueRouteTests {
     verify(issueCommentRepository).findAllByIssueId(anyString());
     verify(userRepository, times(2)).findById(anyString());
     verify(projectRepository).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
   }
 
   @Test
@@ -201,9 +202,10 @@ public class IssueRouteTests {
     var issueEntityFlux = Flux.just(issue1);
 
     when(userRepository.findById(anyString())).thenReturn(Mono.just(userEntity));
-    when(projectRepository.exists(anyString())).thenReturn(Mono.just(true));
+    when(projectRepository.existsById(anyString())).thenReturn(Mono.just(true));
     when(projectRepository.findById(anyString())).thenReturn(Mono.just(projectEntity));
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.just(projectVersionEntity));
+    when(projectRepository.findAllVersionByProjectId(anyString()))
+        .thenReturn(Flux.just(projectVersionEntity));
     when(issueRepository.findAllByProjectId(anyString())).thenReturn(issueEntityFlux);
     when(issueCommentRepository.findAllByIssueId(anyString())).thenReturn(Flux.empty());
     webClient
@@ -223,9 +225,9 @@ public class IssueRouteTests {
     verify(issueRepository).findAllByProjectId(anyString());
     verify(issueCommentRepository).findAllByIssueId(anyString());
     verify(userRepository, times(2)).findById(anyString());
-    verify(projectRepository).exists(anyString());
+    verify(projectRepository).existsById(anyString());
     verify(projectRepository).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
   }
 
   @Test
@@ -233,7 +235,7 @@ public class IssueRouteTests {
 
     var projectId = UUID.randomUUID().toString();
     var invalidProjectIdException = IssueException.invalidProject(projectId);
-    when(projectRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(projectRepository.existsById(anyString())).thenReturn(Mono.just(false));
     webClient
         .get()
         .uri("/api/rest/v1/issue?projectId=" + projectId)
@@ -250,7 +252,7 @@ public class IssueRouteTests {
         .isEqualTo(invalidProjectIdException.getMessage())
         .jsonPath("$.timeStamp")
         .exists();
-    verify(projectRepository).exists(anyString());
+    verify(projectRepository).existsById(anyString());
   }
 
   @Test
@@ -295,10 +297,11 @@ public class IssueRouteTests {
 
     var issueEntityFlux = Flux.just(issue1);
 
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
     when(userRepository.findById(anyString())).thenReturn(Mono.just(userEntity));
     when(projectRepository.findById(anyString())).thenReturn(Mono.just(projectEntity));
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.just(projectVersionEntity));
+    when(projectRepository.findAllVersionByProjectId(anyString()))
+        .thenReturn(Flux.just(projectVersionEntity));
 
     when(issueRepository.findAllByReporter(anyString())).thenReturn(issueEntityFlux);
     when(issueCommentRepository.findAllByIssueId(anyString())).thenReturn(Flux.empty());
@@ -319,9 +322,9 @@ public class IssueRouteTests {
     verify(issueRepository).findAllByReporter(anyString());
     verify(issueCommentRepository).findAllByIssueId(anyString());
     verify(userRepository, times(2)).findById(anyString());
-    verify(userRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
     verify(projectRepository).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
   }
 
   @Test
@@ -329,7 +332,7 @@ public class IssueRouteTests {
 
     var reporter = UUID.randomUUID().toString();
     var invalidReporterException = IssueException.invalidUser(reporter);
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     webClient
         .get()
         .uri("/api/rest/v1/issue?reportedBy=" + reporter)
@@ -347,7 +350,7 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(userRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -409,7 +412,8 @@ public class IssueRouteTests {
 
     when(userRepository.findById(anyString())).thenReturn(Mono.just(userEntity));
     when(projectRepository.findById(anyString())).thenReturn(Mono.just(projectEntity));
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.just(projectVersionEntity));
+    when(projectRepository.findAllVersionByProjectId(anyString()))
+        .thenReturn(Flux.just(projectVersionEntity));
     when(issueRepository.findById(issueId1)).thenReturn(issueEntityMono);
     when(issueCommentRepository.findAllByIssueId(anyString())).thenReturn(Flux.empty());
     webClient
@@ -426,7 +430,7 @@ public class IssueRouteTests {
     verify(issueCommentRepository).findAllByIssueId(anyString());
     verify(userRepository, times(3)).findById(anyString());
     verify(projectRepository).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
   }
 
   @Test
@@ -500,11 +504,13 @@ public class IssueRouteTests {
 
     when(userRepository.findById(anyString())).thenReturn(Mono.just(userEntity));
     when(projectRepository.findById(anyString())).thenReturn(Mono.just(projectEntity));
-    when(projectVersionRepository.exists(anyString(), anyString())).thenReturn(Mono.just(true));
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.just(projectVersionEntity));
+    when(projectRepository.existsByIdAndVersionId(anyString(), anyString()))
+        .thenReturn(Mono.just(true));
+    when(projectRepository.findAllVersionByProjectId(anyString()))
+        .thenReturn(Flux.just(projectVersionEntity));
     when(issueCommentRepository.findAllByIssueId(anyString())).thenReturn(Flux.empty());
-    when(projectRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
+    when(projectRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
     when(issueRepository.save(any(IssueEntity.class))).thenReturn(Mono.just(issueEntity));
 
     webClient
@@ -520,11 +526,11 @@ public class IssueRouteTests {
     verify(issueRepository).save(any(IssueEntity.class));
     verify(issueCommentRepository).findAllByIssueId(anyString());
     verify(userRepository, times(2)).findById(anyString());
-    verify(userRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
     verify(projectRepository).findById(anyString());
-    verify(projectRepository).exists(anyString());
-    verify(projectVersionRepository).exists(anyString(), anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).existsById(anyString());
+    verify(projectRepository).existsByIdAndVersionId(anyString(), anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
   }
 
   @Test
@@ -534,9 +540,9 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
 
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueRepository.assign(anyString(), anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.findAndSetAssigneeById(anyString(), anyString())).thenReturn(Mono.empty());
 
     webClient
         .patch()
@@ -547,9 +553,9 @@ public class IssueRouteTests {
         .expectStatus()
         .isNoContent();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).assign(anyString(), anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).findAndSetAssigneeById(anyString(), anyString());
   }
 
   @Test
@@ -559,8 +565,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var issueNotFoundException = new IssueNotFoundException(issueId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(false));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/assign";
     webClient
         .patch()
@@ -578,8 +584,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -589,8 +595,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var userNotFoundException = new UserNotFoundException(userId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/assign";
     webClient
         .patch()
@@ -608,8 +614,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -619,9 +625,9 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
 
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueRepository.unassign(anyString(), anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.findAndUnSetAssigneeById(anyString())).thenReturn(Mono.empty());
 
     webClient
         .method(HttpMethod.DELETE)
@@ -632,9 +638,9 @@ public class IssueRouteTests {
         .expectStatus()
         .isNoContent();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).unassign(anyString(), anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).findAndUnSetAssigneeById(anyString());
   }
 
   @Test
@@ -644,8 +650,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var issueNotFoundException = new IssueNotFoundException(issueId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(false));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/assign";
     webClient
         .method(HttpMethod.DELETE)
@@ -663,8 +669,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -674,8 +680,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var userNotFoundException = new UserNotFoundException(userId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/assign";
     webClient
         .method(HttpMethod.DELETE)
@@ -693,8 +699,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -704,9 +710,9 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
 
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueRepository.addWatcher(anyString(), anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.findAndAddWatcherById(anyString(), anyString())).thenReturn(Mono.just(1l));
 
     webClient
         .patch()
@@ -717,9 +723,9 @@ public class IssueRouteTests {
         .expectStatus()
         .isNoContent();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).addWatcher(anyString(), anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).findAndAddWatcherById(anyString(), anyString());
   }
 
   @Test
@@ -729,8 +735,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var issueNotFoundException = new IssueNotFoundException(issueId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(false));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/watcher";
     webClient
         .patch()
@@ -748,8 +754,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -759,8 +765,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var userNotFoundException = new UserNotFoundException(userId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/watcher";
     webClient
         .patch()
@@ -778,8 +784,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -789,9 +795,10 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
 
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueRepository.removeWatcher(anyString(), anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.findAndPullWatcherById(anyString(), anyString()))
+        .thenReturn(Mono.just(1l));
 
     webClient
         .method(HttpMethod.DELETE)
@@ -802,9 +809,9 @@ public class IssueRouteTests {
         .expectStatus()
         .isNoContent();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).removeWatcher(anyString(), anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).findAndPullWatcherById(anyString(), anyString());
   }
 
   @Test
@@ -814,8 +821,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var issueNotFoundException = new IssueNotFoundException(issueId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(false));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/watcher";
     webClient
         .method(HttpMethod.DELETE)
@@ -833,8 +840,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -844,8 +851,8 @@ public class IssueRouteTests {
     var issueAssignRequest = new IssueAssignRequest();
     issueAssignRequest.setUser(userId);
     var userNotFoundException = new UserNotFoundException(userId);
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
     var path = "/api/rest/v1/issue/" + issueId + "/watcher";
     webClient
         .method(HttpMethod.DELETE)
@@ -863,8 +870,8 @@ public class IssueRouteTests {
         .jsonPath("$.timeStamp")
         .exists();
 
-    verify(issueRepository).exists(anyString());
-    verify(userRepository).exists(anyString());
+    verify(issueRepository).existsById(anyString());
+    verify(userRepository).existsById(anyString());
   }
 
   @Test
@@ -876,7 +883,7 @@ public class IssueRouteTests {
     var issueCommentRequest = new IssueCommentRequest();
     issueCommentRequest.setContent("Test comment");
     issueCommentRequest.setUserId(userId);
-    var issueCommentEntity = new IssueCommentEntity(issueCommentRequest);
+    var issueCommentEntity = new IssueCommentEntity(issueCommentRequest, issueId);
 
     var userEntity = new UserEntity();
     userEntity.setId(userId);
@@ -887,10 +894,10 @@ public class IssueRouteTests {
     userEntity.setFirstName("lName");
     userEntity.setPassword("********");
 
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
     when(userRepository.findById(anyString())).thenReturn(Mono.just(userEntity));
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueCommentRepository.save(anyString(), any())).thenReturn(Mono.just(issueCommentEntity));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueCommentRepository.save(any())).thenReturn(Mono.just(issueCommentEntity));
 
     webClient
         .post()
@@ -901,10 +908,10 @@ public class IssueRouteTests {
         .expectStatus()
         .isOk()
         .expectBody(IssueComment.class);
-    verify(userRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
     verify(userRepository).findById(anyString());
-    verify(issueRepository).exists(anyString());
-    verify(issueCommentRepository).save(anyString(), any());
+    verify(issueRepository).existsById(anyString());
+    verify(issueCommentRepository).save(any());
   }
 
   @Test
@@ -919,8 +926,8 @@ public class IssueRouteTests {
 
     var userNotFoundException = new UserNotFoundException(userId);
 
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(false));
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(true));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(false));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(true));
 
     webClient
         .post()
@@ -937,8 +944,8 @@ public class IssueRouteTests {
         .isEqualTo(userNotFoundException.getMessage())
         .jsonPath("$.timeStamp")
         .exists();
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).existsById(anyString());
   }
 
   @Test
@@ -953,8 +960,8 @@ public class IssueRouteTests {
 
     var issueNotFoundException = new IssueNotFoundException(issueId);
 
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(false));
 
     webClient
         .post()
@@ -971,8 +978,8 @@ public class IssueRouteTests {
         .isEqualTo(issueNotFoundException.getMessage())
         .jsonPath("$.timeStamp")
         .exists();
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).existsById(anyString());
   }
 
   @Test
@@ -987,8 +994,8 @@ public class IssueRouteTests {
 
     var invalidCommentException = IssueException.invalidComment(issueCommentRequest.getContent());
 
-    when(userRepository.exists(anyString())).thenReturn(Mono.just(true));
-    when(issueRepository.exists(anyString())).thenReturn(Mono.just(false));
+    when(userRepository.existsById(anyString())).thenReturn(Mono.just(true));
+    when(issueRepository.existsById(anyString())).thenReturn(Mono.just(false));
 
     webClient
         .post()
@@ -1005,8 +1012,8 @@ public class IssueRouteTests {
         .isEqualTo(invalidCommentException.getMessage())
         .jsonPath("$.timeStamp")
         .exists();
-    verify(userRepository).exists(anyString());
-    verify(issueRepository).exists(anyString());
+    verify(userRepository).existsById(anyString());
+    verify(issueRepository).existsById(anyString());
   }
 
   @Test

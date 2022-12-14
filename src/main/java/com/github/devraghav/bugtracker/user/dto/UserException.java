@@ -1,7 +1,8 @@
 package com.github.devraghav.bugtracker.user.dto;
 
-import java.util.Map;
 import lombok.Getter;
+
+import java.util.Map;
 
 public class UserException extends RuntimeException {
 
@@ -27,6 +28,10 @@ public class UserException extends RuntimeException {
 
   public static UserException invalidEmail(String email) {
     return new UserException("Invalid email", Map.of("email", email));
+  }
+
+  public static UserException alreadyExistsWithEmail(String email) {
+    return new UserException("User already exists", Map.of("email", email));
   }
 
   public static UserException notFound(String userId) {

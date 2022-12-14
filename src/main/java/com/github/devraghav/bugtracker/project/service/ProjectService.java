@@ -1,53 +1,88 @@
 package com.github.devraghav.bugtracker.project.service;
 
-import com.github.devraghav.bugtracker.project.dto.Project;
-import com.github.devraghav.bugtracker.project.dto.ProjectException;
-import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
-import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
+import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
+import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
-import com.github.devraghav.bugtracker.project.repository.ProjectVersionRepository;
-import com.github.devraghav.bugtracker.user.service.UserNotFoundException;
-import com.github.devraghav.bugtracker.user.service.UserService;
-import lombok.RequiredArgsConstructor;
+import com.github.devraghav.bugtracker.user.dto.User;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.stream.Collectors;
-
 @Service
-@RequiredArgsConstructor
 public class ProjectService {
+
+  private final String userFindByIdURL;
+  private final WebClient webClient;
   private final ProjectRepository projectRepository;
-  private final ProjectVersionRepository projectVersionRepository;
-  private final UserService userService;
+
+  public ProjectService(
+      @Value("${app.external.user-service.url}") String userServiceURL,
+      WebClient webClient,
+      ProjectRepository projectRepository) {
+    this.projectRepository = projectRepository;
+    this.webClient = webClient;
+    this.userFindByIdURL = userServiceURL + "/api/rest/v1/user/{id}";
+  }
+
+  public Mono<Project> save(ProjectRequest projectRequest) {
+    return Mono.just(projectRequest)
+        .flatMap(this::validate)
+        .map(ProjectEntity::new)
+        .flatMap(projectRepository::save)
+        .flatMap(this::getProject)
+        .onErrorResume(
+            DuplicateKeyException.class,
+            exception ->
+                Mono.error(ProjectAlreadyExistsException.withName(projectRequest.getName())));
+  }
+
+  public Flux<Project> findAll() {
+    return projectRepository.findAll().flatMap(this::getProject);
+  }
 
   public Mono<Project> findById(String projectId) {
-    return projectRepository.findById(projectId).flatMap(this::getProject);
+    return projectRepository
+        .findById(projectId)
+        .flatMap(this::getProject)
+        .switchIfEmpty(Mono.error(() -> new ProjectNotFoundException(projectId)));
   }
 
   public Mono<Boolean> exists(String projectId) {
     return projectRepository
-        .exists(projectId)
+        .existsById(projectId)
         .filter(Boolean::booleanValue)
-        .switchIfEmpty(Mono.error(() -> ProjectException.projectNotFound(projectId)));
+        .switchIfEmpty(Mono.error(() -> ProjectException.notFound(projectId)));
   }
 
-  public Mono<Boolean> exists(String projectId, String versionId) {
-    return projectVersionRepository
-        .exists(projectId, versionId)
+  public Mono<Boolean> existsByIdAndVersionId(String projectId, String versionId) {
+    return projectRepository
+        .existsByIdAndVersionId(projectId, versionId)
         .filter(Boolean::booleanValue)
         .switchIfEmpty(Mono.error(() -> ProjectException.versionNotFound(projectId, versionId)));
   }
 
+  public Mono<ProjectVersion> addVersionToProjectId(
+      String projectId, ProjectVersionRequest projectVersionRequest) {
+    return Mono.just(projectVersionRequest)
+        .flatMap(
+            _projectVersionRequest -> this.exists(projectId).thenReturn(_projectVersionRequest))
+        .map(ProjectVersionEntity::new)
+        .flatMap(
+            projectVersionEntity -> projectRepository.saveVersion(projectId, projectVersionEntity))
+        .map(ProjectVersion::new);
+  }
+
+  public Flux<ProjectVersion> findAllVersionByProjectId(String projectId) {
+    return projectRepository.findAllVersionByProjectId(projectId).map(ProjectVersion::new);
+  }
+
   public Mono<Project> getProject(ProjectEntity projectEntity) {
-    return Mono.zip(
-        userService.findById(projectEntity.getAuthor()),
-        projectVersionRepository
-            .findAll(projectEntity.getId())
-            .map(ProjectVersion::new)
-            .collect(Collectors.toSet()),
-        (author, versions) -> new Project(projectEntity, author, versions));
+    return getUser(projectEntity.getAuthor()).map(author -> new Project(projectEntity, author));
   }
 
   public Mono<ProjectRequest> validate(ProjectRequest projectRequest) {
@@ -81,12 +116,21 @@ public class ProjectService {
   }
 
   private Mono<Boolean> validateAuthor(String author) {
-    return userService
-        .hasUserWriteAccess(author)
+    return getUser(author)
+        .map(User::isWriteAccess)
+        .map(Boolean::booleanValue)
         .filter(Boolean::booleanValue)
-        .switchIfEmpty(Mono.error(() -> ProjectException.authorNotHaveWriteAccess(author)))
-        .onErrorResume(
-            UserNotFoundException.class,
-            exception -> Mono.error(() -> ProjectException.authorNotFound(author)));
+        .switchIfEmpty(Mono.error(() -> ProjectException.authorNotHaveWriteAccess(author)));
+  }
+
+  private Mono<User> getUser(String authorId) {
+    return webClient
+        .get()
+        .uri(userFindByIdURL, authorId)
+        .retrieve()
+        .onStatus(
+            httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
+            clientResponse -> Mono.error(ProjectException.authorNotFound(authorId)))
+        .bodyToMono(User.class);
   }
 }

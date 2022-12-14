@@ -1,30 +1,31 @@
 package com.github.devraghav.bugtracker.issue.repository;
 
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.Update;
+import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface IssueRepository {
+@Repository
+public interface IssueRepository
+    extends ReactiveMongoRepository<IssueEntity, String>, CustomIssueRepository {
 
-  Mono<IssueEntity> save(IssueEntity entity);
+  @Update("{ '$set' : { 'assignee' : '?1' } }")
+  Mono<Long> findAndSetAssigneeById(String id, String userId);
 
-  Mono<IssueEntity> findById(String issueId);
+  @Update("{ '$unset' : { 'assignee' : '' } }")
+  Mono<Long> findAndUnSetAssigneeById(String id);
 
+  @Update(" {'_id' : '?0' } ,{ '$addToSet' : { 'watchers' : '?1' } }")
+  Mono<Long> findAndAddWatcherById(String id, String userId);
+
+  @Update("{ '$pull' : { 'watchers' : '?1' } }")
+  Mono<Long> findAndPullWatcherById(String id, String userId);
+
+  @Query("{ 'projects.projectId' : '?0'}")
   Flux<IssueEntity> findAllByProjectId(String projectId);
 
   Flux<IssueEntity> findAllByReporter(String reporter);
-
-  Mono<Boolean> assign(String issuedId, String userId);
-
-  Mono<Boolean> unassign(String issuedId, String userId);
-
-  Mono<Boolean> addWatcher(String issuedId, String userId);
-
-  Mono<Boolean> removeWatcher(String issuedId, String userId);
-
-  Mono<Boolean> done(String issuedId);
-
-  Flux<IssueEntity> findAll();
-
-  Mono<Boolean> exists(String issueId);
 }

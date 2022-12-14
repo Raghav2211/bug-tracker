@@ -38,7 +38,7 @@ public class ProjectException extends RuntimeException {
     return new ProjectException("Author don't have write access", Map.of("author", author));
   }
 
-  public static ProjectException projectNotFound(String projectId) {
+  public static ProjectException notFound(String projectId) {
     return new ProjectException("Project not found", Map.of("projectId", projectId));
   }
 

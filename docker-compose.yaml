@@ -1,17 +1,112 @@
 version: "3.9"
 services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./portainer-data:/data
+    ports:
+      - 9000:9000
+  prometheus:
+    image: prom/prometheus:v2.40.6
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+    ports:
+      - "9090:9090"
+  promtail:
+    image: grafana/promtail:2.7.0
+    container_name: promtail
+    volumes:
+      - ./promtail/promtail-docker-config.yaml:/etc/promtail/docker-config.yaml
+      - ./logs:/var/log
+    command: "--config.file=/etc/promtail/docker-config.yaml"
+  loki:
+    image: grafana/loki:2.7.0
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+  grafana:
+    image: grafana/grafana:9.3.1
+    container_name: grafana
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+  jaeger:
+    image: jaegertracing/all-in-one:1.21.0
+    container_name: monitoring-jaeger
+    command: "--collector.zipkin.http-port=9411 --log-level=debug"
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+  mongoexporter:
+    container_name: mongoexporter
+#    image: bitnami/mongodb-exporter
+    image: "percona/mongodb_exporter:0.32.0"
+    command:
+      - "--collect-all"
+      - "--compatible-mode"
+    ports:
+      - "9216:9216"
+    environment:
+      MONGODB_URI: mongodb://exporter:password@mongodb:27017
   mongodb:
     container_name: mongodb
     image: mongo:4.2.21
     restart: always
     environment:
-      #MONGO_INITDB_ROOT_USERNAME: admin
-      #ONGO_INITDB_ROOT_PASSWORD: pass
       MONGO_INITDB_DATABASE: bug-tracker
     ports:
       - "27017:27017"
+    volumes:
+      - ./001_init.js:/docker-entrypoint-initdb.d/001_init.js:ro
   bug-tracker:
     image: "bug-tracker:1.0.0"
     container_name: bug-tracker
+    volumes:
+      - ./logs:/logs
     ports:
       - "8080:8080"
+
+  user-service:
+    image: "user-service:1.0.0"
+    container_name: user-service
+    volumes:
+      - ./logs:/logs
+    ports:
+      - "8081:8080"
+
+  project-service:
+    image: "project-service:1.0.0"
+    container_name: project-service
+    volumes:
+      - ./logs:/logs
+    ports:
+      - "8082:8080"
+
+  issue-service:
+    image: "issue-service:1.0.0"
+    container_name: issue-service
+    volumes:
+      - ./logs:/logs
+    ports:
+      - "8083:8080"

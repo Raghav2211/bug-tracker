@@ -9,16 +9,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document("issues")
 @Data
 @NoArgsConstructor
 public class IssueEntity {
-  private String id;
+  @Id private String id;
   private Integer priority;
   private Integer severity;
   private String businessUnit;
 
   private Set<ProjectInfoRef> projects;
+
   private String header;
 
   private String description;

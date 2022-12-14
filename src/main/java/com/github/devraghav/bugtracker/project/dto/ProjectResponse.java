@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.project.dto;
 
-import com.github.devraghav.bugtracker.project.repository.ProjectAlreadyExistsException;
-import com.github.devraghav.bugtracker.project.repository.ProjectNotFoundException;
+import com.github.devraghav.bugtracker.project.service.ProjectAlreadyExistsException;
+import com.github.devraghav.bugtracker.project.service.ProjectNotFoundException;
 import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.BodyInserters;

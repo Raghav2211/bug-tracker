@@ -2,11 +2,15 @@ package com.github.devraghav.bugtracker.project.entity;
 
 import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "project")
 @Data
 @NoArgsConstructor
 public class ProjectEntity {
@@ -18,6 +22,7 @@ public class ProjectEntity {
   private Integer status;
   private Map<String, Object> tags;
   private String author;
+  private List<ProjectVersionEntity> versions;
   private LocalDateTime createdAt;
 
   public ProjectEntity(ProjectRequest projectRequest) {
@@ -28,6 +33,7 @@ public class ProjectEntity {
     this.status = projectRequest.getStatus().getValue();
     this.tags = projectRequest.getTags();
     this.author = projectRequest.getAuthor();
+    this.versions = new ArrayList<>();
     this.createdAt = LocalDateTime.now();
   }
 }

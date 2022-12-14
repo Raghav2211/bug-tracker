@@ -2,10 +2,8 @@ package com.github.devraghav.bugtracker.issue.route;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
-import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
-import com.github.devraghav.bugtracker.issue.service.IssueCommentPersistService;
+import com.github.devraghav.bugtracker.issue.service.IssueCommentService;
 import com.github.devraghav.bugtracker.issue.service.IssueService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -13,12 +11,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
-public class IssueRouteHandler {
-  private final IssueService issueService;
-  private final IssueCommentPersistService issueCommentPersistService;
-
-  private final IssueRepository issueRepository;
+public record IssueRouteHandler(
+    IssueService issueService, IssueCommentService issueCommentService) {
 
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
     IssueFilter issueFilter = new IssueFilter();
@@ -68,13 +62,7 @@ public class IssueRouteHandler {
     var issueId = serverRequest.pathVariable("id");
     return serverRequest
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            assignRequest ->
-                Mono.just(issueId)
-                    .and(issueService.exists(issueId))
-                    .and(issueService.validateUserId(assignRequest.getUser()))
-                    .thenReturn(assignRequest))
-        .flatMap(assignRequest -> issueRepository.assign(issueId, assignRequest.getUser()))
+        .flatMap(assignRequest -> issueService.assign(issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
@@ -83,15 +71,8 @@ public class IssueRouteHandler {
 
   public Mono<ServerResponse> unassign(ServerRequest request) {
     var issueId = request.pathVariable("id");
-    return request
-        .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            assignRequest ->
-                Mono.just(issueId)
-                    .and(issueService.exists(issueId))
-                    .and(issueService.validateUserId(assignRequest.getUser()))
-                    .thenReturn(assignRequest))
-        .flatMap(assignRequest -> issueRepository.unassign(issueId, assignRequest.getUser()))
+    return issueService
+        .unassigned(issueId)
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -101,13 +82,7 @@ public class IssueRouteHandler {
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            assignRequest ->
-                Mono.just(issueId)
-                    .and(issueService.exists(issueId))
-                    .and(issueService.validateUserId(assignRequest.getUser()))
-                    .thenReturn(assignRequest))
-        .flatMap(assignRequest -> issueRepository.addWatcher(issueId, assignRequest.getUser()))
+        .flatMap(assignRequest -> issueService.addWatcher(issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -118,15 +93,7 @@ public class IssueRouteHandler {
 
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            removeWatcherRequest ->
-                Mono.just(issueId)
-                    .and(issueService.exists(issueId))
-                    .and(issueService.validateUserId(removeWatcherRequest.getUser()))
-                    .thenReturn(removeWatcherRequest))
-        .flatMap(
-            removeWatcherRequest ->
-                issueRepository.removeWatcher(issueId, removeWatcherRequest.getUser()))
+        .flatMap(assignRequest -> issueService.removeWatcher(issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -136,7 +103,7 @@ public class IssueRouteHandler {
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(IssueCommentRequest.class)
-        .flatMap(commentRequest -> issueCommentPersistService.save(issueId, commentRequest))
+        .flatMap(commentRequest -> issueCommentService.save(issueId, commentRequest))
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -145,7 +112,7 @@ public class IssueRouteHandler {
 
   public Mono<ServerResponse> done(ServerRequest request) {
     return Mono.just(request.pathVariable("id"))
-        .flatMap(issueRepository::done)
+        .flatMap(issueService::done)
         .flatMap(done -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class,

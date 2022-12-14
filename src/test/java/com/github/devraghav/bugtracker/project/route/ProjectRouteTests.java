@@ -6,10 +6,7 @@ import static org.mockito.Mockito.*;
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
-import com.github.devraghav.bugtracker.project.repository.ProjectAlreadyExistsException;
-import com.github.devraghav.bugtracker.project.repository.ProjectNotFoundException;
-import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
-import com.github.devraghav.bugtracker.project.repository.ProjectVersionRepository;
+import com.github.devraghav.bugtracker.project.repository.*;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
@@ -33,7 +30,8 @@ import reactor.core.publisher.Mono;
       ProjectRouteDefinition.class,
       ProjectRouteHandler.class,
       ProjectService.class,
-      UserService.class
+      UserService.class,
+      ProjectVersionRepositoryImpl.class
     })
 @WebFluxTest
 @AutoConfigureWebClient
@@ -65,7 +63,7 @@ public class ProjectRouteTests {
     var projectEntityFlux = Flux.just(projectEntity);
 
     when(userRepository.findById(anyString())).thenReturn(userMono);
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.empty());
+    when(projectRepository.findAllVersionByProjectId(anyString())).thenReturn(Flux.empty());
     when(projectRepository.findAll()).thenReturn(projectEntityFlux);
     webClient
         .get()
@@ -83,7 +81,7 @@ public class ProjectRouteTests {
             });
 
     verify(userRepository).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
     verify(projectRepository).findAll();
     verifyNoMoreInteractions(userRepository, projectVersionRepository, projectRepository);
   }
@@ -129,7 +127,7 @@ public class ProjectRouteTests {
     var projectEntityMono = Mono.just(projectEntity);
 
     when(userRepository.findById(anyString())).thenReturn(userMono);
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.empty());
+    when(projectRepository.findAllVersionByProjectId(anyString())).thenReturn(Flux.empty());
     when(projectRepository.findById(projectId1)).thenReturn(projectEntityMono);
 
     webClient
@@ -146,7 +144,7 @@ public class ProjectRouteTests {
             });
 
     verify(userRepository).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
     verify(projectRepository).findById(anyString());
     verifyNoMoreInteractions(userRepository, projectVersionRepository, projectRepository);
   }
@@ -200,7 +198,7 @@ public class ProjectRouteTests {
     var userMono = Mono.just(userEntity);
 
     when(userRepository.findById(anyString())).thenReturn(userMono);
-    when(projectVersionRepository.findAll(anyString())).thenReturn(Flux.empty());
+    when(projectRepository.findAllVersionByProjectId(anyString())).thenReturn(Flux.empty());
     when(projectRepository.save(any(ProjectEntity.class))).thenReturn(Mono.just(projectEntity));
 
     webClient
@@ -214,7 +212,7 @@ public class ProjectRouteTests {
         .expectBody(Project.class);
 
     verify(userRepository, times(2)).findById(anyString());
-    verify(projectVersionRepository).findAll(anyString());
+    verify(projectRepository).findAllVersionByProjectId(anyString());
     verify(projectRepository).save(any(ProjectEntity.class));
     verifyNoMoreInteractions(userRepository, projectVersionRepository, projectRepository);
   }
@@ -454,9 +452,9 @@ public class ProjectRouteTests {
 
     var projectVersionEntity = new ProjectVersionEntity(projectVersionRequest);
 
-    when(projectRepository.exists(projectId)).thenReturn(Mono.just(true));
+    when(projectRepository.existsById(projectId)).thenReturn(Mono.just(true));
 
-    when(projectVersionRepository.save(anyString(), any(ProjectVersionEntity.class)))
+    when(projectVersionRepository.saveVersion(anyString(), any(ProjectVersionEntity.class)))
         .thenReturn(Mono.just(projectVersionEntity));
 
     webClient
@@ -468,8 +466,8 @@ public class ProjectRouteTests {
         .expectStatus()
         .isOk()
         .expectBody(ProjectVersion.class);
-    verify(projectRepository).exists(anyString());
-    verify(projectVersionRepository).save(anyString(), any(ProjectVersionEntity.class));
+    verify(projectRepository).existsById(anyString());
+    verify(projectVersionRepository).saveVersion(anyString(), any(ProjectVersionEntity.class));
     verifyNoMoreInteractions(userRepository, projectVersionRepository, projectRepository);
   }
 
@@ -480,9 +478,9 @@ public class ProjectRouteTests {
     var projectVersionRequest = new ProjectVersionRequest();
     projectVersionRequest.setVersion("v1.0");
 
-    var invalidProjectException = ProjectException.projectNotFound(projectId);
+    var invalidProjectException = ProjectException.notFound(projectId);
 
-    when(projectRepository.exists(projectId)).thenReturn(Mono.just(false));
+    when(projectRepository.existsById(projectId)).thenReturn(Mono.just(false));
 
     var path = "/api/rest/v1/project/" + projectId + "/version";
     webClient
@@ -502,7 +500,7 @@ public class ProjectRouteTests {
         .isEqualTo(invalidProjectException.getMessage())
         .jsonPath("$.timeStamp")
         .exists();
-    verify(projectRepository).exists(anyString());
+    verify(projectRepository).existsById(anyString());
     verifyNoMoreInteractions(userRepository, projectVersionRepository, projectRepository);
   }
 
