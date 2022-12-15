@@ -1,0 +1,51 @@
+plugins {
+	id 'java'
+	id 'maven-publish'
+	id "com.diffplug.spotless" version "5.11.1"
+	id 'org.springframework.boot' version '3.0.0'
+	id 'io.spring.dependency-management' version '1.1.0'
+}
+
+group = 'com.github.devraghav.user'
+version = '1.0.0'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webflux:3.0.0'
+	implementation 'org.projectlombok:lombok:1.18.24'
+
+	annotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+spotless {
+	java {
+		toggleOffOn()
+		targetExclude('build/**')
+		googleJavaFormat('1.12.0')
+	}
+}
+
+jar {
+	enabled = true
+	archiveClassifier = ''
+}
+bootJar {enabled(false)}
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+//			groupId = 'com.github.devraghav.user'
+//			artifactId = 'user-service-reactive-client'
+//			version = '1.0.0'
+			from components.java
+		}
+	}
+}
