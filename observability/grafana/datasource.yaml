@@ -2,17 +2,17 @@
 apiVersion: 1
 
 datasources:
-  - name: local-prometheus
+  - name: prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
     editable: true
-  - name: local-loki-datasource
+  - name: loki
     type: loki
     access: proxy
     url: http://loki:3100
     editable: true
-  - name: local-loki-as-prometheus-datasource
+  - name: loki-as-prometheus-datasource
     type: prometheus
     access: proxy
     url: http://loki:3100/loki
