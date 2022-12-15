@@ -1,9 +1,7 @@
 package com.github.devraghav.project.dto;
 
-import lombok.Getter;
-
-import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
 
 public class ProjectClientException extends RuntimeException {
   @Getter private final Map<String, Object> meta;
@@ -18,8 +16,8 @@ public class ProjectClientException extends RuntimeException {
   }
 
   public static ProjectClientException invalidProjectOrVersion(String projectId, String versionId) {
-    return new ProjectClientException("Either project or version not found", Map.of("projectId", projectId,"versionId", versionId
-    ));
+    return new ProjectClientException(
+        "Either project or version not found",
+        Map.of("projectId", projectId, "versionId", versionId));
   }
-
 }

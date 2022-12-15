@@ -1,7 +1,7 @@
 plugins {
 	id 'org.springframework.boot' version '3.0.0'
 	id 'io.spring.dependency-management' version '1.1.0'
-	id "com.diffplug.spotless" version "5.11.1"
+	 id "com.diffplug.spotless" version "6.12.0"
 	id 'java'
 }
 
@@ -12,7 +12,6 @@ targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
 	mavenCentral()
-	mavenLocal()
 }
 
 dependencies {
@@ -27,8 +26,8 @@ dependencies {
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-webflux-ui' , version: '1.6.13'
 	implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.2'
 
-	implementation 'com.github.devraghav.user:user-service-reactive-client:1.0.0'
-	implementation 'com.github.devraghav.project:project-service-reactive-client:1.0.0'
+	implementation project(':user-service-reactive-client')
+	implementation project(':project-service-reactive-client')
 
 	annotationProcessor group: 'org.projectlombok', name: 'lombok-mapstruct-binding', version: '0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.2.Final'
@@ -49,10 +48,10 @@ jar {
 	enabled = false
 }
 
-spotless {
-	java {
-		toggleOffOn()
-		targetExclude('build/**')
-		googleJavaFormat('1.12.0')
-	}
-}
+ spotless {
+ 	java {
+ 		toggleOffOn()
+ 		targetExclude('build/**')
+ 		googleJavaFormat()
+ 	}
+ }

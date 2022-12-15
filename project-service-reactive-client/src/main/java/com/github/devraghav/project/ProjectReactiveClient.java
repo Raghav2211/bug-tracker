@@ -1,7 +1,7 @@
 package com.github.devraghav.project;
 
-import com.github.devraghav.project.dto.ProjectClientException;
 import com.github.devraghav.project.dto.Project;
+import com.github.devraghav.project.dto.ProjectClientException;
 import com.github.devraghav.project.dto.ProjectVersion;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -38,7 +38,6 @@ public class ProjectReactiveClient {
     return fetchProject(projectId).hasElement();
   }
 
-
   public Mono<ProjectVersion> fetchProjectVersion(String projectId, String versionId) {
     return webClient
         .get()
@@ -46,11 +45,12 @@ public class ProjectReactiveClient {
         .retrieve()
         .onStatus(
             httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
-            clientResponse -> Mono.error(ProjectClientException.invalidProjectOrVersion(projectId,versionId)))
+            clientResponse ->
+                Mono.error(ProjectClientException.invalidProjectOrVersion(projectId, versionId)))
         .bodyToMono(ProjectVersion.class);
   }
 
-  public Mono<Boolean> isProjectVersionExists(String projectId,String versionId) {
-    return fetchProjectVersion(projectId,versionId).hasElement();
+  public Mono<Boolean> isProjectVersionExists(String projectId, String versionId) {
+    return fetchProjectVersion(projectId, versionId).hasElement();
   }
 }
