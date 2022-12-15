@@ -2,42 +2,27 @@ package com.github.devraghav.project.service;
 
 import com.github.devraghav.project.dto.*;
 import com.github.devraghav.project.entity.ProjectEntity;
-import com.github.devraghav.project.entity.ProjectVersionEntity;
+import com.github.devraghav.project.mapper.ProjectMapper;
+import com.github.devraghav.project.mapper.ProjectVersionMapper;
 import com.github.devraghav.project.repository.ProjectRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public class ProjectService {
-
-  private final String userFindByIdURL;
-  private final WebClient webClient;
-  private final ProjectRepository projectRepository;
-
-  public ProjectService(
-      @Value("${app.external.user-service.url}") String userServiceURL,
-      WebClient webClient,
-      ProjectRepository projectRepository) {
-    this.projectRepository = projectRepository;
-    this.webClient = webClient;
-    this.userFindByIdURL = userServiceURL + "/api/rest/v1/user/{id}";
-  }
+public record ProjectService(
+    UserService userService, ProjectRepository projectRepository, ProjectMapper projectMapper) {
 
   public Mono<Project> save(ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
         .flatMap(this::validate)
-        .map(ProjectEntity::new)
+        .map(projectMapper::requestToEntity)
         .flatMap(projectRepository::save)
         .flatMap(this::getProject)
         .onErrorResume(
             DuplicateKeyException.class,
-            exception ->
-                Mono.error(ProjectException.alreadyExistsByName(projectRequest.getName())));
+            exception -> Mono.error(ProjectException.alreadyExistsByName(projectRequest.name())));
   }
 
   public Flux<Project> findAll() {
@@ -63,25 +48,31 @@ public class ProjectService {
     return Mono.just(projectVersionRequest)
         .flatMap(
             _projectVersionRequest -> this.exists(projectId).thenReturn(_projectVersionRequest))
-        .map(ProjectVersionEntity::new)
+        .map(ProjectVersionMapper.INSTANCE::requestToEntity)
         .flatMap(
             projectVersionEntity -> projectRepository.saveVersion(projectId, projectVersionEntity))
-        .map(ProjectVersion::new);
+        .map(ProjectVersionMapper.INSTANCE::entityToResponse);
   }
 
   public Flux<ProjectVersion> findAllVersionByProjectId(String projectId) {
-    return projectRepository.findAllVersionByProjectId(projectId).map(ProjectVersion::new);
+    return projectRepository
+        .findAllVersionByProjectId(projectId)
+        .map(ProjectVersionMapper.INSTANCE::entityToResponse);
   }
 
   public Mono<ProjectVersion> findVersionByProjectIdAndVersionId(
       String projectId, String versionId) {
     return projectRepository
         .findVersionByProjectIdAndVersionId(projectId, versionId)
-        .map(ProjectVersion::new);
+        .map(ProjectVersionMapper.INSTANCE::entityToResponse);
   }
 
   public Mono<Project> getProject(ProjectEntity projectEntity) {
-    return getUser(projectEntity.getAuthor()).map(author -> new Project(projectEntity, author));
+    return userService
+        .getUserById(projectEntity.getAuthor())
+        .map(
+            author ->
+                projectMapper.entityToResponse(projectEntity).toBuilder().author(author).build());
   }
 
   public Mono<ProjectRequest> validate(ProjectRequest projectRequest) {
@@ -95,41 +86,31 @@ public class ProjectService {
   private Mono<ProjectRequest> validateName(ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
         .filter(ProjectRequest::isNameValid)
-        .switchIfEmpty(Mono.error(() -> ProjectException.invalidName(projectRequest.getName())));
+        .switchIfEmpty(Mono.error(() -> ProjectException.invalidName(projectRequest.name())));
   }
 
   private Mono<ProjectRequest> validateDescription(ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
         .filter(ProjectRequest::isDescriptionValid)
         .switchIfEmpty(
-            Mono.error(() -> ProjectException.invalidDescription(projectRequest.getDescription())));
+            Mono.error(() -> ProjectException.invalidDescription(projectRequest.description())));
   }
 
   private Mono<ProjectRequest> validateAuthor(ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
         .filter(ProjectRequest::isAuthorNotNull)
-        .map(ProjectRequest::getAuthor)
+        .map(ProjectRequest::author)
         .flatMap(this::validateAuthor)
         .switchIfEmpty(Mono.error(ProjectException::nullAuthor))
         .thenReturn(projectRequest);
   }
 
   private Mono<Boolean> validateAuthor(String author) {
-    return getUser(author)
+    return userService
+        .getUserById(author)
         .map(User::hasWriteAccess)
         .map(Boolean::booleanValue)
         .filter(Boolean::booleanValue)
         .switchIfEmpty(Mono.error(() -> ProjectException.authorNotHaveWriteAccess(author)));
-  }
-
-  private Mono<User> getUser(String authorId) {
-    return webClient
-        .get()
-        .uri(userFindByIdURL, authorId)
-        .retrieve()
-        .onStatus(
-            httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
-            clientResponse -> Mono.error(ProjectException.authorNotFound(authorId)))
-        .bodyToMono(User.class);
   }
 }

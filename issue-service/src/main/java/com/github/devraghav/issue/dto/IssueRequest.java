@@ -1,25 +1,23 @@
 package com.github.devraghav.issue.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import lombok.Data;
 import org.springframework.util.StringUtils;
 
-@Data
-public class IssueRequest {
-
-  private Priority priority;
-  private Severity severity;
-  private String businessUnit;
-  private Set<ProjectInfo> projects = new HashSet<>();
-  private String header;
-  private String description;
-  private String reporter;
-
-  private Map<String, String> tags = new HashMap<>();
+public record IssueRequest(
+    Priority priority,
+    Severity severity,
+    String businessUnit,
+    Set<ProjectInfo> projects,
+    String header,
+    String description,
+    String reporter,
+    Map<String, String> tags) {
+  public IssueRequest {
+    projects = Set.copyOf(projects == null ? Set.of() : projects);
+    tags = Map.copyOf(tags == null ? Map.of() : tags);
+  }
 
   @JsonIgnore
   public boolean hasSeverity() {

@@ -1,13 +1,9 @@
 package com.github.devraghav.issue.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
 import org.springframework.util.StringUtils;
 
-@Data
-public class ProjectInfo {
-  private String projectId;
-  private String versionId;
+public record ProjectInfo(String projectId, String versionId) {
 
   @JsonIgnore
   public boolean isValid() {

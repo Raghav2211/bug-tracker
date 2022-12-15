@@ -43,4 +43,8 @@ public class ProjectException extends RuntimeException {
   public static ProjectException alreadyExistsByName(String name) {
     return new ProjectException("Project already exists", Map.of("name", name));
   }
+
+  public static ProjectException unrecognizedStatus() {
+    return new ProjectException("Unrecognized status");
+  }
 }

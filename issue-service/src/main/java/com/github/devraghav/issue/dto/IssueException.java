@@ -65,8 +65,8 @@ public class IssueException extends RuntimeException {
 
   public static IssueException invalidProject(ProjectInfo projectInfo) {
     var meta = new HashMap<String, Object>();
-    meta.put("projectId", projectInfo.getProjectId());
-    meta.put("versionId", projectInfo.getVersionId());
+    meta.put("projectId", projectInfo.projectId());
+    meta.put("versionId", projectInfo.versionId());
     return new IssueException("Either projectId or versionId is invalid", meta);
   }
 }

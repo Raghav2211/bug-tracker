@@ -1,20 +1,18 @@
 package com.github.devraghav.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.HashMap;
 import java.util.Map;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
-@Data
-@NoArgsConstructor
-public class ProjectRequest {
-  private String name;
-  private String description;
-  private ProjectStatus status;
-  private String author;
-  private Map<String, Object> tags = new HashMap<>();
+public record ProjectRequest(
+    String name,
+    String description,
+    ProjectStatus status,
+    String author,
+    Map<String, Object> tags) {
+  public ProjectRequest {
+    tags = Map.copyOf(tags == null ? Map.of() : tags);
+  }
 
   @JsonIgnore
   public boolean isDescriptionValid() {
@@ -28,6 +26,6 @@ public class ProjectRequest {
 
   @JsonIgnore
   public boolean isNameValid() {
-    return StringUtils.hasLength(this.name) && this.getName().matches("^[a-zA-Z]*$");
+    return StringUtils.hasLength(this.name) && this.name().matches("^[a-zA-Z]*$");
   }
 }

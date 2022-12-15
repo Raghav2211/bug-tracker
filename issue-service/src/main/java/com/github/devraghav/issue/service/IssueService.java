@@ -3,41 +3,23 @@ package com.github.devraghav.issue.service;
 import com.github.devraghav.issue.dto.*;
 import com.github.devraghav.issue.entity.IssueEntity;
 import com.github.devraghav.issue.entity.ProjectInfoRef;
+import com.github.devraghav.issue.mapper.IssueMapper;
 import com.github.devraghav.issue.repository.IssueRepository;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public class IssueService {
-  private final String userFindByIdURL;
-  private final String projectFindByIdURL;
-  private final String projectVersionFindByIdURL;
-  private final WebClient webClient;
-  private final IssueRepository issueRepository;
-  private final IssueCommentFetchService issueCommentFetchService;
-
-  public IssueService(
-      @Value("${app.external.user-service.url}") String userServiceURL,
-      @Value("${app.external.project-service.url}") String projectServiceURL,
-      WebClient webClient,
-      IssueRepository issueRepository,
-      IssueCommentFetchService issueCommentFetchService) {
-    this.webClient = webClient;
-    this.issueRepository = issueRepository;
-    this.issueCommentFetchService = issueCommentFetchService;
-    this.userFindByIdURL = userServiceURL + "/api/rest/v1/user/{id}";
-    this.projectFindByIdURL = userServiceURL + "/api/rest/v1/project/{id}";
-    this.projectVersionFindByIdURL =
-        userServiceURL + "/api/rest/v1/project/{id}/version/{versionId}";
-  }
+public record IssueService(
+    IssueMapper issueMapper,
+    UserService userService,
+    ProjectService projectService,
+    IssueRepository issueRepository,
+    IssueCommentFetchService issueCommentFetchService) {
 
   public Flux<Issue> getAll(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
@@ -62,13 +44,13 @@ public class IssueService {
   }
 
   public Mono<Issue> create(IssueRequest issueRequest) {
-    return validate(issueRequest).map(IssueEntity::new).flatMap(this::save);
+    return validate(issueRequest).map(issueMapper::issueRequestToIssueEntity).flatMap(this::save);
   }
 
   public Mono<Issue> update(String issueId, IssueUpdateRequest request) {
     return findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
-        .map(issueEntity -> new IssueEntity(issueEntity, request))
+        .map(issueEntity -> issueMapper.issueRequestToIssueEntity(issueEntity, request))
         .flatMap(this::save)
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
@@ -86,11 +68,10 @@ public class IssueService {
 
   public Mono<Long> assign(String issueId, IssueAssignRequest issueAssignRequest) {
     return exists(issueId)
-        .and(getUser(issueAssignRequest.getUser()))
+        .and(userService.fetchUser(issueAssignRequest.user()))
         .thenReturn(issueAssignRequest)
         .flatMap(
-            assignRequest ->
-                issueRepository.findAndSetAssigneeById(issueId, assignRequest.getUser()));
+            assignRequest -> issueRepository.findAndSetAssigneeById(issueId, assignRequest.user()));
   }
 
   public Mono<Long> unassigned(String issueId) {
@@ -100,20 +81,18 @@ public class IssueService {
 
   public Mono<Long> addWatcher(String issueId, IssueAssignRequest issueAssignRequest) {
     return exists(issueId)
-        .and(getUser(issueAssignRequest.getUser()))
+        .and(userService.fetchUser(issueAssignRequest.user()))
         .thenReturn(issueAssignRequest)
         .flatMap(
-            assignRequest ->
-                issueRepository.findAndAddWatcherById(issueId, assignRequest.getUser()));
+            assignRequest -> issueRepository.findAndAddWatcherById(issueId, assignRequest.user()));
   }
 
   public Mono<Long> removeWatcher(String issueId, IssueAssignRequest issueAssignRequest) {
     return exists(issueId)
-        .and(getUser(issueAssignRequest.getUser()))
+        .and(userService.fetchUser(issueAssignRequest.user()))
         .thenReturn(issueAssignRequest)
         .flatMap(
-            assignRequest ->
-                issueRepository.findAndPullWatcherById(issueId, assignRequest.getUser()));
+            assignRequest -> issueRepository.findAndPullWatcherById(issueId, assignRequest.user()));
   }
 
   public Mono<Boolean> done(String issueId) {
@@ -127,20 +106,21 @@ public class IssueService {
   }
 
   private Flux<Issue> getAllByReporter(String reporter) {
-    return getUser(reporter)
+    return userService
+        .fetchUser(reporter)
         .flatMapMany(
             unused -> issueRepository.findAllByReporter(reporter).flatMap(this::generateIssue));
   }
 
   private Mono<Issue> generateIssue(IssueEntity issueEntity) {
-    var issueBuilder = Issue.builder(issueEntity);
+    var issueBuilder = issueMapper.issueEntityToIssue(issueEntity);
     return getWatchers(issueEntity.getWatchers())
         .collect(Collectors.toSet())
         .map(issueBuilder::watchers)
         .flatMapMany(unused -> issueCommentFetchService.getComments(issueEntity.getId()))
         .collectList()
         .map(issueBuilder::comments)
-        .flatMap(unused -> getUser(issueEntity.getReporter()))
+        .flatMap(unused -> userService.fetchUser(issueEntity.getReporter()))
         .map(issueBuilder::reporter)
         .flatMapMany(unused -> getProjects(issueEntity.getProjects()))
         .collectList()
@@ -152,15 +132,14 @@ public class IssueService {
   }
 
   private Flux<User> getWatchers(Set<String> watchers) {
-    return Flux.fromIterable(watchers).flatMap(this::getUser);
+    return Flux.fromIterable(watchers).flatMap(userService::fetchUser);
   }
 
   private Mono<User> getAssignee(Optional<String> assignee) {
     return Mono.just(assignee)
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .flatMap(this::getUser)
-        .switchIfEmpty(Mono.just(new User()));
+        .flatMap(userService::fetchUser);
   }
 
   private Flux<Project> getProjects(Set<ProjectInfoRef> projectInfoRefs) {
@@ -168,7 +147,8 @@ public class IssueService {
   }
 
   private Mono<Project> getProject(ProjectInfoRef projectInfoRef) {
-    return getProject(projectInfoRef.getProjectId())
+    return projectService
+        .fetchProject(projectInfoRef.getProjectId())
         .doOnNext(project -> project.removeProjectVersionIfNotEqual(projectInfoRef.getVersionId()));
   }
 
@@ -186,14 +166,14 @@ public class IssueService {
   private Mono<IssueRequest> validateHeader(IssueRequest issueRequest) {
     return Mono.just(issueRequest)
         .filter(IssueRequest::isHeaderValid)
-        .switchIfEmpty(Mono.error(() -> IssueException.invalidSummary(issueRequest.getHeader())));
+        .switchIfEmpty(Mono.error(() -> IssueException.invalidSummary(issueRequest.header())));
   }
 
   private Mono<IssueRequest> validateDescription(IssueRequest issueRequest) {
     return Mono.just(issueRequest)
         .filter(IssueRequest::isDescriptionValid)
         .switchIfEmpty(
-            Mono.error(() -> IssueException.invalidDescription(issueRequest.getDescription())));
+            Mono.error(() -> IssueException.invalidDescription(issueRequest.description())));
   }
 
   private Mono<IssueRequest> validatePriority(IssueRequest issueRequest) {
@@ -211,7 +191,7 @@ public class IssueService {
   }
 
   private Mono<IssueRequest> validatedProjectInfo(IssueRequest issueRequest) {
-    return Flux.fromIterable(issueRequest.getProjects())
+    return Flux.fromIterable(issueRequest.projects())
         .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
         .flatMap(this::validateProjectInfo)
         .collectList()
@@ -224,55 +204,26 @@ public class IssueService {
         .flatMap(
             validInfo ->
                 Mono.zip(
-                        validateProjectId(validInfo.getProjectId()),
-                        validateProjectVersion(validInfo.getProjectId(), validInfo.getVersionId()),
+                        validateProjectId(validInfo.projectId()),
+                        validateProjectVersion(validInfo.projectId(), validInfo.versionId()),
                         Boolean::logicalAnd)
                     .map(Boolean::booleanValue))
         .switchIfEmpty(Mono.error(() -> IssueException.invalidProject(projectInfo)));
   }
 
   private Mono<Boolean> validateProjectId(String projectId) {
-    return getProject(projectId).map(project -> Boolean.TRUE);
+    return projectService.fetchProject(projectId).map(project -> Boolean.TRUE);
   }
 
   private Mono<Boolean> validateProjectVersion(String projectId, String versionId) {
-    return getProjectVersion(projectId, versionId).map(projectVersion -> Boolean.TRUE);
+    return projectService
+        .fetchProjectVersion(projectId, versionId)
+        .map(projectVersion -> Boolean.TRUE);
   }
 
   private Mono<IssueRequest> validateReporter(IssueRequest issueRequest) {
-    return Mono.just(issueRequest.getReporter()).flatMap(this::getUser).thenReturn(issueRequest);
-  }
-
-  public Mono<User> getUser(String userId) {
-    return webClient
-        .get()
-        .uri(userFindByIdURL, userId)
-        .retrieve()
-        .onStatus(
-            httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
-            clientResponse -> Mono.error(IssueException.invalidUser(userId)))
-        .bodyToMono(User.class);
-  }
-
-  public Mono<Project> getProject(String projectId) {
-    return webClient
-        .get()
-        .uri(projectFindByIdURL, projectId)
-        .retrieve()
-        .onStatus(
-            httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
-            clientResponse -> Mono.error(IssueException.invalidProject(projectId)))
-        .bodyToMono(Project.class);
-  }
-
-  public Mono<ProjectVersion> getProjectVersion(String projectId, String versionId) {
-    return webClient
-        .get()
-        .uri(projectVersionFindByIdURL, projectId, versionId)
-        .retrieve()
-        .onStatus(
-            httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
-            clientResponse -> Mono.error(IssueException.invalidProject(projectId)))
-        .bodyToMono(ProjectVersion.class);
+    return Mono.just(issueRequest.reporter())
+        .flatMap(userService::fetchUser)
+        .thenReturn(issueRequest);
   }
 }

@@ -11,7 +11,7 @@ public class ProjectInfoRef {
   private String versionId;
 
   public ProjectInfoRef(ProjectInfo projectInfo) {
-    this.projectId = projectInfo.getProjectId();
-    this.versionId = projectInfo.getVersionId();
+    this.projectId = projectInfo.projectId();
+    this.versionId = projectInfo.versionId();
   }
 }

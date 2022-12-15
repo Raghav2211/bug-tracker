@@ -22,7 +22,7 @@ public interface UserMapper {
   @Mappings({
     @Mapping(target = "access", source = "access", qualifiedByName = "valueToAccessLevel")
   })
-  User entityToResponse(UserEntity todo);
+  User entityToResponse(UserEntity userEntity);
 
   @Named("accessLevelToValue")
   default Integer accessLevelToValue(AccessLevel accessLevel) {
