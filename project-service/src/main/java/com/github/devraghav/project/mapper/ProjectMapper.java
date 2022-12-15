@@ -28,7 +28,7 @@ public interface ProjectMapper {
     @Mapping(target = "status", source = "status", qualifiedByName = "valueToStatus"),
     @Mapping(target = "author", ignore = true)
   })
-  Project entityToResponse(ProjectEntity projectEntity);
+  Project.ProjectBuilder entityToResponse(ProjectEntity projectEntity);
 
   @Named("statusToValue")
   default Integer statusToValue(ProjectStatus projectStatus) {

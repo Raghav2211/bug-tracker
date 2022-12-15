@@ -1,5 +1,7 @@
 package com.github.devraghav.issue.dto;
 
+import com.github.devraghav.project.dto.Project;
+import com.github.devraghav.user.dto.User;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.*;

@@ -9,11 +9,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
-public class UserClient {
+public class UserReactiveClient {
   private final String userFindByIdURL;
   private final WebClient webClient;
 
-  public UserClient(
+  public UserReactiveClient(
       @Value("${app.external.user-service.url}") String userServiceURL, WebClient webClient) {
     this.webClient = webClient;
     this.userFindByIdURL = userServiceURL + "/api/rest/v1/user/{id}";

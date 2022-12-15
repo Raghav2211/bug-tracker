@@ -5,6 +5,9 @@ import com.github.devraghav.project.entity.ProjectEntity;
 import com.github.devraghav.project.mapper.ProjectMapper;
 import com.github.devraghav.project.mapper.ProjectVersionMapper;
 import com.github.devraghav.project.repository.ProjectRepository;
+import com.github.devraghav.user.UserReactiveClient;
+import com.github.devraghav.user.dto.User;
+import com.github.devraghav.user.dto.UserClientException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -12,7 +15,9 @@ import reactor.core.publisher.Mono;
 
 @Service
 public record ProjectService(
-    UserService userService, ProjectRepository projectRepository, ProjectMapper projectMapper) {
+    UserReactiveClient userReactiveClient,
+    ProjectRepository projectRepository,
+    ProjectMapper projectMapper) {
 
   public Mono<Project> save(ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
@@ -68,49 +73,30 @@ public record ProjectService(
   }
 
   public Mono<Project> getProject(ProjectEntity projectEntity) {
-    return userService
-        .getUserById(projectEntity.getAuthor())
-        .map(
-            author ->
-                projectMapper.entityToResponse(projectEntity).toBuilder().author(author).build());
+    return fetchAuthor(projectEntity.getAuthor())
+        .map(author -> projectMapper.entityToResponse(projectEntity).author(author).build());
   }
 
   public Mono<ProjectRequest> validate(ProjectRequest projectRequest) {
-    return Mono.just(projectRequest)
-        .and(validateName(projectRequest))
-        .and(validateDescription(projectRequest))
-        .and(validateAuthor(projectRequest))
+    return projectRequest
+        .validate()
+        .and(fetchAndValidateAuthorAccess(projectRequest.author()))
         .thenReturn(projectRequest);
   }
 
-  private Mono<ProjectRequest> validateName(ProjectRequest projectRequest) {
-    return Mono.just(projectRequest)
-        .filter(ProjectRequest::isNameValid)
-        .switchIfEmpty(Mono.error(() -> ProjectException.invalidName(projectRequest.name())));
-  }
-
-  private Mono<ProjectRequest> validateDescription(ProjectRequest projectRequest) {
-    return Mono.just(projectRequest)
-        .filter(ProjectRequest::isDescriptionValid)
-        .switchIfEmpty(
-            Mono.error(() -> ProjectException.invalidDescription(projectRequest.description())));
-  }
-
-  private Mono<ProjectRequest> validateAuthor(ProjectRequest projectRequest) {
-    return Mono.just(projectRequest)
-        .filter(ProjectRequest::isAuthorNotNull)
-        .map(ProjectRequest::author)
-        .flatMap(this::validateAuthor)
-        .switchIfEmpty(Mono.error(ProjectException::nullAuthor))
-        .thenReturn(projectRequest);
-  }
-
-  private Mono<Boolean> validateAuthor(String author) {
-    return userService
-        .getUserById(author)
+  private Mono<Boolean> fetchAndValidateAuthorAccess(String author) {
+    return fetchAuthor(author)
         .map(User::hasWriteAccess)
         .map(Boolean::booleanValue)
         .filter(Boolean::booleanValue)
         .switchIfEmpty(Mono.error(() -> ProjectException.authorNotHaveWriteAccess(author)));
+  }
+
+  private Mono<User> fetchAuthor(String authorId) {
+    return userReactiveClient
+        .fetchUser(authorId)
+        .onErrorResume(
+            UserClientException.class,
+            exception -> Mono.error(ProjectException.authorNotFound(authorId)));
   }
 }

@@ -1,4 +1,4 @@
-package com.github.devraghav.issue.dto;
+package com.github.devraghav.project.dto;
 
 import java.time.LocalDateTime;
 import java.util.Set;

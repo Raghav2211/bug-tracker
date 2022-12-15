@@ -50,11 +50,11 @@ public record UserRequest(
         .switchIfEmpty(Mono.error(UserException::nullFirstName));
   }
 
-  public Mono<UserRequest> validate(UserRequest userRequest) {
-    return Mono.just(userRequest)
-        .and(validateFirstName(userRequest))
-        .and(validateLastName(userRequest))
-        .and(validateEmail(userRequest))
-        .thenReturn(userRequest);
+  public Mono<UserRequest> validate() {
+    return Mono.just(this)
+        .and(validateFirstName(this))
+        .and(validateLastName(this))
+        .and(validateEmail(this))
+        .thenReturn(this);
   }
 }

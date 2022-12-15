@@ -29,19 +29,6 @@ public class IssueException extends RuntimeException {
     return new IssueException("Priority not found");
   }
 
-  public static IssueException invalidUser(String userId) {
-    return new IssueException("User not found", Map.of("userId", userId));
-  }
-
-  public static IssueException invalidProject(String projectId) {
-    return new IssueException("Project not found", Map.of("projectId", projectId));
-  }
-
-  public static IssueException invalidProjectVersion(String projectId, String version) {
-    return new IssueException(
-        "Version not found", Map.of("projectId", projectId, "version", version));
-  }
-
   public static IssueException invalidSummary(String requestedSummary) {
     return new IssueException("Summary is invalid", Map.of("summary", requestedSummary));
   }
@@ -49,6 +36,10 @@ public class IssueException extends RuntimeException {
   public static IssueException invalidDescription(String requestedDescription) {
     return new IssueException(
         "Description is invalid", Map.of("description", requestedDescription));
+  }
+
+  public static IssueException invalidUser(String userId) {
+    return new IssueException("User not found", Map.of("userId", userId));
   }
 
   public static IssueException invalidIssue(String issueId) {

@@ -1,10 +1,11 @@
-package com.github.devraghav.issue.dto;
+package com.github.devraghav.project.dto;
+
+import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.Getter;
 
 public enum ProjectStatus {
   UNKNOWN(-1),

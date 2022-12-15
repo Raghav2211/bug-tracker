@@ -23,7 +23,7 @@ public record UserRouteHandler(UserService userService, UserRepository userRepos
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(UserRequest.class)
-        .flatMap(userRequest -> userRequest.validate(userRequest))
+        .flatMap(UserRequest::validate)
         .flatMap(userService::save)
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))

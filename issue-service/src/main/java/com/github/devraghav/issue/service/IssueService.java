@@ -5,6 +5,11 @@ import com.github.devraghav.issue.entity.IssueEntity;
 import com.github.devraghav.issue.entity.ProjectInfoRef;
 import com.github.devraghav.issue.mapper.IssueMapper;
 import com.github.devraghav.issue.repository.IssueRepository;
+import com.github.devraghav.project.ProjectReactiveClient;
+import com.github.devraghav.project.dto.Project;
+import com.github.devraghav.user.UserReactiveClient;
+import com.github.devraghav.user.dto.User;
+import com.github.devraghav.user.dto.UserClientException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -16,8 +21,8 @@ import reactor.core.publisher.Mono;
 @Service
 public record IssueService(
     IssueMapper issueMapper,
-    UserService userService,
-    ProjectService projectService,
+    UserReactiveClient userReactiveClient,
+    ProjectReactiveClient projectReactiveClient,
     IssueRepository issueRepository,
     IssueCommentFetchService issueCommentFetchService) {
 
@@ -68,7 +73,7 @@ public record IssueService(
 
   public Mono<Long> assign(String issueId, IssueAssignRequest issueAssignRequest) {
     return exists(issueId)
-        .and(userService.fetchUser(issueAssignRequest.user()))
+        .and(fetchUser(issueAssignRequest.user()))
         .thenReturn(issueAssignRequest)
         .flatMap(
             assignRequest -> issueRepository.findAndSetAssigneeById(issueId, assignRequest.user()));
@@ -81,7 +86,7 @@ public record IssueService(
 
   public Mono<Long> addWatcher(String issueId, IssueAssignRequest issueAssignRequest) {
     return exists(issueId)
-        .and(userService.fetchUser(issueAssignRequest.user()))
+        .and(fetchUser(issueAssignRequest.user()))
         .thenReturn(issueAssignRequest)
         .flatMap(
             assignRequest -> issueRepository.findAndAddWatcherById(issueId, assignRequest.user()));
@@ -89,7 +94,7 @@ public record IssueService(
 
   public Mono<Long> removeWatcher(String issueId, IssueAssignRequest issueAssignRequest) {
     return exists(issueId)
-        .and(userService.fetchUser(issueAssignRequest.user()))
+        .and(fetchUser(issueAssignRequest.user()))
         .thenReturn(issueAssignRequest)
         .flatMap(
             assignRequest -> issueRepository.findAndPullWatcherById(issueId, assignRequest.user()));
@@ -106,8 +111,7 @@ public record IssueService(
   }
 
   private Flux<Issue> getAllByReporter(String reporter) {
-    return userService
-        .fetchUser(reporter)
+    return fetchUser(reporter)
         .flatMapMany(
             unused -> issueRepository.findAllByReporter(reporter).flatMap(this::generateIssue));
   }
@@ -120,7 +124,7 @@ public record IssueService(
         .flatMapMany(unused -> issueCommentFetchService.getComments(issueEntity.getId()))
         .collectList()
         .map(issueBuilder::comments)
-        .flatMap(unused -> userService.fetchUser(issueEntity.getReporter()))
+        .flatMap(unused -> fetchUser(issueEntity.getReporter()))
         .map(issueBuilder::reporter)
         .flatMapMany(unused -> getProjects(issueEntity.getProjects()))
         .collectList()
@@ -132,14 +136,14 @@ public record IssueService(
   }
 
   private Flux<User> getWatchers(Set<String> watchers) {
-    return Flux.fromIterable(watchers).flatMap(userService::fetchUser);
+    return Flux.fromIterable(watchers).flatMap(this::fetchUser);
   }
 
   private Mono<User> getAssignee(Optional<String> assignee) {
     return Mono.just(assignee)
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .flatMap(userService::fetchUser);
+        .flatMap(this::fetchUser);
   }
 
   private Flux<Project> getProjects(Set<ProjectInfoRef> projectInfoRefs) {
@@ -147,46 +151,16 @@ public record IssueService(
   }
 
   private Mono<Project> getProject(ProjectInfoRef projectInfoRef) {
-    return projectService
+    return projectReactiveClient
         .fetchProject(projectInfoRef.getProjectId())
         .doOnNext(project -> project.removeProjectVersionIfNotEqual(projectInfoRef.getVersionId()));
   }
 
   private Mono<IssueRequest> validate(IssueRequest issueRequest) {
-    return Mono.just(issueRequest)
-        .and(validateHeader(issueRequest))
-        .and(validateDescription(issueRequest))
-        .and(validatePriority(issueRequest))
-        .and(validateSeverity(issueRequest))
+    return issueRequest
+        .validate()
         .and(validatedProjectInfo(issueRequest))
         .and(validateReporter(issueRequest))
-        .thenReturn(issueRequest);
-  }
-
-  private Mono<IssueRequest> validateHeader(IssueRequest issueRequest) {
-    return Mono.just(issueRequest)
-        .filter(IssueRequest::isHeaderValid)
-        .switchIfEmpty(Mono.error(() -> IssueException.invalidSummary(issueRequest.header())));
-  }
-
-  private Mono<IssueRequest> validateDescription(IssueRequest issueRequest) {
-    return Mono.just(issueRequest)
-        .filter(IssueRequest::isDescriptionValid)
-        .switchIfEmpty(
-            Mono.error(() -> IssueException.invalidDescription(issueRequest.description())));
-  }
-
-  private Mono<IssueRequest> validatePriority(IssueRequest issueRequest) {
-    return Mono.just(issueRequest)
-        .filter(IssueRequest::hasPriority)
-        .switchIfEmpty(Mono.error(IssueException::nullPriority))
-        .thenReturn(issueRequest);
-  }
-
-  private Mono<IssueRequest> validateSeverity(IssueRequest issueRequest) {
-    return Mono.just(issueRequest)
-        .filter(IssueRequest::hasSeverity)
-        .switchIfEmpty(Mono.error(IssueException::nullSeverity))
         .thenReturn(issueRequest);
   }
 
@@ -194,36 +168,41 @@ public record IssueService(
     return Flux.fromIterable(issueRequest.projects())
         .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
         .flatMap(this::validateProjectInfo)
-        .collectList()
+        .last()
         .thenReturn(issueRequest);
   }
 
   private Mono<Boolean> validateProjectInfo(ProjectInfo projectInfo) {
     return Mono.just(projectInfo)
         .filter(ProjectInfo::isValid)
-        .flatMap(
-            validInfo ->
-                Mono.zip(
-                        validateProjectId(validInfo.projectId()),
-                        validateProjectVersion(validInfo.projectId(), validInfo.versionId()),
-                        Boolean::logicalAnd)
-                    .map(Boolean::booleanValue))
+        .flatMap(this::isProjectInfoExists)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidProject(projectInfo)));
   }
 
+  private Mono<Boolean> isProjectInfoExists(ProjectInfo projectInfo) {
+    return Mono.zip(
+            validateProjectId(projectInfo.projectId()),
+            validateProjectVersion(projectInfo.projectId(), projectInfo.versionId()),
+            Boolean::logicalAnd)
+        .map(Boolean::booleanValue);
+  }
+
   private Mono<Boolean> validateProjectId(String projectId) {
-    return projectService.fetchProject(projectId).map(project -> Boolean.TRUE);
+    return projectReactiveClient.isProjectExists(projectId);
   }
 
   private Mono<Boolean> validateProjectVersion(String projectId, String versionId) {
-    return projectService
-        .fetchProjectVersion(projectId, versionId)
-        .map(projectVersion -> Boolean.TRUE);
+    return projectReactiveClient.isProjectVersionExists(projectId, versionId);
   }
 
   private Mono<IssueRequest> validateReporter(IssueRequest issueRequest) {
-    return Mono.just(issueRequest.reporter())
-        .flatMap(userService::fetchUser)
-        .thenReturn(issueRequest);
+    return fetchUser(issueRequest.reporter()).thenReturn(issueRequest);
+  }
+
+  private Mono<User> fetchUser(String userId) {
+    return userReactiveClient
+        .fetchUser(userId)
+        .onErrorResume(
+            UserClientException.class, exception -> Mono.error(IssueException.invalidUser(userId)));
   }
 }

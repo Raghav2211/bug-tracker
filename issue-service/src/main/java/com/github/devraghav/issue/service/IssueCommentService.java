@@ -5,12 +5,13 @@ import com.github.devraghav.issue.dto.IssueCommentRequest;
 import com.github.devraghav.issue.dto.IssueException;
 import com.github.devraghav.issue.mapper.IssueCommentMapper;
 import com.github.devraghav.issue.repository.IssueCommentRepository;
+import com.github.devraghav.user.UserReactiveClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
 public record IssueCommentService(
-    UserService userService,
+    UserReactiveClient userReactiveClient,
     IssueCommentMapper issueCommentMapper,
     IssueService issueService,
     IssueCommentFetchService issueCommentFetchService,
@@ -36,7 +37,7 @@ public record IssueCommentService(
 
   private Mono<IssueCommentRequest> validateCommentUserId(IssueCommentRequest issueCommentRequest) {
     return Mono.just(issueCommentRequest.userId())
-        .flatMap(userService::fetchUser)
+        .flatMap(userReactiveClient::fetchUser)
         .thenReturn(issueCommentRequest);
   }
 
