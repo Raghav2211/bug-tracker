@@ -2,6 +2,7 @@ package com.github.devraghav.project.dto;
 
 import java.util.Map;
 import lombok.Getter;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 public class ProjectClientException extends RuntimeException {
   @Getter private final Map<String, Object> meta;
@@ -19,5 +20,10 @@ public class ProjectClientException extends RuntimeException {
     return new ProjectClientException(
         "Either project or version not found",
         Map.of("projectId", projectId, "versionId", versionId));
+  }
+
+  public static ProjectClientException unableToConnect(WebClientRequestException exception) {
+    return new ProjectClientException(
+        "Unable to connect with Project Service", Map.of("path", exception.getUri().getPath()));
   }
 }

@@ -2,6 +2,7 @@ package com.github.devraghav.user.dto;
 
 import java.util.Map;
 import lombok.Getter;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 public class UserClientException extends RuntimeException {
   @Getter private final Map<String, Object> meta;
@@ -17,5 +18,10 @@ public class UserClientException extends RuntimeException {
 
   public static UserClientException invalidUser(String userId) {
     return new UserClientException("User not found", Map.of("userId", userId));
+  }
+
+  public static UserClientException unableToConnect(WebClientRequestException exception) {
+    return new UserClientException(
+        "Unable to connect with User Service", Map.of("path", exception.getUri().getPath()));
   }
 }

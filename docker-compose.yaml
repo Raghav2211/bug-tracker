@@ -90,6 +90,11 @@ services:
   user-service:
     image: "user-service:1.0.0"
     container_name: user-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "500M"
     volumes:
       - ./logs:/logs
     ports:
@@ -98,6 +103,11 @@ services:
   project-service:
     image: "project-service:1.0.0"
     container_name: project-service
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: "500M"
     volumes:
       - ./logs:/logs
     ports:
@@ -106,6 +116,11 @@ services:
   issue-service:
     image: "issue-service:1.0.0"
     container_name: issue-service
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "500M"
     volumes:
       - ./logs:/logs
     ports:

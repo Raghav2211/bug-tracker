@@ -1,5 +1,6 @@
 package com.github.devraghav.project.dto;
 
+import com.github.devraghav.user.dto.UserClientException;
 import java.util.Map;
 import lombok.Getter;
 
@@ -28,8 +29,8 @@ public class ProjectException extends RuntimeException {
     return new ProjectException("Description is invalid", Map.of("description", description));
   }
 
-  public static ProjectException authorNotFound(String author) {
-    return new ProjectException("Author not found", Map.of("author", author));
+  public static ProjectException userServiceException(UserClientException userClientException) {
+    return new ProjectException(userClientException.getMessage(), userClientException.getMeta());
   }
 
   public static ProjectException authorNotHaveWriteAccess(String author) {

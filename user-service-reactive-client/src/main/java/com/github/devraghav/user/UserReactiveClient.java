@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -27,6 +28,9 @@ public class UserReactiveClient {
         .onStatus(
             httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
             clientResponse -> Mono.error(UserClientException.invalidUser(userId)))
-        .bodyToMono(User.class);
+        .bodyToMono(User.class)
+        .onErrorResume(
+            WebClientRequestException.class,
+            exception -> Mono.error(UserClientException.unableToConnect(exception)));
   }
 }

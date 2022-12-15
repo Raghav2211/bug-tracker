@@ -97,6 +97,6 @@ public record ProjectService(
         .fetchUser(authorId)
         .onErrorResume(
             UserClientException.class,
-            exception -> Mono.error(ProjectException.authorNotFound(authorId)));
+            exception -> Mono.error(ProjectException.userServiceException(exception)));
   }
 }

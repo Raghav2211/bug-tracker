@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -31,7 +32,10 @@ public class ProjectReactiveClient {
         .onStatus(
             httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
             clientResponse -> Mono.error(ProjectClientException.invalidProject(projectId)))
-        .bodyToMono(Project.class);
+        .bodyToMono(Project.class)
+        .onErrorResume(
+            WebClientRequestException.class,
+            exception -> Mono.error(ProjectClientException.unableToConnect(exception)));
   }
 
   public Mono<Boolean> isProjectExists(String projectId) {
@@ -47,7 +51,10 @@ public class ProjectReactiveClient {
             httpStatusCode -> httpStatusCode.value() == HttpStatus.NOT_FOUND.value(),
             clientResponse ->
                 Mono.error(ProjectClientException.invalidProjectOrVersion(projectId, versionId)))
-        .bodyToMono(ProjectVersion.class);
+        .bodyToMono(ProjectVersion.class)
+        .onErrorResume(
+            WebClientRequestException.class,
+            exception -> Mono.error(ProjectClientException.unableToConnect(exception)));
   }
 
   public Mono<Boolean> isProjectVersionExists(String projectId, String versionId) {

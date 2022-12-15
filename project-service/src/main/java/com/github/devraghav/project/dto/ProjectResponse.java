@@ -1,13 +1,21 @@
 package com.github.devraghav.project.dto;
 
 import java.net.URI;
+import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 public class ProjectResponse {
+
+  public static Mono<ServerResponse> retrieve(List<Project> projects) {
+    return ServerResponse.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(BodyInserters.fromValue(projects));
+  }
 
   public static Mono<ServerResponse> create(ServerRequest request, Project project) {
     return ServerResponse.created(URI.create(request.path() + "/" + project.getId()))

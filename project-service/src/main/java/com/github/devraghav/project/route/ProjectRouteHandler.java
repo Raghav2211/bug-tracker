@@ -11,10 +11,13 @@ import reactor.core.publisher.Mono;
 
 @Component
 public record ProjectRouteHandler(ProjectService projectService) {
-  public Mono<ServerResponse> getAll(ServerRequest request) {
-    return ServerResponse.ok()
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findAll(), Project.class);
+  public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
+    return projectService
+        .findAll()
+        .collectList()
+        .flatMap(ProjectResponse::retrieve)
+        .onErrorResume(
+            ProjectException.class, exception -> ProjectResponse.invalid(serverRequest, exception));
   }
 
   public Mono<ServerResponse> create(ServerRequest request) {
