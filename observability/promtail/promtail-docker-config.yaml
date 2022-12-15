@@ -1,0 +1,45 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: bug
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: bug-tracker
+          __path__: /var/log/app.log
+  - job_name: user
+    static_configs:
+      - targets:
+        - localhost
+        labels:
+          job: user-service
+          __path__: /var/log/user.log
+  - job_name: project
+    static_configs:
+      - targets:
+        - localhost
+        labels:
+          job: project-service
+          __path__: /var/log/project.log
+  - job_name: issue
+    static_configs:
+      - targets:
+        - localhost
+        labels:
+          job: issue-service
+          __path__: /var/log/issue.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+      - labels:
+          level:

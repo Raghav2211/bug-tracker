@@ -16,7 +16,7 @@ services:
     image: prom/prometheus:v2.40.6
     container_name: prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
     ports:
       - "9090:9090"
@@ -24,7 +24,7 @@ services:
     image: grafana/promtail:2.7.0
     container_name: promtail
     volumes:
-      - ./promtail/promtail-docker-config.yaml:/etc/promtail/docker-config.yaml
+      - ./observability/promtail/promtail-docker-config.yaml:/etc/promtail/docker-config.yaml
       - ./logs:/var/log
     command: "--config.file=/etc/promtail/docker-config.yaml"
   loki:
@@ -37,9 +37,9 @@ services:
     image: grafana/grafana:9.3.1
     container_name: grafana
     volumes:
-      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
-      - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
-      - ./grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+      - ./observability/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./observability/grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./observability/grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
     ports:
       - "3000:3000"
     depends_on:
@@ -79,21 +79,13 @@ services:
       - "27017:27017"
     volumes:
       - ./001_init.js:/docker-entrypoint-initdb.d/001_init.js:ro
-  bug-tracker:
-    image: "bug-tracker:1.0.0"
-    container_name: bug-tracker
-    volumes:
-      - ./logs:/logs
-    ports:
-      - "8080:8080"
-
   user-service:
     image: "user-service:1.0.0"
     container_name: user-service
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: "2.0"
           memory: "500M"
     volumes:
       - ./logs:/logs
@@ -106,7 +98,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.5"
+          cpus: "2.0"
           memory: "500M"
     volumes:
       - ./logs:/logs
@@ -119,7 +111,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: "2.0"
           memory: "500M"
     volumes:
       - ./logs:/logs
