@@ -7,6 +7,7 @@ import com.github.devraghav.issue.mapper.IssueMapper;
 import com.github.devraghav.issue.repository.IssueRepository;
 import com.github.devraghav.project.ProjectReactiveClient;
 import com.github.devraghav.project.dto.Project;
+import com.github.devraghav.project.dto.ProjectClientException;
 import com.github.devraghav.user.UserReactiveClient;
 import com.github.devraghav.user.dto.User;
 import com.github.devraghav.user.dto.UserClientException;
@@ -153,6 +154,9 @@ public record IssueService(
   private Mono<Project> getProject(ProjectInfoRef projectInfoRef) {
     return projectReactiveClient
         .fetchProject(projectInfoRef.getProjectId())
+        .onErrorResume(
+            ProjectClientException.class,
+            exception -> Mono.error(IssueException.projectServiceException(exception)))
         .doOnNext(project -> project.removeProjectVersionIfNotEqual(projectInfoRef.getVersionId()));
   }
 
@@ -188,11 +192,19 @@ public record IssueService(
   }
 
   private Mono<Boolean> validateProjectId(String projectId) {
-    return projectReactiveClient.isProjectExists(projectId);
+    return projectReactiveClient
+        .isProjectExists(projectId)
+        .onErrorResume(
+            ProjectClientException.class,
+            exception -> Mono.error(IssueException.projectServiceException(exception)));
   }
 
   private Mono<Boolean> validateProjectVersion(String projectId, String versionId) {
-    return projectReactiveClient.isProjectVersionExists(projectId, versionId);
+    return projectReactiveClient
+        .isProjectVersionExists(projectId, versionId)
+        .onErrorResume(
+            ProjectClientException.class,
+            exception -> Mono.error(IssueException.projectServiceException(exception)));
   }
 
   private Mono<IssueRequest> validateReporter(IssueRequest issueRequest) {
@@ -203,6 +215,7 @@ public record IssueService(
     return userReactiveClient
         .fetchUser(userId)
         .onErrorResume(
-            UserClientException.class, exception -> Mono.error(IssueException.invalidUser(userId)));
+            UserClientException.class,
+            exception -> Mono.error(IssueException.userServiceException(exception)));
   }
 }

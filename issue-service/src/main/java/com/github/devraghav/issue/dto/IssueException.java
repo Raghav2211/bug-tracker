@@ -1,5 +1,7 @@
 package com.github.devraghav.issue.dto;
 
+import com.github.devraghav.project.dto.ProjectClientException;
+import com.github.devraghav.user.dto.UserClientException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
@@ -38,8 +40,14 @@ public class IssueException extends RuntimeException {
         "Description is invalid", Map.of("description", requestedDescription));
   }
 
-  public static IssueException invalidUser(String userId) {
-    return new IssueException("User not found", Map.of("userId", userId));
+  public static IssueException userServiceException(UserClientException userClientException) {
+    return new IssueException(userClientException.getMessage(), userClientException.getMeta());
+  }
+
+  public static IssueException projectServiceException(
+      ProjectClientException projectClientException) {
+    return new IssueException(
+        projectClientException.getMessage(), projectClientException.getMeta());
   }
 
   public static IssueException invalidIssue(String issueId) {

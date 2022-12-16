@@ -14,18 +14,19 @@ import reactor.core.publisher.Mono;
 public class ProjectReactiveClient {
   private final String projectFindByIdURL;
   private final String projectVersionFindByIdURL;
-  private final WebClient webClient;
+  private final WebClient projectWebClient;
 
   public ProjectReactiveClient(
-      @Value("${app.external.project-service.url}") String projectServiceURL, WebClient webClient) {
-    this.webClient = webClient;
+      @Value("${app.external.project-service.url}") String projectServiceURL,
+      WebClient projectWebClient) {
+    this.projectWebClient = projectWebClient;
     this.projectFindByIdURL = projectServiceURL + "/api/rest/v1/project/{id}";
     this.projectVersionFindByIdURL =
         projectServiceURL + "/api/rest/v1/project/{id}/version/{versionId}";
   }
 
   public Mono<Project> fetchProject(String projectId) {
-    return webClient
+    return projectWebClient
         .get()
         .uri(projectFindByIdURL, projectId)
         .retrieve()
@@ -43,7 +44,7 @@ public class ProjectReactiveClient {
   }
 
   public Mono<ProjectVersion> fetchProjectVersion(String projectId, String versionId) {
-    return webClient
+    return projectWebClient
         .get()
         .uri(projectVersionFindByIdURL, projectId, versionId)
         .retrieve()
