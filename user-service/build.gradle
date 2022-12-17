@@ -43,10 +43,6 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
-jar {
-	enabled = false
-}
-
 spotless {
 	java {
 		toggleOffOn()

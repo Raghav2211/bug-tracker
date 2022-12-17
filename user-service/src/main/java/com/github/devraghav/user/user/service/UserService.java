@@ -11,26 +11,26 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public record UserService(UserRepository userRepository) {
+public record UserService(UserMapper userMapper, UserRepository userRepository) {
 
   public Mono<User> save(UserRequest userRequest) {
     return Mono.just(userRequest)
-        .map(UserMapper.INSTANCE::requestToEntity)
+        .map(userMapper::requestToEntity)
         .flatMap(userRepository::save)
-        .map(UserMapper.INSTANCE::entityToResponse)
+        .map(userMapper::entityToResponse)
         .onErrorResume(
             DuplicateKeyException.class,
             exception -> Mono.error(UserException.alreadyExistsWithEmail(userRequest.email())));
   }
 
   public Flux<User> findAll() {
-    return userRepository.findAll().map(UserMapper.INSTANCE::entityToResponse);
+    return userRepository.findAll().map(userMapper::entityToResponse);
   }
 
   public Mono<User> findById(String userId) {
     return userRepository
         .findById(userId)
-        .map(UserMapper.INSTANCE::entityToResponse)
+        .map(userMapper::entityToResponse)
         .switchIfEmpty(Mono.error(() -> UserException.notFound(userId)));
   }
 }
