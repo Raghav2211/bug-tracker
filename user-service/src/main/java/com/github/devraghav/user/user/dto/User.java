@@ -1,21 +1,11 @@
 package com.github.devraghav.user.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.io.Serializable;
 
-@Data
-@NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class User {
-
-  private String id;
-  private AccessLevel access;
-  private String firstName;
-  private String lastName;
-  private String email;
-  private Boolean enabled;
+public record User(
+    String id, AccessLevel access, String firstName, String lastName, String email, Boolean enabled)
+    implements Serializable {
 
   @JsonIgnore
   public boolean isWriteAccess() {
