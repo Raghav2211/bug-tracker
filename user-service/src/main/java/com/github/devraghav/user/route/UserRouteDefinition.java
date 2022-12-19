@@ -14,6 +14,8 @@ import com.github.devraghav.user.dto.User;
 import com.github.devraghav.user.dto.UserErrorResponse;
 import com.github.devraghav.user.dto.UserRequest;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.context.annotation.Bean;
@@ -26,17 +28,22 @@ public class UserRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> userRoutes(UserRouteHandler userRouteHandler) {
+    Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
+        builder -> {};
+
+    Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
+        () ->
+            SpringdocRouteBuilder.route()
+                .GET("", userRouteHandler::getAll, this::getAllUserOperationDoc)
+                .POST(userRouteHandler::create, this::saveUserOperationDoc)
+                .GET("/{id}", userRouteHandler::get, this::getUserByIdOperationDoc)
+                .build();
     return SpringdocRouteBuilder.route()
         .nest(
             path("/api/rest/v1/user")
                 .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
-            () ->
-                SpringdocRouteBuilder.route()
-                    .GET("", userRouteHandler::getAll, this::getAllUserOperationDoc)
-                    .POST(userRouteHandler::create, this::saveUserOperationDoc)
-                    .GET("/{id}", userRouteHandler::get, this::getUserByIdOperationDoc)
-                    .build(),
-            ops -> {})
+            routerFunctionSupplier,
+            emptyOperationsConsumer)
         .build();
   }
 

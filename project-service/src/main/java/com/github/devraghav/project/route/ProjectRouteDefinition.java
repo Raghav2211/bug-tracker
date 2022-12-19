@@ -12,6 +12,8 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 
 import com.github.devraghav.project.dto.*;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
@@ -27,34 +29,46 @@ public class ProjectRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> projectRoutes(ProjectRouteHandler projectRouteHandler) {
+    Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
+        builder -> {};
+
+    Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
+        () ->
+            SpringdocRouteBuilder.route()
+                .GET("", projectRouteHandler::get, this::getProjectByIdOperationDoc)
+                .GET(
+                    "/version",
+                    projectRouteHandler::getAllProjectVersion,
+                    this::getAllVersionOperationDoc)
+                .POST("/version", projectRouteHandler::addVersion, this::saveVersionOperationDoc)
+                .GET(
+                    "/version/{versionId}",
+                    projectRouteHandler::getProjectVersionById,
+                    this::getProjectVersionByIdOperationDoc)
+                .build();
+
+    Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
+        () ->
+            SpringdocRouteBuilder.route()
+                .GET("", projectRouteHandler::getAll, this::getAllProjectOperationDoc)
+                .POST(projectRouteHandler::create, this::saveProjectOperationDoc)
+                .nest(
+                    path("/{id}").and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
+                    routerByIdSupplier,
+                    emptyOperationsConsumer)
+                .build();
+
     return SpringdocRouteBuilder.route()
         .nest(
             path("/api/rest/v1/project")
                 .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
-            () ->
-                SpringdocRouteBuilder.route()
-                    .GET("", projectRouteHandler::getAll, this::getAllProjectOperationDoc)
-                    .POST(projectRouteHandler::create, this::saveProjectOperationDoc)
-                    .nest(
-                        path("/{id}")
-                            .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
-                        request -> routeById(projectRouteHandler),
-                        ops -> {})
-                    .build(),
-            ops -> {})
+            routerFunctionSupplier,
+            emptyOperationsConsumer)
         .build();
   }
 
-  private void routeById(ProjectRouteHandler projectRouteHandler) {
-    SpringdocRouteBuilder.route()
-        .GET("", projectRouteHandler::get, this::getProjectByIdOperationDoc)
-        .GET("/version", projectRouteHandler::getAllProjectVersion, this::getAllVersionOperationDoc)
-        .POST("/version", projectRouteHandler::addVersion, this::saveVersionOperationDoc)
-        .GET(
-            "/version/{versionId}",
-            projectRouteHandler::getProjectVersionById,
-            this::getProjectVersionByIdOperationDoc)
-        .build();
+  private void getAllProjectOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("getAll").summary("Get all projects").response(getAll200ResponseDoc()).build();
   }
 
   private void getAllVersionOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
@@ -194,14 +208,10 @@ public class ProjectRouteDefinition {
                         .arraySchema(schemaBuilder().implementation(ProjectVersion.class))));
   }
 
-  private void getAllProjectOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
-    ops.operationId("getAll").summary("Get all projects").response(getAll200ResponseDoc()).build();
-  }
-
   private Builder errorResponseDoc(HttpStatus httpStatus, String message) {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
-        .description("Project not found")
+        .description(message)
         .content(
             contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)

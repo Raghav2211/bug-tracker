@@ -1,28 +1,25 @@
 package com.github.devraghav.issue.route;
 
+import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
+import static org.springdoc.core.fn.builders.arrayschema.Builder.arraySchemaBuilder;
+import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
+import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
+import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
+import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
-import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
-import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import com.github.devraghav.issue.dto.*;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.annotations.RouterOperation;
-import org.springdoc.core.annotations.RouterOperations;
+import org.springdoc.core.fn.builders.operation.Builder;
+import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
@@ -30,291 +27,118 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Slf4j
 public class IssueRouteDefinition {
 
-  @RouterOperations({
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.GET,
-        beanMethod = "get",
-        operation =
-            @Operation(
-                summary = "Get a issue by its id",
-                operationId = "get",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "200",
-                      description = "Retrieve issue successfully",
-                      content = @Content(schema = @Schema(implementation = Issue.class))),
-                  @ApiResponse(
-                      responseCode = "404",
-                      description = "Issue not found",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                })),
-    @RouterOperation(
-        path = "/api/rest/v1/issue",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.POST,
-        beanMethod = "create",
-        operation =
-            @Operation(
-                summary = "Create issue",
-                operationId = "create",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "201",
-                      description = "Issue successfully created",
-                      content = @Content(schema = @Schema(implementation = Issue.class))),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(schema = @Schema(implementation = IssueRequest.class))))),
-    @RouterOperation(
-        path = "/api/rest/v1/issue",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.GET,
-        beanMethod = "getAll",
-        operation =
-            @Operation(
-                summary = "Get all issues",
-                operationId = "getAll",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "200",
-                      description = "Retrieve all issues",
-                      content =
-                          @Content(
-                              mediaType = APPLICATION_JSON_VALUE,
-                              array = @ArraySchema(schema = @Schema(implementation = Issue.class))))
-                },
-                parameters = {
-                  @Parameter(
-                      in = ParameterIn.QUERY,
-                      name = "projectId",
-                      schema = @Schema(type = "string")),
-                  @Parameter(
-                      in = ParameterIn.QUERY,
-                      name = "reportedBy",
-                      schema = @Schema(type = "string"))
-                })),
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}/assign",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.PATCH,
-        beanMethod = "assign",
-        operation =
-            @Operation(
-                summary = "Assign issue",
-                operationId = "assign",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "204",
-                      description = "Assigned issue successfully",
-                      content = @Content),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(
-                                schema = @Schema(implementation = IssueAssignRequest.class))))),
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}/assign",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.DELETE,
-        beanMethod = "unassign",
-        operation =
-            @Operation(
-                summary = "Unassigned issue",
-                operationId = "unassign",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "204",
-                      description = "Unassigned issue successfully",
-                      content = @Content),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(
-                                schema = @Schema(implementation = IssueAssignRequest.class))))),
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}/watcher",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.PATCH,
-        beanMethod = "addWatcher",
-        operation =
-            @Operation(
-                summary = "Add watcher to issue",
-                operationId = "addWatcher",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "204",
-                      description = "Add watcher to issue successfully",
-                      content = @Content),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(
-                                schema = @Schema(implementation = IssueAssignRequest.class))))),
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}/watcher",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.DELETE,
-        beanMethod = "addWatcher",
-        operation =
-            @Operation(
-                summary = "Remove watcher to issue",
-                operationId = "removeWatcher",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "204",
-                      description = "Remove watcher from issue successfully",
-                      content = @Content),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(
-                                schema = @Schema(implementation = IssueAssignRequest.class))))),
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}/comment",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.POST,
-        beanMethod = "addComment",
-        operation =
-            @Operation(
-                summary = "Add comment in issue",
-                operationId = "addComment",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "200",
-                      description = "Add comment in issue successfully",
-                      content = @Content(schema = @Schema(implementation = IssueComment.class))),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(
-                                schema = @Schema(implementation = IssueCommentRequest.class))))),
-    @RouterOperation(
-        path = "/api/rest/v1/issue/{id}",
-        produces = {MediaType.APPLICATION_JSON_VALUE},
-        beanClass = IssueRouteHandler.class,
-        method = RequestMethod.PATCH,
-        beanMethod = "update",
-        operation =
-            @Operation(
-                summary = "Update issue",
-                operationId = "update",
-                responses = {
-                  @ApiResponse(
-                      responseCode = "200",
-                      description = "Issue successfully updated",
-                      content = @Content(schema = @Schema(implementation = Issue.class))),
-                  @ApiResponse(
-                      responseCode = "400",
-                      description = "Bad Request",
-                      content = {
-                        @Content(schema = @Schema(implementation = IssueErrorResponse.class))
-                      })
-                },
-                parameters = {
-                  @Parameter(in = ParameterIn.PATH, name = "id", schema = @Schema(type = "string"))
-                },
-                requestBody =
-                    @RequestBody(
-                        content =
-                            @Content(schema = @Schema(implementation = IssueUpdateRequest.class)))))
-  })
   @Bean
   public RouterFunction<ServerResponse> issueRoutes(IssueRouteHandler issueRouteHandler) {
+    Consumer<Builder> emptyOperationsConsumer = builder -> {};
 
-    return nest(
-        path("/api/rest/v1/issue"),
-        nest(path("/{id}"), routesById(issueRouteHandler))
-            .andNest(
-                accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON)),
-                basic(issueRouteHandler)));
+    Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
+        () ->
+            SpringdocRouteBuilder.route()
+                .GET("", issueRouteHandler::get, this::getIssueByIdOperationDoc)
+                .PATCH("", issueRouteHandler::update, ops -> {})
+                .POST("/comment", issueRouteHandler::addComment, ops -> {})
+                .PATCH("/assign", issueRouteHandler::assign, ops -> {})
+                .DELETE("/assign", issueRouteHandler::unassign, ops -> {})
+                .PATCH("/watcher", issueRouteHandler::addWatcher, ops -> {})
+                .DELETE("/watcher", issueRouteHandler::removeWatcher, ops -> {})
+                .DELETE("/resolve", issueRouteHandler::done, ops -> {})
+                .build();
+
+    Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
+        () ->
+            SpringdocRouteBuilder.route()
+                .GET("", issueRouteHandler::getAll, this::getAllIssueOperationDoc)
+                .POST(issueRouteHandler::create, this::saveIssueOperationDoc)
+                .nest(
+                    path("/{id}").and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
+                    routerByIdSupplier,
+                    emptyOperationsConsumer)
+                .build();
+
+    return SpringdocRouteBuilder.route()
+        .nest(
+            path("/api/rest/v1/issue")
+                .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
+            routerFunctionSupplier,
+            emptyOperationsConsumer)
+        .build();
   }
 
-  private RouterFunction<ServerResponse> basic(IssueRouteHandler issueRouteHandler) {
-    return route(method(HttpMethod.GET), issueRouteHandler::getAll)
-        .andRoute(method(HttpMethod.POST), issueRouteHandler::create);
+  private void getAllIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("getAll").summary("Get all issues").response(getAll200ResponseDoc()).build();
   }
 
-  private RouterFunction<ServerResponse> routesById(IssueRouteHandler issueRouteHandler) {
-    return route(method(HttpMethod.GET), issueRouteHandler::get)
-        .andRoute(POST("/comment"), issueRouteHandler::addComment)
-        .andRoute(PATCH("/assign"), issueRouteHandler::assign)
-        .andRoute(DELETE("/assign"), issueRouteHandler::unassign)
-        .andRoute(PATCH("/watcher"), issueRouteHandler::addWatcher)
-        .andRoute(DELETE("/watcher"), issueRouteHandler::removeWatcher)
-        .andRoute(DELETE("/done"), issueRouteHandler::done)
-        .andRoute(method(HttpMethod.PATCH), issueRouteHandler::update);
+  private void saveIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("create")
+        .summary("Create issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder().schema(schemaBuilder().implementation(IssueRequest.class))))
+        .response(saveIssue201ResponseDoc())
+        .response(savProject400ResponseDoc())
+        .build();
+  }
+
+  private void getIssueByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("get")
+        .summary("Get a project by its id")
+        .response(getIssueById200ResponseDoc())
+        .response(issue404ResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")))
+        .build();
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder issue404ResponseDoc() {
+    return errorResponseDoc(HttpStatus.NOT_FOUND, "Issue not found");
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder getIssueById200ResponseDoc() {
+    return responseBuilder()
+        .responseCode("200")
+        .description("Retrieve issue successfully")
+        .content(
+            contentBuilder()
+                .mediaType(APPLICATION_JSON_VALUE)
+                .schema(schemaBuilder().implementation(Issue.class)));
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder saveIssue201ResponseDoc() {
+    return responseBuilder()
+        .responseCode("201")
+        .description("Issue successfully created")
+        .content(
+            contentBuilder()
+                .mediaType(APPLICATION_JSON_VALUE)
+                .schema(schemaBuilder().implementation(Issue.class)));
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder savProject400ResponseDoc() {
+    return errorResponseDoc(HttpStatus.BAD_REQUEST, "Bad Request");
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder getAll200ResponseDoc() {
+    return responseBuilder()
+        .responseCode("200")
+        .description("Retrieve all issues")
+        .content(
+            contentBuilder()
+                .mediaType(APPLICATION_JSON_VALUE)
+                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(Issue.class))));
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder errorResponseDoc(
+      HttpStatus httpStatus, String message) {
+    return responseBuilder()
+        .responseCode(String.valueOf(httpStatus.value()))
+        .description(message)
+        .content(
+            contentBuilder()
+                .mediaType(APPLICATION_JSON_VALUE)
+                .schema(schemaBuilder().implementation(IssueErrorResponse.class)));
   }
 }
