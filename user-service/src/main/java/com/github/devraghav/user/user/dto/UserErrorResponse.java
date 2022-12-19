@@ -1,27 +1,19 @@
 package com.github.devraghav.user.user.dto;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
-@Data
-@AllArgsConstructor
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserErrorResponse {
-  private final int status;
-  private final String path;
-  private final String errorMessage;
-  private final LocalDateTime timeStamp;
-
-  private Map<String, Object> meta = new HashMap<>();
+public record UserErrorResponse(
+    Integer status,
+    String path,
+    String errorMessage,
+    LocalDateTime timeStamp,
+    Map<String, Object> meta) {
 
   public static UserErrorResponse of(String path, String errorMessage, HttpStatus httpStatus) {
-    return new UserErrorResponse(httpStatus.value(), path, errorMessage, LocalDateTime.now());
+    return new UserErrorResponse(
+        httpStatus.value(), path, errorMessage, LocalDateTime.now(), Map.of());
   }
 
   public static UserErrorResponse of(
