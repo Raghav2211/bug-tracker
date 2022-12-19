@@ -1,0 +1,17 @@
+[
+  {
+    "name": "com.github.devraghav.user.user.dto.User",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.user.user.dto.UserErrorResponse",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.user.user.dto.UserRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  }
+]

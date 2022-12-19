@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 public class UserResponse {
 
   public static Mono<ServerResponse> create(ServerRequest request, User user) {
-    return ServerResponse.created(URI.create(request.path() + "/" + user.getId()))
+    return ServerResponse.created(URI.create(request.path() + "/" + user.id()))
         .body(BodyInserters.fromValue(user));
   }
 

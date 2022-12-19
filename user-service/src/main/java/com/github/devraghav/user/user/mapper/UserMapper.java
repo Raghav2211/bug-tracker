@@ -5,15 +5,16 @@ import com.github.devraghav.user.user.dto.User;
 import com.github.devraghav.user.user.dto.UserException;
 import com.github.devraghav.user.user.dto.UserRequest;
 import com.github.devraghav.user.user.entity.UserEntity;
+import java.util.UUID;
 import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    imports = {UUID.class})
 public interface UserMapper {
-  UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
   @Mappings({
-    @Mapping(target = "id", expression = MappingUtils.GENERATE_UUID_EXPRESSION),
+    @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
     @Mapping(target = "enabled", constant = "true"),
     @Mapping(target = "access", source = "access", qualifiedByName = "accessLevelToValue")
   })
