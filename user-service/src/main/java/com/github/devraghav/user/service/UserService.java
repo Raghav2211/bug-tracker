@@ -1,10 +1,10 @@
-package com.github.devraghav.user.user.service;
+package com.github.devraghav.user.service;
 
-import com.github.devraghav.user.user.dto.User;
-import com.github.devraghav.user.user.dto.UserException;
-import com.github.devraghav.user.user.dto.UserRequest;
-import com.github.devraghav.user.user.mapper.UserMapper;
-import com.github.devraghav.user.user.repository.UserRepository;
+import com.github.devraghav.user.dto.User;
+import com.github.devraghav.user.dto.UserException;
+import com.github.devraghav.user.dto.UserRequest;
+import com.github.devraghav.user.mapper.UserMapper;
+import com.github.devraghav.user.repository.UserRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

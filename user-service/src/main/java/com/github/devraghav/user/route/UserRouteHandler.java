@@ -1,11 +1,11 @@
-package com.github.devraghav.user.user.route;
+package com.github.devraghav.user.route;
 
-import com.github.devraghav.user.user.dto.User;
-import com.github.devraghav.user.user.dto.UserException;
-import com.github.devraghav.user.user.dto.UserRequest;
-import com.github.devraghav.user.user.dto.UserResponse;
-import com.github.devraghav.user.user.repository.UserRepository;
-import com.github.devraghav.user.user.service.UserService;
+import com.github.devraghav.user.dto.User;
+import com.github.devraghav.user.dto.UserException;
+import com.github.devraghav.user.dto.UserRequest;
+import com.github.devraghav.user.dto.UserResponse;
+import com.github.devraghav.user.repository.UserRepository;
+import com.github.devraghav.user.service.UserService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;

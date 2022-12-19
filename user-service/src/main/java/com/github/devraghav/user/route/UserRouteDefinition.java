@@ -1,4 +1,4 @@
-package com.github.devraghav.user.user.route;
+package com.github.devraghav.user.route;
 
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.arrayschema.Builder.arraySchemaBuilder;
@@ -10,11 +10,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
-import com.github.devraghav.user.user.dto.User;
-import com.github.devraghav.user.user.dto.UserErrorResponse;
-import com.github.devraghav.user.user.dto.UserRequest;
+import com.github.devraghav.user.dto.User;
+import com.github.devraghav.user.dto.UserErrorResponse;
+import com.github.devraghav.user.dto.UserRequest;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import org.springdoc.core.fn.RouterOperation;
 import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.context.annotation.Bean;
@@ -41,9 +40,8 @@ public class UserRouteDefinition {
         .build();
   }
 
-  private RouterOperation saveUserOperationDoc(
-      org.springdoc.core.fn.builders.operation.Builder ops) {
-    return ops.operationId("create")
+  private void saveUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("create")
         .summary("Create user")
         .requestBody(
             requestBodyBuilder()
@@ -54,17 +52,12 @@ public class UserRouteDefinition {
         .build();
   }
 
-  private RouterOperation getAllUserOperationDoc(
-      org.springdoc.core.fn.builders.operation.Builder ops) {
-    return ops.operationId("getAll")
-        .summary("Get all users")
-        .response(getAll200ResponseDoc())
-        .build();
+  private void getAllUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("getAll").summary("Get all users").response(getAll200ResponseDoc()).build();
   }
 
-  private RouterOperation getUserByIdOperationDoc(
-      org.springdoc.core.fn.builders.operation.Builder ops) {
-    return ops.operationId("get")
+  private void getUserByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("get")
         .summary("Get a user by its id")
         .response(getUserById200ResponseDoc())
         .response(getUserById404ResponseDoc())

@@ -1,4 +1,4 @@
-package com.github.devraghav.user.user.config;
+package com.github.devraghav.user.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;

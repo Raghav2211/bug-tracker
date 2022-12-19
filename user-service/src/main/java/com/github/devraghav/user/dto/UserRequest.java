@@ -1,4 +1,4 @@
-package com.github.devraghav.user.user.dto;
+package com.github.devraghav.user.dto;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -6,16 +6,12 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 public record UserRequest(
-    String firstName,
-    String lastName,
-    String email,
-    String password,
-    com.github.devraghav.user.user.dto.AccessLevel access) {
+    String firstName, String lastName, String email, String password, AccessLevel access) {
 
   private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 
   @Override
-  public com.github.devraghav.user.user.dto.AccessLevel access() {
+  public AccessLevel access() {
     return Objects.isNull(access) ? AccessLevel.READ : access;
   }
 

@@ -6,14 +6,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(
     uses = {ProjectVersionMapper.class},
     componentModel = "spring",
     imports = {List.class, LocalDateTime.class, UUID.class})
 public interface ProjectMapper {
-  ProjectMapper INSTANCE = Mappers.getMapper(ProjectMapper.class);
 
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),

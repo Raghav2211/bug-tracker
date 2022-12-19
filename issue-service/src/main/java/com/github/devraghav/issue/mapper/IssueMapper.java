@@ -6,14 +6,11 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(
     componentModel = "spring",
     imports = {UUID.class, LocalDateTime.class, Optional.class, Priority.class, Severity.class})
 public interface IssueMapper {
-
-  IssueMapper INSTANCE = Mappers.getMapper(IssueMapper.class);
 
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),

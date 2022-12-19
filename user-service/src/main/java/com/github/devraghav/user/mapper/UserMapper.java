@@ -1,12 +1,15 @@
-package com.github.devraghav.user.user.mapper;
+package com.github.devraghav.user.mapper;
 
-import com.github.devraghav.user.user.dto.AccessLevel;
-import com.github.devraghav.user.user.dto.User;
-import com.github.devraghav.user.user.dto.UserException;
-import com.github.devraghav.user.user.dto.UserRequest;
-import com.github.devraghav.user.user.entity.UserEntity;
+import com.github.devraghav.user.dto.AccessLevel;
+import com.github.devraghav.user.dto.User;
+import com.github.devraghav.user.dto.UserException;
+import com.github.devraghav.user.dto.UserRequest;
+import com.github.devraghav.user.entity.UserEntity;
 import java.util.UUID;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.Named;
 
 @Mapper(
     componentModel = "spring",

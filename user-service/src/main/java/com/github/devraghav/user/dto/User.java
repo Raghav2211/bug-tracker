@@ -1,4 +1,4 @@
-package com.github.devraghav.user.user.dto;
+package com.github.devraghav.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

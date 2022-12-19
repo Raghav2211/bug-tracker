@@ -15,9 +15,10 @@ import reactor.core.publisher.Mono;
 
 @Service
 public record ProjectService(
+    ProjectMapper projectMapper,
+    ProjectVersionMapper projectVersionMapper,
     UserReactiveClient userReactiveClient,
-    ProjectRepository projectRepository,
-    ProjectMapper projectMapper) {
+    ProjectRepository projectRepository) {
 
   public Mono<Project> save(ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
@@ -53,23 +54,23 @@ public record ProjectService(
     return Mono.just(projectVersionRequest)
         .flatMap(
             _projectVersionRequest -> this.exists(projectId).thenReturn(_projectVersionRequest))
-        .map(ProjectVersionMapper.INSTANCE::requestToEntity)
+        .map(projectVersionMapper::requestToEntity)
         .flatMap(
             projectVersionEntity -> projectRepository.saveVersion(projectId, projectVersionEntity))
-        .map(ProjectVersionMapper.INSTANCE::entityToResponse);
+        .map(projectVersionMapper::entityToResponse);
   }
 
   public Flux<ProjectVersion> findAllVersionByProjectId(String projectId) {
     return projectRepository
         .findAllVersionByProjectId(projectId)
-        .map(ProjectVersionMapper.INSTANCE::entityToResponse);
+        .map(projectVersionMapper::entityToResponse);
   }
 
   public Mono<ProjectVersion> findVersionByProjectIdAndVersionId(
       String projectId, String versionId) {
     return projectRepository
         .findVersionByProjectIdAndVersionId(projectId, versionId)
-        .map(ProjectVersionMapper.INSTANCE::entityToResponse);
+        .map(projectVersionMapper::entityToResponse);
   }
 
   public Mono<Project> getProject(ProjectEntity projectEntity) {

@@ -1,0 +1,27 @@
+[
+  {
+    "name": "com.github.devraghav.issue.dto.IssueAssignRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.issue.dto.IssueCommentRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.issue.dto.IssueErrorResponse",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.issue.dto.IssueRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.issue.dto.IssueUpdateRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  }
+]

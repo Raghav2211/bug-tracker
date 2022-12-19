@@ -1,4 +1,4 @@
-package com.github.devraghav.user.user.entity;
+package com.github.devraghav.user.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

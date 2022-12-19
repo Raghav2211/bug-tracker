@@ -6,14 +6,11 @@ import com.github.devraghav.issue.entity.IssueCommentEntity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(
     componentModel = "spring",
     imports = {LocalDateTime.class, UUID.class})
 public interface IssueCommentMapper {
-
-  IssueCommentMapper INSTANCE = Mappers.getMapper(IssueCommentMapper.class);
 
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
