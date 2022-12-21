@@ -1,11 +1,11 @@
 [
   {
-    "name": "com.github.devraghav.user.project.dto.ProjectErrorResponse",
+    "name": "com.github.devraghav.bugtracker.project.dto.ProjectErrorResponse",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.user.project.dto.ProjectRequest",
+    "name": "com.github.devraghav.bugtracker.project.dto.ProjectRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   }

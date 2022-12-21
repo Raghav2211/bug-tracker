@@ -6,7 +6,7 @@ plugins {
 	id "com.diffplug.spotless" version "6.12.0"
 }
 
-group = 'com.github.devraghav.user'
+group = 'com.github.devraghav.bugtracker'
 version = '1.0.0'
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17

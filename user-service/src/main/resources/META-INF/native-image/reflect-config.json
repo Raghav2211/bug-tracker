@@ -1,16 +1,16 @@
 [
   {
-    "name": "com.github.devraghav.user.dto.User",
+    "name": "com.github.devraghav.bugtracker.user.dto.User",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.user.dto.UserErrorResponse",
+    "name": "com.github.devraghav.bugtracker.user.dto.UserErrorResponse",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.user.dto.UserRequest",
+    "name": "com.github.devraghav.bugtracker.user.dto.UserRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   }
