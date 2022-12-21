@@ -91,6 +91,7 @@ services:
       - ./logs:/logs
     ports:
       - "8081:8080"
+      - "9091:9090"
 
   project-service:
     image: "project-service:1.0.0"
@@ -104,6 +105,7 @@ services:
       - ./logs:/logs
     ports:
       - "8082:8080"
+      - "9092:9090"
 
   issue-service:
     image: "issue-service:1.0.0"
@@ -117,3 +119,4 @@ services:
       - ./logs:/logs
     ports:
       - "8083:8080"
+      - "9093:9090"
