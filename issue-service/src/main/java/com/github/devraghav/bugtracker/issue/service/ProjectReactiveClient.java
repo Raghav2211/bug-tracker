@@ -1,8 +1,8 @@
-package com.github.devraghav.bugtracker.project;
+package com.github.devraghav.bugtracker.issue.service;
 
-import com.github.devraghav.bugtracker.project.dto.Project;
-import com.github.devraghav.bugtracker.project.dto.ProjectClientException;
-import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
+import com.github.devraghav.bugtracker.issue.dto.Project;
+import com.github.devraghav.bugtracker.issue.dto.ProjectClientException;
+import com.github.devraghav.bugtracker.issue.dto.ProjectVersion;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

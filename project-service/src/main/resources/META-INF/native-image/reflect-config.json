@@ -8,5 +8,25 @@
     "name": "com.github.devraghav.bugtracker.project.dto.ProjectRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.bugtracker.project.dto.Project",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.bugtracker.project.dto.ProjectVersion",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.bugtracker.project.dto.User",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.bugtracker.project.dto.ProjectVersionRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   }
 ]

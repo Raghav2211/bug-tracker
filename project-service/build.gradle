@@ -13,6 +13,7 @@ targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
 	mavenCentral()
+	mavenLocal()
 	maven { url 'https://repo.spring.io/milestone' }
 }
 
@@ -27,8 +28,6 @@ dependencies {
 	implementation 'org.projectlombok:lombok'
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webflux-ui' , version: '2.0.2'
 	implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.2'
-
-	implementation project(':user-service-reactive-client')
 
 	annotationProcessor group: 'org.projectlombok', name: 'lombok-mapstruct-binding', version: '0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.2.Final'

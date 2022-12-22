@@ -10,9 +10,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
-import com.github.devraghav.bugtracker.issue.dto.Issue;
-import com.github.devraghav.bugtracker.issue.dto.IssueErrorResponse;
-import com.github.devraghav.bugtracker.issue.dto.IssueRequest;
+import com.github.devraghav.bugtracker.issue.dto.*;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -37,13 +35,14 @@ public class IssueRouteDefinition {
         () ->
             SpringdocRouteBuilder.route()
                 .GET("", issueRouteHandler::get, this::getIssueByIdOperationDoc)
-                .PATCH("", issueRouteHandler::update, ops -> {})
-                .POST("/comment", issueRouteHandler::addComment, ops -> {})
-                .PATCH("/assign", issueRouteHandler::assign, ops -> {})
-                .DELETE("/assign", issueRouteHandler::unassign, ops -> {})
-                .PATCH("/watcher", issueRouteHandler::addWatcher, ops -> {})
-                .DELETE("/watcher", issueRouteHandler::removeWatcher, ops -> {})
-                .DELETE("/resolve", issueRouteHandler::done, ops -> {})
+                .PATCH("", issueRouteHandler::update, this::updateIssueOperationDoc)
+                .POST("/comment", issueRouteHandler::addComment, this::addCommentOperationDoc)
+                .PATCH("/assign", issueRouteHandler::assign, this::addAssigneeOperationDoc)
+                .DELETE("/assign", issueRouteHandler::unassign, this::removeAssigneeOperationDoc)
+                .PATCH("/watcher", issueRouteHandler::addWatcher, this::addWatcherOperationDoc)
+                .DELETE(
+                    "/watcher", issueRouteHandler::removeWatcher, this::removeWatcherOperationDoc)
+                .PATCH("/resolve", issueRouteHandler::done, this::resolveIssueOperationDoc)
                 .build();
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
@@ -78,13 +77,31 @@ public class IssueRouteDefinition {
                 .content(
                     contentBuilder().schema(schemaBuilder().implementation(IssueRequest.class))))
         .response(saveIssue201ResponseDoc())
-        .response(savProject400ResponseDoc())
+        .response(badResponseDoc())
+        .build();
+  }
+
+  private void updateIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("update")
+        .summary("Update issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(IssueUpdateRequest.class))))
+        .response(updateIssue200ResponseDoc())
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")))
         .build();
   }
 
   private void getIssueByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("get")
-        .summary("Get a project by its id")
+        .summary("Get a issue by its id")
         .response(getIssueById200ResponseDoc())
         .response(issue404ResponseDoc())
         .parameter(
@@ -93,6 +110,103 @@ public class IssueRouteDefinition {
                 .name("id")
                 .schema(schemaBuilder().type("string")))
         .build();
+  }
+
+  private void addCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("addComment")
+        .summary("Add comment in issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(IssueCommentRequest.class))))
+        .response(addComment200ResponseDoc())
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")))
+        .build();
+  }
+
+  private void addAssigneeOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("assign")
+        .summary("Assign issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(IssueAssignRequest.class))))
+        .response(responseBuilder().description("Assigned issue successfully").responseCode("204"))
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")));
+  }
+
+  private void removeAssigneeOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("unassigned")
+        .summary("Unassigned issue")
+        .response(
+            responseBuilder().description("Unassigned issue successfully").responseCode("204"))
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")));
+  }
+
+  private void addWatcherOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("addWatcher")
+        .summary("Add watcher to issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(IssueAssignRequest.class))))
+        .response(
+            responseBuilder().description("Add watcher to issue successfully").responseCode("204"))
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")));
+  }
+
+  private void removeWatcherOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("removeWatcher")
+        .summary("Remove watcher to issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(IssueAssignRequest.class))))
+        .response(
+            responseBuilder()
+                .description("Remove watcher from issue successfully")
+                .responseCode("204"))
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")));
+  }
+
+  private void resolveIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("resolveIssue")
+        .summary("Resolve issue")
+        .response(responseBuilder().description("Resolve issue successfully").responseCode("204"))
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder issue404ResponseDoc() {
@@ -119,7 +233,27 @@ public class IssueRouteDefinition {
                 .schema(schemaBuilder().implementation(Issue.class)));
   }
 
-  private org.springdoc.core.fn.builders.apiresponse.Builder savProject400ResponseDoc() {
+  private org.springdoc.core.fn.builders.apiresponse.Builder updateIssue200ResponseDoc() {
+    return responseBuilder()
+        .responseCode("200")
+        .description("Issue successfully updated")
+        .content(
+            contentBuilder()
+                .mediaType(APPLICATION_JSON_VALUE)
+                .schema(schemaBuilder().implementation(Issue.class)));
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder addComment200ResponseDoc() {
+    return responseBuilder()
+        .responseCode("200")
+        .description("Add comment in issue successfully")
+        .content(
+            contentBuilder()
+                .mediaType(APPLICATION_JSON_VALUE)
+                .schema(schemaBuilder().implementation(IssueComment.class)));
+  }
+
+  private org.springdoc.core.fn.builders.apiresponse.Builder badResponseDoc() {
     return errorResponseDoc(HttpStatus.BAD_REQUEST, "Bad Request");
   }
 

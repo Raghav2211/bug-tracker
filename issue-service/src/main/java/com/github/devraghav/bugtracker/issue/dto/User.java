@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.user.dto;
+package com.github.devraghav.bugtracker.issue.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

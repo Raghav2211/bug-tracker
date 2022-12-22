@@ -1,7 +1,5 @@
 package com.github.devraghav.bugtracker.issue.dto;
 
-import com.github.devraghav.bugtracker.project.dto.Project;
-import com.github.devraghav.bugtracker.user.dto.User;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.*;

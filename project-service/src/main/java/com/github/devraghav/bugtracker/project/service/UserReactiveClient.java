@@ -1,15 +1,15 @@
-package com.github.devraghav.bugtracker.user;
+package com.github.devraghav.bugtracker.project.service;
 
-import com.github.devraghav.bugtracker.user.dto.User;
-import com.github.devraghav.bugtracker.user.dto.UserClientException;
+import com.github.devraghav.bugtracker.project.dto.User;
+import com.github.devraghav.bugtracker.project.dto.UserClientException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
-@Service
+@Component
 public class UserReactiveClient {
   private final String userFindByIdURL;
   private final WebClient userWebClient;

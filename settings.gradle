@@ -6,8 +6,6 @@ pluginManagement {
 }
 rootProject.name = 'bug-tracker'
 
-include('user-service-reactive-client')
-include('project-service-reactive-client')
 include('user-service')
 include('project-service')
 include('issue-service')

@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.config;
+package com.github.devraghav.bugtracker.issue.config;
 
 import io.netty.channel.ChannelOption;
 import java.time.Duration;

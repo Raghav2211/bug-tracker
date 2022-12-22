@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.dto;
+package com.github.devraghav.bugtracker.issue.dto;
 
 import java.time.LocalDateTime;
 import java.util.Set;

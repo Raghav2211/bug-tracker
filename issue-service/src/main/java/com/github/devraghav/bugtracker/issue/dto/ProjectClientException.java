@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.dto;
+package com.github.devraghav.bugtracker.issue.dto;
 
 import java.util.Map;
 import lombok.Getter;

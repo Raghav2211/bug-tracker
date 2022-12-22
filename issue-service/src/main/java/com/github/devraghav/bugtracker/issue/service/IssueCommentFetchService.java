@@ -4,7 +4,6 @@ import com.github.devraghav.bugtracker.issue.dto.IssueComment;
 import com.github.devraghav.bugtracker.issue.entity.IssueCommentEntity;
 import com.github.devraghav.bugtracker.issue.mapper.IssueCommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueCommentRepository;
-import com.github.devraghav.bugtracker.user.UserReactiveClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

@@ -1,7 +1,5 @@
 package com.github.devraghav.bugtracker.issue.dto;
 
-import com.github.devraghav.bugtracker.project.dto.ProjectClientException;
-import com.github.devraghav.bugtracker.user.dto.UserClientException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;

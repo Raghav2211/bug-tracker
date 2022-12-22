@@ -74,7 +74,12 @@ public class ProjectRouteDefinition {
   private void getAllVersionOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("getAllProjectVersion")
         .summary("Get all project versions")
-        .response(getAllProjectVersion200ResponseDoc());
+        .response(getAllProjectVersion200ResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")));
   }
 
   private void saveVersionOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
