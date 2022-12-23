@@ -1,0 +1,9 @@
+@namespace("com.github.devraghav.user")
+protocol UserCreateSchema {
+	record UserCreateSchema {
+		string firstName;
+		string lastName;
+		string email;
+		string accessLevel;
+	}
+}

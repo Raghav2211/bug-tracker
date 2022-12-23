@@ -58,42 +58,33 @@ public record IssueRouteHandler(
             IssueException.class, exception -> IssueResponse.invalid(request, exception));
   }
 
-  public Mono<ServerResponse> assign(ServerRequest serverRequest) {
+  public Mono<ServerResponse> assignee(ServerRequest serverRequest) {
     var issueId = serverRequest.pathVariable("id");
     return serverRequest
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.assign(issueId, assignRequest))
+        .flatMap(assignRequest -> issueService.assignee(issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
         .switchIfEmpty(IssueResponse.noBody(serverRequest));
   }
 
-  public Mono<ServerResponse> unassign(ServerRequest request) {
+  public Mono<ServerResponse> watch(ServerRequest request) {
     var issueId = request.pathVariable("id");
-    return issueService
-        .unassigned(issueId)
+    return request
+        .bodyToMono(IssueAssignRequest.class)
+        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, true))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
   }
 
-  public Mono<ServerResponse> addWatcher(ServerRequest request) {
-    var issueId = request.pathVariable("id");
-    return request
-        .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.addWatcher(issueId, assignRequest))
-        .flatMap(unused -> IssueResponse.noContent())
-        .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
-        .switchIfEmpty(IssueResponse.noBody(request));
-  }
-
-  public Mono<ServerResponse> removeWatcher(ServerRequest request) {
+  public Mono<ServerResponse> unWatch(ServerRequest request) {
     var issueId = request.pathVariable("id");
 
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.removeWatcher(issueId, assignRequest))
+        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, false))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));

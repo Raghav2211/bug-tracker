@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.command.user")
+protocol UserCreateCommand {
+	import idl "../user/UserCreateSchema.avdl";
+	record UserCreateCommand {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.user.UserCreateSchema payload;
+	}
+}

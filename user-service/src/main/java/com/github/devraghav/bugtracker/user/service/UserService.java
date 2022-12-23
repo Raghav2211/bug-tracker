@@ -3,6 +3,8 @@ package com.github.devraghav.bugtracker.user.service;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
+import com.github.devraghav.bugtracker.user.entity.UserEntity;
+import com.github.devraghav.bugtracker.user.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import org.springframework.dao.DuplicateKeyException;
@@ -11,16 +13,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public record UserService(UserMapper userMapper, UserRepository userRepository) {
+public record UserService(
+    UserMapper userMapper, UserRepository userRepository, KafkaProducer kafkaProducer) {
 
-  public Mono<User> save(UserRequest userRequest) {
-    return Mono.just(userRequest)
+  public Mono<User> save(String requestId, UserRequest userRequest) {
+    return kafkaProducer
+        .generateAndSendUserCreateCommand(requestId, userRequest)
         .map(userMapper::requestToEntity)
-        .flatMap(userRepository::save)
-        .map(userMapper::entityToResponse)
+        .flatMap(userEntity -> save(requestId, userEntity))
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> Mono.error(UserException.alreadyExistsWithEmail(userRequest.email())));
+            exception -> duplicateUser(requestId, userRequest, exception));
   }
 
   public Flux<User> findAll() {
@@ -32,5 +35,19 @@ public record UserService(UserMapper userMapper, UserRepository userRepository) 
         .findById(userId)
         .map(userMapper::entityToResponse)
         .switchIfEmpty(Mono.error(() -> UserException.notFound(userId)));
+  }
+
+  private Mono<User> save(String requestId, UserEntity userEntity) {
+    return userRepository
+        .save(userEntity)
+        .map(userMapper::entityToResponse)
+        .flatMap(user -> kafkaProducer.generateAndSendUserCreatedEvent(requestId, user));
+  }
+
+  private Mono<User> duplicateUser(
+      String requestId, UserRequest userRequest, DuplicateKeyException exception) {
+    return kafkaProducer
+        .generateAndSendUserDuplicatedEvent(requestId, userRequest)
+        .flatMap(unused -> Mono.error(UserException.alreadyExistsWithEmail(userRequest.email())));
   }
 }

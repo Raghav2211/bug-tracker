@@ -1,0 +1,23 @@
+/**
+ {
+  "command": {
+    "id": "efe3a4c6-92e3-4c76-9c55-2cd0f4d952f3",
+    "name": "Identity.User.Create",
+    "publisher": "Service.User",
+    "createAt": 1671827041,
+    "payload": {
+      "firstName": "Kafka",
+      "lastName": "kafka",
+      "email": "kafka@kafka.com",
+      "accessLevel": "READ"
+    }
+  }
+}
+ */
+@namespace("com.github.devraghav.schema.user")
+protocol UserCreateCommandSchema {
+	import idl "../command/UserCreateCommand.avdl";
+	record UserCreateCommandSchema {
+		com.github.devraghav.command.user.UserCreateCommand command;
+	}
+}

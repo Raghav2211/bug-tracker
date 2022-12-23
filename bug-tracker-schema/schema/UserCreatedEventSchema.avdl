@@ -1,0 +1,25 @@
+/**
+ {
+  "event": {
+    "id": "f6098098-eebb-4bea-ba47-e8a0c506ace8",
+    "name": "Identity.User.Created",
+    "publisher": "Service.User",
+    "createAt": 1671827041,
+    "payload": {
+      "id": "b7df5f58-dbf1-4f29-a049-874319d1d04c",
+      "firstName": "Kafka",
+      "lastName": "kafka",
+      "email": "kafka@kafka.com",
+      "enabled": true,
+      "accessLevel": "READ"
+    }
+  }
+}
+ */
+@namespace("com.github.devraghav.schema.user")
+protocol UserCreatedEventSchema {
+	import idl "../event/UserCreatedEvent.avdl";
+	record UserCreatedEventSchema {
+		com.github.devraghav.event.user.UserCreatedEvent event;
+	}
+}

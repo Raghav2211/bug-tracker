@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id "maven-publish"
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.5.0"
+}
+
+group = 'com.github.devraghav.bugtracker'
+version = '1.0.0'
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.apache.avro:avro:1.11.0"
+}
+
+avro {
+    fieldVisibility = "PUBLIC"
+}
+
+def generateProtocol = tasks.register("generateProtocol", com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask) {
+    source file("schema")
+    include("**/*.avdl")
+    outputDir = file("build/generated-avro-avpr")
+}
+
+tasks.register("generateSchema", com.github.davidmc24.gradle.plugin.avro.GenerateAvroSchemaTask) {
+    dependsOn generateProtocol
+    source file("build/generated-avro-avpr")
+    include("**/*.avpr")
+    outputDir = file("build/generated-avro-avsc")
+}
+
+task generateAvro(type: com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask) {
+    dependsOn generateSchema
+    source("build/generated-avro-avsc","to-model")
+    outputDir = file("build/generated-classes")
+}
+
+tasks.named("compileJava").configure {
+    source(generateAvro)
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}

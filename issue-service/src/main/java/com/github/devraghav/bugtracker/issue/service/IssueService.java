@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 @Service
 public record IssueService(
@@ -66,33 +67,40 @@ public record IssueService(
         .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
-  public Mono<Long> assign(String issueId, IssueAssignRequest issueAssignRequest) {
-    return exists(issueId)
-        .and(fetchUser(issueAssignRequest.user()))
-        .thenReturn(issueAssignRequest)
-        .flatMap(
-            assignRequest -> issueRepository.findAndSetAssigneeById(issueId, assignRequest.user()));
+  public Mono<Long> assignee(String issueId, IssueAssignRequest issueAssignRequest) {
+    var issueMono = exists(issueId).map(unused -> issueId);
+    if (issueAssignRequest.user() == null) {
+      return unassigned(issueMono);
+    }
+    var userMono = fetchUser(issueAssignRequest.user());
+    var issueUserMono = Mono.zip(issueMono, userMono);
+    return assignee(issueUserMono);
   }
 
-  public Mono<Long> unassigned(String issueId) {
-    return exists(issueId)
-        .flatMap(assignRequest -> issueRepository.findAndUnSetAssigneeById(issueId));
+  private Mono<Long> assignee(Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(
+        tuple2 -> issueRepository.findAndSetAssigneeById(tuple2.getT1(), tuple2.getT2().id()));
   }
 
-  public Mono<Long> addWatcher(String issueId, IssueAssignRequest issueAssignRequest) {
-    return exists(issueId)
-        .and(fetchUser(issueAssignRequest.user()))
-        .thenReturn(issueAssignRequest)
-        .flatMap(
-            assignRequest -> issueRepository.findAndAddWatcherById(issueId, assignRequest.user()));
+  private Mono<Long> unassigned(Mono<String> issueMono) {
+    return issueMono.flatMap(issueRepository::findAndUnSetAssigneeById);
   }
 
-  public Mono<Long> removeWatcher(String issueId, IssueAssignRequest issueAssignRequest) {
-    return exists(issueId)
-        .and(fetchUser(issueAssignRequest.user()))
-        .thenReturn(issueAssignRequest)
-        .flatMap(
-            assignRequest -> issueRepository.findAndPullWatcherById(issueId, assignRequest.user()));
+  public Mono<Long> watch(String issueId, IssueAssignRequest issueAssignRequest, boolean watch) {
+    var issueMono = exists(issueId).map(unused -> issueId);
+    var userMono = fetchUser(issueAssignRequest.user());
+    var issueUserMono = Mono.zip(issueMono, userMono);
+    return watch ? watch(issueUserMono) : unWatch(issueUserMono);
+  }
+
+  private Mono<Long> watch(Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(
+        tuple2 -> issueRepository.findAndAddWatcherById(tuple2.getT1(), tuple2.getT2().id()));
+  }
+
+  private Mono<Long> unWatch(Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(
+        tuple2 -> issueRepository.findAndPullWatcherById(tuple2.getT1(), tuple2.getT2().id()));
   }
 
   public Mono<Boolean> done(String issueId) {

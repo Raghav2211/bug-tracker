@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.event.user")
+protocol UserDuplicatedEvent {
+	import idl "../user/UserCreateSchema.avdl";
+	record UserDuplicatedEvent {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.user.UserCreateSchema payload;
+	}
+}

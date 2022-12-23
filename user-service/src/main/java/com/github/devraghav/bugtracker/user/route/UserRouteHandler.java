@@ -4,8 +4,8 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.dto.UserResponse;
-import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import com.github.devraghav.bugtracker.user.service.UserService;
+import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
-public record UserRouteHandler(UserService userService, UserRepository userRepository) {
+public record UserRouteHandler(UserService userService) {
   public Mono<ServerResponse> getAll(ServerRequest request) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
@@ -24,7 +24,7 @@ public record UserRouteHandler(UserService userService, UserRepository userRepos
     return request
         .bodyToMono(UserRequest.class)
         .flatMap(UserRequest::validate)
-        .flatMap(userService::save)
+        .flatMap(userRequest -> userService.save(UUID.randomUUID().toString(), userRequest))
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))
         .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception));
