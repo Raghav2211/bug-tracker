@@ -29,7 +29,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
 
 	// kafka
-	implementation group: 'io.confluent', name: 'kafka-avro-serializer', version: '7.3.0'
+	implementation ('io.confluent:kafka-avro-serializer:7.3.0') {
+		exclude (group: "jakarta.ws.rs", module: "jakarta.ws.rs-api")
+		exclude (group: "io.swagger.core.v3", module: "swagger-annotations")
+	}
 	implementation 'org.springframework.kafka:spring-kafka'
 	implementation 'io.projectreactor.kafka:reactor-kafka'
 	implementation 'com.github.devraghav.bugtracker:bug-tracker-schema:1.0.0'
