@@ -8,8 +8,6 @@ import com.github.devraghav.event.user.UserDuplicatedEvent;
 import com.github.devraghav.schema.user.UserCreateCommandSchema;
 import com.github.devraghav.schema.user.UserCreatedEventSchema;
 import com.github.devraghav.schema.user.UserDuplicatedEventSchema;
-import com.github.devraghav.user.UserCreateSchema;
-import com.github.devraghav.user.UserSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -105,8 +103,8 @@ public record KafkaProducer(
         .build();
   }
 
-  private UserCreateSchema getUserCreateSchema(UserRequest userRequest) {
-    return UserCreateSchema.newBuilder()
+  private com.github.devraghav.domain.user.User getUserCreateSchema(UserRequest userRequest) {
+    return com.github.devraghav.domain.user.User.newBuilder()
         .setAccessLevel(userRequest.access().name())
         .setEmail(userRequest.email())
         .setFirstName(userRequest.firstName())
@@ -114,8 +112,8 @@ public record KafkaProducer(
         .build();
   }
 
-  private UserSchema getUserSchema(User user) {
-    return UserSchema.newBuilder()
+  private com.github.devraghav.domain.user.User getUserSchema(User user) {
+    return com.github.devraghav.domain.user.User.newBuilder()
         .setId(user.id())
         .setAccessLevel(user.access().name())
         .setEmail(user.email())

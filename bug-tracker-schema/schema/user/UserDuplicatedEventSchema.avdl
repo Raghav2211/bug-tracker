@@ -16,7 +16,7 @@
  */
 @namespace("com.github.devraghav.schema.user")
 protocol UserDuplicatedEventSchema {
-	import idl "../event/UserDuplicatedEvent.avdl";
+	import idl "../../event/user/UserDuplicatedEvent.avdl";
 	record UserDuplicatedEventSchema {
 		com.github.devraghav.event.user.UserDuplicatedEvent event;
 	}
