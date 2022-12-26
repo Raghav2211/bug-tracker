@@ -2,6 +2,7 @@ package com.github.devraghav.bugtracker.project.service;
 
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
+import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
 import com.github.devraghav.bugtracker.project.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
@@ -22,7 +23,7 @@ public record ProjectService(
   public Mono<Project> save(String requestId, ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
         .flatMap(this::validate)
-        .flatMap(request -> kafkaProducer.generateAndSendProjectCreateCommand(requestId, request))
+        .flatMap(request -> kafkaProducer.sendProjectCreateCommand(requestId, request))
         .map(projectMapper::requestToEntity)
         .flatMap(entity -> save(requestId, entity))
         .onErrorResume(
@@ -49,13 +50,15 @@ public record ProjectService(
   }
 
   public Mono<ProjectVersion> addVersionToProjectId(
-      String projectId, ProjectVersionRequest projectVersionRequest) {
+      String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
     return Mono.just(projectVersionRequest)
         .flatMap(versionRequest -> this.exists(projectId).thenReturn(versionRequest))
-        .map(projectVersionMapper::requestToEntity)
         .flatMap(
-            projectVersionEntity -> projectRepository.saveVersion(projectId, projectVersionEntity))
-        .map(projectVersionMapper::entityToResponse);
+            validVersionRequest ->
+                kafkaProducer.sendProjectVersionCreateCommand(
+                    requestId, projectId, validVersionRequest))
+        .map(projectVersionMapper::requestToEntity)
+        .flatMap(projectVersionEntity -> save(requestId, projectId, projectVersionEntity));
   }
 
   public Flux<ProjectVersion> findAllVersionByProjectId(String projectId) {
@@ -87,13 +90,23 @@ public record ProjectService(
     return projectRepository
         .save(projectEntity)
         .flatMap(this::getProject)
-        .flatMap(project -> kafkaProducer.generateAndSendProjectCreatedEvent(requestId, project));
+        .flatMap(project -> kafkaProducer.sendProjectCreatedEvent(requestId, project));
+  }
+
+  private Mono<ProjectVersion> save(
+      String requestId, String projectId, ProjectVersionEntity projectVersionEntity) {
+    return projectRepository
+        .saveVersion(projectId, projectVersionEntity)
+        .map(projectVersionMapper::entityToResponse)
+        .flatMap(
+            projectVersion ->
+                kafkaProducer.sendProjectVersionCreatedEvent(requestId, projectId, projectVersion));
   }
 
   private Mono<Project> duplicateProject(
       String requestId, ProjectRequest projectRequest, DuplicateKeyException exception) {
     return kafkaProducer
-        .generateAndSendProjectDuplicatedEvent(requestId, projectRequest)
+        .sendProjectDuplicatedEvent(requestId, projectRequest)
         .flatMap(unused -> Mono.error(ProjectException.alreadyExistsByName(projectRequest.name())));
   }
 

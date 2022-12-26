@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.data_model.schema.project")
+protocol ProjectVersionCreateCommandSchema {
+	import idl "../../command/project/ProjectVersionCreateCommand.avdl";
+	record ProjectVersionCreateCommandSchema {
+		com.github.devraghav.data_model.command.project.ProjectVersionCreateCommand command;
+	}
+}

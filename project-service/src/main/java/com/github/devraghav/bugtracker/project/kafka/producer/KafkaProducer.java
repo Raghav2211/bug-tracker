@@ -3,15 +3,17 @@ package com.github.devraghav.bugtracker.project.kafka.producer;
 import com.github.devraghav.bugtracker.project.dto.Project;
 import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
+import com.github.devraghav.bugtracker.project.dto.ProjectVersionRequest;
 import com.github.devraghav.data_model.command.project.ProjectCreateCommand;
+import com.github.devraghav.data_model.command.project.ProjectVersionCreateCommand;
 import com.github.devraghav.data_model.domain.project.NewProject;
+import com.github.devraghav.data_model.domain.project.NewProjectVersion;
 import com.github.devraghav.data_model.domain.project.Version;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.project.ProjectCreatedEvent;
 import com.github.devraghav.data_model.event.project.ProjectDuplicatedEvent;
-import com.github.devraghav.data_model.schema.project.ProjectCreateCommandSchema;
-import com.github.devraghav.data_model.schema.project.ProjectCreatedEventSchema;
-import com.github.devraghav.data_model.schema.project.ProjectDuplicatedEventSchema;
+import com.github.devraghav.data_model.event.project.ProjectVersionCreatedEvent;
+import com.github.devraghav.data_model.schema.project.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -47,24 +49,38 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<ProjectRequest> generateAndSendProjectCreateCommand(
+  public Mono<ProjectRequest> sendProjectCreateCommand(
       String requestId, ProjectRequest projectRequest) {
     var command = getProjectCreateCommandSchema(requestId, projectRequest);
     log.atDebug().log("Project create command {}", command);
     return send(command).thenReturn(projectRequest);
   }
 
-  public Mono<ProjectRequest> generateAndSendProjectDuplicatedEvent(
+  public Mono<ProjectVersionRequest> sendProjectVersionCreateCommand(
+      String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
+    var command = getProjectVersionCreateCommandSchema(requestId, projectId, projectVersionRequest);
+    log.atDebug().log("ProjectVersion create command {}", command);
+    return send(command).thenReturn(projectVersionRequest);
+  }
+
+  public Mono<ProjectRequest> sendProjectDuplicatedEvent(
       String requestId, ProjectRequest projectRequest) {
     var event = getProjectDuplicatedEventSchema(requestId, projectRequest);
     log.atDebug().log("Project created event {}", event);
     return send(event).thenReturn(projectRequest);
   }
 
-  public Mono<Project> generateAndSendProjectCreatedEvent(String requestId, Project project) {
+  public Mono<Project> sendProjectCreatedEvent(String requestId, Project project) {
     var event = getProjectCreatedEventSchema(requestId, project);
     log.atDebug().log("Project created event {}", event);
     return send(event).thenReturn(project);
+  }
+
+  public Mono<ProjectVersion> sendProjectVersionCreatedEvent(
+      String requestId, String projectId, ProjectVersion projectVersion) {
+    var event = getProjectVersionCreatedEventSchema(requestId, projectId, projectVersion);
+    log.atDebug().log("ProjectVersion created event {}", event);
+    return send(event).thenReturn(projectVersion);
   }
 
   private ProjectCreateCommandSchema getProjectCreateCommandSchema(
@@ -77,6 +93,25 @@ public record KafkaProducer(
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Project.Project.Create")
                 .setPayload(getNewProject(projectRequest))
+                .setPublisher("Service.Project")
+                .build())
+        .build();
+  }
+
+  private ProjectVersionCreateCommandSchema getProjectVersionCreateCommandSchema(
+      String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
+    return ProjectVersionCreateCommandSchema.newBuilder()
+        .setCommand(
+            ProjectVersionCreateCommand.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Project.Version.Create")
+                .setProjectId(projectId)
+                .setPayload(
+                    NewProjectVersion.newBuilder()
+                        .setVersion(projectVersionRequest.version())
+                        .build())
                 .setPublisher("Service.Project")
                 .build())
         .build();
@@ -107,6 +142,22 @@ public record KafkaProducer(
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Project.Project.Created")
                 .setPayload(getProject(project))
+                .setPublisher("Service.Project")
+                .build())
+        .build();
+  }
+
+  private ProjectVersionCreatedEventSchema getProjectVersionCreatedEventSchema(
+      String requestId, String projectId, ProjectVersion projectVersion) {
+    return ProjectVersionCreatedEventSchema.newBuilder()
+        .setEvent(
+            ProjectVersionCreatedEvent.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Project.Version.Created")
+                .setProjectId(projectId)
+                .setPayload(getVersion(projectVersion))
                 .setPublisher("Service.Project")
                 .build())
         .build();

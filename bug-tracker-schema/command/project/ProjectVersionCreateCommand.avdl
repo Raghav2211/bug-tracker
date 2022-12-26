@@ -1,0 +1,13 @@
+@namespace("com.github.devraghav.data_model.command.project")
+protocol ProjectVersionCreateCommand {
+	import idl "../../domain/project/NewProjectVersion.avdl";
+	record ProjectVersionCreateCommand {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		string projectId;
+		long createAt;
+		com.github.devraghav.data_model.domain.project.NewProjectVersion payload;
+	}
+}
