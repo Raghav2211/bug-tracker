@@ -1,0 +1,16 @@
+@namespace("com.github.devraghav.domain.project")
+protocol Project {
+	import idl "../user/User.avdl";
+	import idl "Version.avdl";
+	record Project {
+		string id;
+		string name;
+		string description;
+		boolean enabled;
+		string status;
+		com.github.devraghav.domain.user.User author;
+		long createdAt;
+		union {null,array<com.github.devraghav.domain.project.Version>} versions;
+		union {null,map<string>} tags;
+	}
+}

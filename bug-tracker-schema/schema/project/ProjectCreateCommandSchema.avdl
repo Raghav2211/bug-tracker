@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.schema.project")
+protocol ProjectCreateCommandSchema {
+	import idl "../../command/project/ProjectCreateCommand.avdl";
+	record ProjectCreateCommandSchema {
+		com.github.devraghav.command.project.ProjectCreateCommand command;
+	}
+}

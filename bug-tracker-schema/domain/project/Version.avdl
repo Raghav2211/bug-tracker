@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.domain.project")
+protocol Version {
+	record Version {
+		string id;
+		string version;
+	}
+}

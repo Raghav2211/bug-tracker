@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.schema.project")
+protocol ProjectDuplicatedEventSchema {
+	import idl "../../event/project/ProjectDuplicatedEvent.avdl";
+	record ProjectDuplicatedEventSchema {
+		com.github.devraghav.event.project.ProjectDuplicatedEvent event;
+	}
+}

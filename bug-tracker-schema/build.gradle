@@ -1,3 +1,7 @@
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroSchemaTask
+
 plugins {
     id 'java'
     id "maven-publish"
@@ -22,20 +26,20 @@ avro {
     fieldVisibility = "PUBLIC"
 }
 
-def generateProtocol = tasks.register("generateProtocol", com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask) {
+def generateProtocol = tasks.register("generateProtocol", GenerateAvroProtocolTask) {
     source file("schema")
     include("**/*.avdl")
     outputDir = file("build/generated-avro-avpr")
 }
 
-tasks.register("generateSchema", com.github.davidmc24.gradle.plugin.avro.GenerateAvroSchemaTask) {
+tasks.register("generateSchema", GenerateAvroSchemaTask) {
     dependsOn generateProtocol
     source file("build/generated-avro-avpr")
     include("**/*.avpr")
     outputDir = file("build/generated-avro-avsc")
 }
 
-task generateAvro(type: com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask) {
+task generateAvro(type: GenerateAvroJavaTask) {
     dependsOn generateSchema
     source("build/generated-avro-avsc","to-model")
     outputDir = file("build/generated-classes")

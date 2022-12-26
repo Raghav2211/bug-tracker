@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.command.project")
+protocol ProjectCreateCommand {
+	import idl "../../domain/project/NewProject.avdl";
+	record ProjectCreateCommand {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.domain.project.NewProject payload;
+	}
+}

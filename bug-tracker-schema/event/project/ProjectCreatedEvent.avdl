@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.event.project")
+protocol ProjectCreatedEvent {
+	import idl "../../domain/project/Project.avdl";
+	record ProjectCreatedEvent {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.domain.project.Project payload;
+	}
+}
