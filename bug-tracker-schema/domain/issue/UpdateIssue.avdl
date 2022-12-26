@@ -1,15 +1,14 @@
 @namespace("com.github.devraghav.data_model.domain.issue")
-protocol NewIssue {
+protocol UpdateIssue {
 	import idl "../user/User.avdl";
 	import idl "ProjectAttachment.avdl";
-	record NewIssue {
+	record UpdateIssue {
 		string header;
 		string description;
 		string businessUnit;
 		string priority;
 		string severity;
 		union {null, array<ProjectAttachment>} projectAttachments;
-		string reporterId;
 		union {null, map<string> } tags;
 	}
 }

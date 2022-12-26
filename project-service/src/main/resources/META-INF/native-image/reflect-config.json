@@ -28,5 +28,55 @@
     "name": "com.github.devraghav.bugtracker.project.dto.ProjectVersionRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.serializers.KafkaAvroSerializer",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.serializers.context.NullContextNameStrategy",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.serializers.subject.TopicNameStrategy",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.serializers.subject.RecordNameStrategy",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.schemaregistry.client.rest.entities.requests.RegisterSchemaRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.schemaregistry.client.rest.entities.requests.RegisterSchemaResponse",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.schemaregistry.client.rest.entities.SchemaTypeConverter",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.schemaregistry.client.rest.entities.ErrorMessage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.confluent.kafka.schemaregistry.client.rest.entities.SchemaString",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   }
 ]

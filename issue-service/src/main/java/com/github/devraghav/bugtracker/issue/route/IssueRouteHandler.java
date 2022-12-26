@@ -4,6 +4,7 @@ import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
 import com.github.devraghav.bugtracker.issue.service.IssueCommentService;
 import com.github.devraghav.bugtracker.issue.service.IssueService;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -29,7 +30,7 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(IssueRequest.class)
-        .flatMap(issueService::create)
+        .flatMap(issueRequest -> issueService.create(UUID.randomUUID().toString(), issueRequest))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -40,7 +41,9 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(IssueUpdateRequest.class)
-        .flatMap(updateRequest -> issueService.update(issueId, updateRequest))
+        .flatMap(
+            updateRequest ->
+                issueService.update(UUID.randomUUID().toString(), issueId, updateRequest))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(

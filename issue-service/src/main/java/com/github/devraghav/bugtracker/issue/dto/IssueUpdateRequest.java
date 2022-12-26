@@ -8,6 +8,8 @@ public record IssueUpdateRequest(
     String businessUnit,
     String header,
     String description,
+    // TODO : updateBy feature
+    String updateBy,
     Map<String, String> tags) {
   public IssueUpdateRequest {
     tags = Map.copyOf(tags == null ? Map.of() : tags);

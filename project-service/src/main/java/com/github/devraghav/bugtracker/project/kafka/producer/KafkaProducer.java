@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.producer;
+package com.github.devraghav.bugtracker.project.kafka.producer;
 
 import com.github.devraghav.bugtracker.project.dto.Project;
 import com.github.devraghav.bugtracker.project.dto.ProjectRequest;

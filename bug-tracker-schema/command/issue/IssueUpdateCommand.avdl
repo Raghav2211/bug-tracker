@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.data_model.command.issue")
+protocol IssueUpdateCommand {
+	import idl "../../domain/issue/UpdateIssue.avdl";
+	record IssueUpdateCommand {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.data_model.domain.issue.UpdateIssue payload;
+	}
+}

@@ -2,9 +2,9 @@ package com.github.devraghav.bugtracker.project.service;
 
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
+import com.github.devraghav.bugtracker.project.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
-import com.github.devraghav.bugtracker.project.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;

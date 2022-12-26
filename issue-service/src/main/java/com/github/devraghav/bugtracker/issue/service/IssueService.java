@@ -3,6 +3,7 @@ package com.github.devraghav.bugtracker.issue.service;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import com.github.devraghav.bugtracker.issue.entity.ProjectInfoRef;
+import com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
 import java.util.Objects;
@@ -20,7 +21,8 @@ public record IssueService(
     UserReactiveClient userReactiveClient,
     ProjectReactiveClient projectReactiveClient,
     IssueRepository issueRepository,
-    IssueCommentFetchService issueCommentFetchService) {
+    IssueCommentFetchService issueCommentFetchService,
+    KafkaProducer kafkaProducer) {
 
   public Flux<Issue> getAll(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
@@ -44,20 +46,40 @@ public record IssueService(
     return findById(issueId).flatMap(this::generateIssue);
   }
 
-  public Mono<Issue> create(IssueRequest issueRequest) {
-    return validate(issueRequest).map(issueMapper::issueRequestToIssueEntity).flatMap(this::save);
+  public Mono<Issue> create(String requestId, IssueRequest issueRequest) {
+    return validate(issueRequest)
+        .flatMap(
+            validRequest ->
+                kafkaProducer.generateAndSendIssueCreateCommand(requestId, validRequest))
+        .map(issueMapper::issueRequestToIssueEntity)
+        .flatMap(issueEntity -> save(requestId, issueEntity));
   }
 
-  public Mono<Issue> update(String issueId, IssueUpdateRequest request) {
+  public Mono<Issue> update(String requestId, String issueId, IssueUpdateRequest request) {
     return findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
+        .flatMap(
+            issueEntity ->
+                kafkaProducer
+                    .generateAndSendIssueUpdateCommand(requestId, request)
+                    .thenReturn(issueEntity))
         .map(issueEntity -> issueMapper.issueRequestToIssueEntity(issueEntity, request))
-        .flatMap(this::save)
+        .flatMap(issueEntity -> update(requestId, issueEntity))
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  private Mono<Issue> save(IssueEntity issueEntity) {
-    return issueRepository.save(issueEntity).flatMap(this::generateIssue);
+  private Mono<Issue> save(String requestId, IssueEntity issueEntity) {
+    return issueRepository
+        .save(issueEntity)
+        .flatMap(this::generateIssue)
+        .flatMap(issue -> kafkaProducer.generateAndSendIssueCreatedEvent(requestId, issue));
+  }
+
+  private Mono<Issue> update(String requestId, IssueEntity issueEntity) {
+    return issueRepository
+        .save(issueEntity)
+        .flatMap(this::generateIssue)
+        .flatMap(issue -> kafkaProducer.generateAndSendIssueUpdatedEvent(requestId, issue));
   }
 
   public Mono<Boolean> exists(String issueId) {
