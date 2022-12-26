@@ -1,0 +1,10 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol Comment {
+	import idl "../user/User.avdl";
+	record Comment {
+		string id;
+		string content;
+		com.github.devraghav.data_model.domain.user.User commenter;
+		long createdAt;
+	}
+}

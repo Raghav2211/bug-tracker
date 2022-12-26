@@ -2,10 +2,6 @@ package com.github.devraghav.bugtracker.user.kafka.producer;
 
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.UUID;
-
 import com.github.devraghav.data_model.command.user.UserCreateCommand;
 import com.github.devraghav.data_model.domain.user.NewUser;
 import com.github.devraghav.data_model.event.user.UserCreatedEvent;
@@ -13,6 +9,9 @@ import com.github.devraghav.data_model.event.user.UserDuplicatedEvent;
 import com.github.devraghav.data_model.schema.user.UserCreateCommandSchema;
 import com.github.devraghav.data_model.schema.user.UserCreatedEventSchema;
 import com.github.devraghav.data_model.schema.user.UserDuplicatedEventSchema;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.beans.factory.annotation.Value;

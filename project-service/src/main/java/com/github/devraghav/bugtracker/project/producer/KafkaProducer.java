@@ -11,6 +11,7 @@ import com.github.devraghav.data_model.event.project.ProjectCreatedEvent;
 import com.github.devraghav.data_model.event.project.ProjectDuplicatedEvent;
 import com.github.devraghav.data_model.schema.project.ProjectCreateCommandSchema;
 import com.github.devraghav.data_model.schema.project.ProjectCreatedEventSchema;
+import com.github.devraghav.data_model.schema.project.ProjectDuplicatedEventSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -18,8 +19,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import com.github.devraghav.data_model.schema.project.ProjectDuplicatedEventSchema;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.beans.factory.annotation.Value;
@@ -113,8 +112,7 @@ public record KafkaProducer(
         .build();
   }
 
-  private NewProject getNewProject(
-      ProjectRequest projectRequest) {
+  private NewProject getNewProject(ProjectRequest projectRequest) {
     var tags =
         projectRequest.tags().entrySet().stream()
             .collect(Collectors.toMap(Objects::toString, Object::toString));
