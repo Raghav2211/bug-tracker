@@ -1,4 +1,4 @@
-@namespace("com.github.devraghav.event.project")
+@namespace("com.github.devraghav.data_model.event.project")
 protocol ProjectDuplicatedEvent {
 	import idl "../../domain/project/NewProject.avdl";
 	record ProjectDuplicatedEvent {
@@ -7,6 +7,6 @@ protocol ProjectDuplicatedEvent {
 		string name;
 		string publisher;
 		long createAt;
-		com.github.devraghav.domain.project.NewProject payload;
+		com.github.devraghav.data_model.domain.project.NewProject payload;
 	}
 }

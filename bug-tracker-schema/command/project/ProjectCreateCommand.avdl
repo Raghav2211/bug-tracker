@@ -1,4 +1,4 @@
-@namespace("com.github.devraghav.command.project")
+@namespace("com.github.devraghav.data_model.command.project")
 protocol ProjectCreateCommand {
 	import idl "../../domain/project/NewProject.avdl";
 	record ProjectCreateCommand {
@@ -7,6 +7,6 @@ protocol ProjectCreateCommand {
 		string name;
 		string publisher;
 		long createAt;
-		com.github.devraghav.domain.project.NewProject payload;
+		com.github.devraghav.data_model.domain.project.NewProject payload;
 	}
 }

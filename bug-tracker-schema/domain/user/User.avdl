@@ -1,4 +1,4 @@
-@namespace("com.github.devraghav.domain.user")
+@namespace("com.github.devraghav.data_model.domain.user")
 protocol User {
 	record User {
 		string id;

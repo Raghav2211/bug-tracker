@@ -14,10 +14,10 @@
   }
 }
  */
-@namespace("com.github.devraghav.schema.user")
+@namespace("com.github.devraghav.data_model.schema.user")
 protocol UserCreateCommandSchema {
 	import idl "../../command/user/UserCreateCommand.avdl";
 	record UserCreateCommandSchema {
-		com.github.devraghav.command.user.UserCreateCommand command;
+		com.github.devraghav.data_model.command.user.UserCreateCommand command;
 	}
 }

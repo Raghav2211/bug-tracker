@@ -4,6 +4,7 @@ import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
+import com.github.devraghav.bugtracker.project.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -15,17 +16,18 @@ public record ProjectService(
     ProjectMapper projectMapper,
     ProjectVersionMapper projectVersionMapper,
     UserReactiveClient userReactiveClient,
-    ProjectRepository projectRepository) {
+    ProjectRepository projectRepository,
+    KafkaProducer kafkaProducer) {
 
-  public Mono<Project> save(ProjectRequest projectRequest) {
+  public Mono<Project> save(String requestId, ProjectRequest projectRequest) {
     return Mono.just(projectRequest)
         .flatMap(this::validate)
+        .flatMap(request -> kafkaProducer.generateAndSendProjectCreateCommand(requestId, request))
         .map(projectMapper::requestToEntity)
-        .flatMap(projectRepository::save)
-        .flatMap(this::getProject)
+        .flatMap(entity -> save(requestId, entity))
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> Mono.error(ProjectException.alreadyExistsByName(projectRequest.name())));
+            exception -> duplicateProject(requestId, projectRequest, exception));
   }
 
   public Flux<Project> findAll() {
@@ -49,8 +51,7 @@ public record ProjectService(
   public Mono<ProjectVersion> addVersionToProjectId(
       String projectId, ProjectVersionRequest projectVersionRequest) {
     return Mono.just(projectVersionRequest)
-        .flatMap(
-            _projectVersionRequest -> this.exists(projectId).thenReturn(_projectVersionRequest))
+        .flatMap(versionRequest -> this.exists(projectId).thenReturn(versionRequest))
         .map(projectVersionMapper::requestToEntity)
         .flatMap(
             projectVersionEntity -> projectRepository.saveVersion(projectId, projectVersionEntity))
@@ -80,6 +81,20 @@ public record ProjectService(
         .validate()
         .and(fetchAndValidateAuthorAccess(projectRequest.author()))
         .thenReturn(projectRequest);
+  }
+
+  private Mono<Project> save(String requestId, ProjectEntity projectEntity) {
+    return projectRepository
+        .save(projectEntity)
+        .flatMap(this::getProject)
+        .flatMap(project -> kafkaProducer.generateAndSendProjectCreatedEvent(requestId, project));
+  }
+
+  private Mono<Project> duplicateProject(
+      String requestId, ProjectRequest projectRequest, DuplicateKeyException exception) {
+    return kafkaProducer
+        .generateAndSendProjectDuplicatedEvent(requestId, projectRequest)
+        .flatMap(unused -> Mono.error(ProjectException.alreadyExistsByName(projectRequest.name())));
   }
 
   private Mono<Boolean> fetchAndValidateAuthorAccess(String author) {

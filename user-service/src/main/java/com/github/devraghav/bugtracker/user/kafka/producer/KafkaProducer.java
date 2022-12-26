@@ -2,15 +2,17 @@ package com.github.devraghav.bugtracker.user.kafka.producer;
 
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
-import com.github.devraghav.command.user.UserCreateCommand;
-import com.github.devraghav.event.user.UserCreatedEvent;
-import com.github.devraghav.event.user.UserDuplicatedEvent;
-import com.github.devraghav.schema.user.UserCreateCommandSchema;
-import com.github.devraghav.schema.user.UserCreatedEventSchema;
-import com.github.devraghav.schema.user.UserDuplicatedEventSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+
+import com.github.devraghav.data_model.command.user.UserCreateCommand;
+import com.github.devraghav.data_model.domain.user.NewUser;
+import com.github.devraghav.data_model.event.user.UserCreatedEvent;
+import com.github.devraghav.data_model.event.user.UserDuplicatedEvent;
+import com.github.devraghav.data_model.schema.user.UserCreateCommandSchema;
+import com.github.devraghav.data_model.schema.user.UserCreatedEventSchema;
+import com.github.devraghav.data_model.schema.user.UserDuplicatedEventSchema;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,7 +69,7 @@ public record KafkaProducer(
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Identity.User.Create")
+                .setName("User.User.Create")
                 .setPayload(getNewUSer(userRequest))
                 .setPublisher("Service.User")
                 .build())
@@ -82,7 +84,7 @@ public record KafkaProducer(
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Identity.User.Duplicated")
+                .setName("User.User.Duplicated")
                 .setPayload(getNewUSer(userRequest))
                 .setPublisher("Service.User")
                 .build())
@@ -96,15 +98,15 @@ public record KafkaProducer(
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Identity.User.Created")
-                .setPayload(getUserSchema(user))
+                .setName("User.User.Created")
+                .setPayload(getUser(user))
                 .setPublisher("Service.User")
                 .build())
         .build();
   }
 
-  private com.github.devraghav.domain.user.NewUser getNewUSer(UserRequest userRequest) {
-    return com.github.devraghav.domain.user.NewUser.newBuilder()
+  private NewUser getNewUSer(UserRequest userRequest) {
+    return NewUser.newBuilder()
         .setAccessLevel(userRequest.access().name())
         .setEmail(userRequest.email())
         .setFirstName(userRequest.firstName())
@@ -112,8 +114,8 @@ public record KafkaProducer(
         .build();
   }
 
-  private com.github.devraghav.domain.user.User getUserSchema(User user) {
-    return com.github.devraghav.domain.user.User.newBuilder()
+  private com.github.devraghav.data_model.domain.user.User getUser(User user) {
+    return com.github.devraghav.data_model.domain.user.User.newBuilder()
         .setId(user.id())
         .setAccessLevel(user.access().name())
         .setEmail(user.email())

@@ -14,10 +14,10 @@
   }
 }
  */
-@namespace("com.github.devraghav.schema.user")
+@namespace("com.github.devraghav.data_model.schema.user")
 protocol UserDuplicatedEventSchema {
 	import idl "../../event/user/UserDuplicatedEvent.avdl";
 	record UserDuplicatedEventSchema {
-		com.github.devraghav.event.user.UserDuplicatedEvent event;
+		com.github.devraghav.data_model.event.user.UserDuplicatedEvent event;
 	}
 }

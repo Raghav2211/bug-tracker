@@ -1,4 +1,4 @@
-@namespace("com.github.devraghav.event.user")
+@namespace("com.github.devraghav.data_model.event.user")
 protocol UserDuplicatedEvent {
 	import idl "../../domain/user/NewUser.avdl";
 	record UserDuplicatedEvent {
@@ -7,6 +7,6 @@ protocol UserDuplicatedEvent {
 		string name;
 		string publisher;
 		long createAt;
-		com.github.devraghav.domain.user.NewUser payload;
+		com.github.devraghav.data_model.domain.user.NewUser payload;
 	}
 }

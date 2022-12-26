@@ -1,4 +1,4 @@
-@namespace("com.github.devraghav.event.user")
+@namespace("com.github.devraghav.data_model.event.user")
 protocol UserCreatedEvent {
 	import idl "../../domain/user/User.avdl";
 	record UserCreatedEvent {
@@ -7,6 +7,6 @@ protocol UserCreatedEvent {
 		string name;
 		string publisher;
 		long createAt;
-		com.github.devraghav.domain.user.User payload;
+		com.github.devraghav.data_model.domain.user.User payload;
 	}
 }

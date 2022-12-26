@@ -1,4 +1,4 @@
-@namespace("com.github.devraghav.domain.project")
+@namespace("com.github.devraghav.data_model.domain.project")
 protocol Version {
 	record Version {
 		string id;

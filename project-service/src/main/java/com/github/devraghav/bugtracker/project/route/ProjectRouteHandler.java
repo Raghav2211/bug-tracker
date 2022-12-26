@@ -2,6 +2,7 @@ package com.github.devraghav.bugtracker.project.route;
 
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
+import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -23,7 +24,8 @@ public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(ProjectRequest.class)
-        .flatMap(projectService::save)
+        .flatMap(
+            projectRequest -> projectService.save(UUID.randomUUID().toString(), projectRequest))
         .flatMap(project -> ProjectResponse.create(request, project))
         .switchIfEmpty(ProjectResponse.noBody(request))
         .onErrorResume(
