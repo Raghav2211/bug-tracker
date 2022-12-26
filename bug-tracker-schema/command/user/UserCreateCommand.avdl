@@ -1,12 +1,12 @@
 @namespace("com.github.devraghav.command.user")
 protocol UserCreateCommand {
-	import idl "../../domain/user/User.avdl";
+	import idl "../../domain/user/NewUser.avdl";
 	record UserCreateCommand {
 		string id;
 		string requestId;
 		string name;
 		string publisher;
 		long createAt;
-		com.github.devraghav.domain.user.User payload;
+		com.github.devraghav.domain.user.NewUser payload;
 	}
 }

@@ -68,7 +68,7 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Identity.User.Create")
-                .setPayload(getUserCreateSchema(userRequest))
+                .setPayload(getNewUSer(userRequest))
                 .setPublisher("Service.User")
                 .build())
         .build();
@@ -83,7 +83,7 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Identity.User.Duplicated")
-                .setPayload(getUserCreateSchema(userRequest))
+                .setPayload(getNewUSer(userRequest))
                 .setPublisher("Service.User")
                 .build())
         .build();
@@ -103,8 +103,8 @@ public record KafkaProducer(
         .build();
   }
 
-  private com.github.devraghav.domain.user.User getUserCreateSchema(UserRequest userRequest) {
-    return com.github.devraghav.domain.user.User.newBuilder()
+  private com.github.devraghav.domain.user.NewUser getNewUSer(UserRequest userRequest) {
+    return com.github.devraghav.domain.user.NewUser.newBuilder()
         .setAccessLevel(userRequest.access().name())
         .setEmail(userRequest.email())
         .setFirstName(userRequest.firstName())

@@ -1,11 +1,9 @@
 @namespace("com.github.devraghav.domain.user")
-protocol User {
-	record User {
-		string id;
+protocol NewUser {
+	record NewUser {
 		string firstName;
 		string lastName;
 		string email;
-		boolean enabled;
 		string accessLevel;
 	}
 }
