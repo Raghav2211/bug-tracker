@@ -10,7 +10,7 @@ protocol Project {
 		string status;
 		com.github.devraghav.data_model.domain.user.User author;
 		long createdAt;
-		union {null,array<com.github.devraghav.data_model.domain.project.version.Version>} versions;
-		union {null,map<string>} tags;
+		array<com.github.devraghav.data_model.domain.project.version.Version> versions = [];
+		union {null,map<string>} tags = null;
 	}
 }

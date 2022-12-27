@@ -21,4 +21,9 @@
         <appender-ref ref="STDOUT" />
     </logger>
 
+    <logger name="com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer" level="debug" >
+        <appender-ref ref="FILE" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
 </configuration>

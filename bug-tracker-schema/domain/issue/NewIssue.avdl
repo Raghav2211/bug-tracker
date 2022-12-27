@@ -8,8 +8,8 @@ protocol NewIssue {
 		string businessUnit;
 		string priority;
 		string severity;
-		union {null, array<ProjectAttachment>} projectAttachments;
+		array<ProjectAttachment> projectAttachments = [];
 		string reporterId;
-		union {null, map<string> } tags;
+		union {null, map<string>} tags = null;
 	}
 }

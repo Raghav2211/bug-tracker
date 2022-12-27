@@ -46,32 +46,33 @@ public record KafkaProducer(
 
   public Mono<IssueRequest> sendIssueCreateCommand(String requestId, IssueRequest issueRequest) {
     var command = getCreateIssueSchema(requestId, issueRequest);
-    log.atDebug().log("Issue create command {}", command);
+    log.atDebug().log("IssueCreateCommand {}", command);
     return send(command).thenReturn(issueRequest);
   }
 
   public Mono<IssueRequest> sendIssueDuplicatedEvent(String requestId, IssueRequest issueRequest) {
     var event = getIssueDuplicatedSchema(requestId, issueRequest);
-    log.atDebug().log("Issue created event {}", event);
+    log.atDebug().log("IssueDuplicatedEvent {}", event);
     return send(event).thenReturn(issueRequest);
   }
 
   public Mono<Issue> sendIssueCreatedEvent(String requestId, Issue issue) {
+    log.atDebug().log("create issue created event using request {} issue {}", requestId, issue);
     var event = getIssueCreatedSchema(requestId, issue);
-    log.atDebug().log("Issue created event {}", event);
+    log.atDebug().log("IssueCreatedEvent {}", event);
     return send(event).thenReturn(issue);
   }
 
   public Mono<IssueUpdateRequest> sendIssueUpdateCommand(
       String requestId, IssueUpdateRequest IssueUpdateRequest) {
     var command = getUpdateIssueSchema(requestId, IssueUpdateRequest);
-    log.atDebug().log("Issue update command {}", command);
+    log.atDebug().log("IssueUpdateCommand {}", command);
     return send(command).thenReturn(IssueUpdateRequest);
   }
 
   public Mono<Issue> sendIssueUpdatedEvent(String requestId, Issue issue) {
     var event = getIssueUpdatedSchema(requestId, issue);
-    log.atDebug().log("Issue updated event {}", event);
+    log.atDebug().log("IssueUpdatedEvent {}", event);
     return send(event).thenReturn(issue);
   }
 
@@ -180,22 +181,25 @@ public record KafkaProducer(
   }
 
   private com.github.devraghav.data_model.domain.issue.Issue getIssue(Issue issue) {
-    return com.github.devraghav.data_model.domain.issue.Issue.newBuilder()
-        .setId(issue.getId())
-        .setHeader(issue.getHeader())
-        .setDescription(issue.getDescription())
-        .setBusinessUnit(issue.getBusinessUnit())
-        .setPriority(issue.getPriority().name())
-        .setSeverity(issue.getSeverity().name())
-        .setAssignee(getAssignee(issue.getAssignee()))
-        .setProjects(getProjects(issue.getProjects()))
-        .setWatchers(getWatchers(issue.getWatchers()))
-        .setComments(getComments(issue.getComments()))
-        .setReporter(getUser(issue.getReporter()))
-        .setTags(issue.getTags())
-        .setCreatedAt(issue.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
-        .setEndedAt(issue.getEndedAt().toEpochSecond(ZoneOffset.UTC))
-        .build();
+    var issueBuilder =
+        com.github.devraghav.data_model.domain.issue.Issue.newBuilder()
+            .setId(issue.getId())
+            .setHeader(issue.getHeader())
+            .setDescription(issue.getDescription())
+            .setBusinessUnit(issue.getBusinessUnit())
+            .setPriority(issue.getPriority().name())
+            .setSeverity(issue.getSeverity().name())
+            .setAssignee(getAssignee(issue.getAssignee()))
+            .setProjects(getProjects(issue.getProjects()))
+            .setWatchers(getWatchers(issue.getWatchers()))
+            .setComments(getComments(issue.getComments()))
+            .setReporter(getUser(issue.getReporter()))
+            .setTags(issue.getTags())
+            .setCreatedAt(issue.getCreatedAt().toEpochSecond(ZoneOffset.UTC));
+    if (issue.getEndedAt() != null) {
+      issueBuilder.setEndedAt(issue.getEndedAt().toEpochSecond(ZoneOffset.UTC));
+    }
+    return issueBuilder.build();
   }
 
   private User getAssignee(com.github.devraghav.bugtracker.issue.dto.User assignee) {

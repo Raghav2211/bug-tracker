@@ -5,6 +5,6 @@ protocol NewProject {
 		string description;
 		string status;
 		string authorId;
-		union {null,map<string>} tags;
+		union {null,map<string>} tags = null;
 	}
 }

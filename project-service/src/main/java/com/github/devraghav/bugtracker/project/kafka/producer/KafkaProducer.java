@@ -54,7 +54,7 @@ public record KafkaProducer(
   public Mono<ProjectRequest> sendProjectCreateCommand(
       String requestId, ProjectRequest projectRequest) {
     var command = getCreateProjectSchema(requestId, projectRequest);
-    log.atDebug().log("Project create command {}", command);
+    log.atDebug().log("CreateProjectSchema {}", command);
     return send(command).thenReturn(projectRequest);
   }
 
@@ -68,20 +68,25 @@ public record KafkaProducer(
   public Mono<ProjectRequest> sendProjectDuplicatedEvent(
       String requestId, ProjectRequest projectRequest) {
     var event = getProjectDuplicatedSchema(requestId, projectRequest);
-    log.atDebug().log("Project created event {}", event);
+    log.atDebug().log("ProjectDuplicatedSchema {}", event);
     return send(event).thenReturn(projectRequest);
   }
 
   public Mono<Project> sendProjectCreatedEvent(String requestId, Project project) {
     var event = getProjectCreatedSchema(requestId, project);
-    log.atDebug().log("Project created event {}", event);
+    log.atDebug().log("ProjectCreatedSchema {}", event);
     return send(event).thenReturn(project);
   }
 
   public Mono<ProjectVersion> sendProjectVersionCreatedEvent(
       String requestId, String projectId, ProjectVersion projectVersion) {
+    log.atDebug().log(
+        "create VersionCreateSchema against requestId {} projectId {} projectVersion {} ",
+        requestId,
+        projectId,
+        projectVersion);
     var event = getVersionCreatedSchema(requestId, projectId, projectVersion);
-    log.atDebug().log("ProjectVersion created event {}", event);
+    log.atDebug().log("VersionCreateSchema {}", event);
     return send(event).thenReturn(projectVersion);
   }
 

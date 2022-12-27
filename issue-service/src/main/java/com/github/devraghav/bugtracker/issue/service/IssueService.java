@@ -6,6 +6,7 @@ import com.github.devraghav.bugtracker.issue.entity.ProjectInfoRef;
 import com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple5;
 
 @Service
 public record IssueService(
@@ -138,33 +140,41 @@ public record IssueService(
   }
 
   private Mono<Issue> generateIssue(IssueEntity issueEntity) {
-    var issueBuilder = issueMapper.issueEntityToIssue(issueEntity);
-    return getWatchers(issueEntity.getWatchers())
-        .collect(Collectors.toSet())
-        .map(issueBuilder::watchers)
-        .flatMapMany(unused -> issueCommentFetchService.getComments(issueEntity.getId()))
-        .collectList()
-        .map(issueBuilder::comments)
-        .flatMap(unused -> fetchUser(issueEntity.getReporter()))
-        .map(issueBuilder::reporter)
-        .flatMapMany(unused -> getProjects(issueEntity.getProjects()))
-        .collectList()
-        .map(issueBuilder::projects)
-        .flatMap(unused -> getAssignee(issueEntity.getAssignee()))
-        .map(issueBuilder::assignee)
-        .map(unused -> issueBuilder.endedAt(issueEntity.getEndedAt()))
-        .map(unused -> issueBuilder.build());
+    var watchersMono = getWatchers(issueEntity.getWatchers()).collect(Collectors.toSet());
+    var commentsMono = issueCommentFetchService.getComments(issueEntity.getId()).collectList();
+    var projectsMono = getProjects(issueEntity.getProjects()).collectList();
+    var reporterMono = fetchUser(issueEntity.getReporter());
+    var assigneeMono =
+        getAssignee(issueEntity.getAssignee()).switchIfEmpty(Mono.just(Optional.empty()));
+    return Mono.zip(watchersMono, commentsMono, projectsMono, assigneeMono, reporterMono)
+        .map(tuple5 -> generateIssue(issueEntity, tuple5));
+  }
+
+  private Issue generateIssue(
+      IssueEntity issueEntity,
+      Tuple5<Set<User>, List<IssueComment>, List<Project>, Optional<User>, User> tuple5) {
+    var issueBuilder =
+        issueMapper
+            .issueEntityToIssue(issueEntity)
+            .watchers(tuple5.getT1())
+            .comments(tuple5.getT2())
+            .projects(tuple5.getT3())
+            .reporter(tuple5.getT5())
+            .endedAt(issueEntity.getEndedAt());
+    tuple5.getT4().ifPresent(issueBuilder::assignee);
+    return issueBuilder.build();
   }
 
   private Flux<User> getWatchers(Set<String> watchers) {
     return Flux.fromIterable(watchers).flatMap(this::fetchUser);
   }
 
-  private Mono<User> getAssignee(Optional<String> assignee) {
+  private Mono<Optional<User>> getAssignee(Optional<String> assignee) {
     return Mono.just(assignee)
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .flatMap(this::fetchUser);
+        .flatMap(this::fetchUser)
+        .map(Optional::of);
   }
 
   private Flux<Project> getProjects(Set<ProjectInfoRef> projectInfoRefs) {

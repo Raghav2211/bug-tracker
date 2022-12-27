@@ -8,7 +8,7 @@ protocol UpdateIssue {
 		string businessUnit;
 		string priority;
 		string severity;
-		union {null, array<ProjectAttachment>} projectAttachments;
-		union {null, map<string> } tags;
+		array<ProjectAttachment> projectAttachments = [];
+		union {null, map<string>} tags = null;
 	}
 }
