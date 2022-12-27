@@ -223,8 +223,6 @@ public record KafkaProducer(
         .build();
   }
 
-  
-
   private IssueUpdatedSchema getIssueUpdatedSchema(String requestId, Issue issue) {
     return IssueUpdatedSchema.newBuilder()
         .setEvent(
