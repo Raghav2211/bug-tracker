@@ -4,16 +4,18 @@ import com.github.devraghav.bugtracker.project.dto.Project;
 import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
 import com.github.devraghav.bugtracker.project.dto.ProjectVersionRequest;
-import com.github.devraghav.data_model.command.project.ProjectCreateCommand;
-import com.github.devraghav.data_model.command.project.ProjectVersionCreateCommand;
+import com.github.devraghav.data_model.command.project.CreateProject;
+import com.github.devraghav.data_model.command.project.version.CreateVersion;
 import com.github.devraghav.data_model.domain.project.NewProject;
-import com.github.devraghav.data_model.domain.project.NewProjectVersion;
-import com.github.devraghav.data_model.domain.project.Version;
+import com.github.devraghav.data_model.domain.project.version.NewVersion;
+import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
-import com.github.devraghav.data_model.event.project.ProjectCreatedEvent;
-import com.github.devraghav.data_model.event.project.ProjectDuplicatedEvent;
-import com.github.devraghav.data_model.event.project.ProjectVersionCreatedEvent;
+import com.github.devraghav.data_model.event.project.ProjectCreated;
+import com.github.devraghav.data_model.event.project.ProjectDuplicated;
+import com.github.devraghav.data_model.event.project.version.VersionCreated;
 import com.github.devraghav.data_model.schema.project.*;
+import com.github.devraghav.data_model.schema.project.version.CreateVersionSchema;
+import com.github.devraghav.data_model.schema.project.version.VersionCreatedSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -51,43 +53,43 @@ public record KafkaProducer(
 
   public Mono<ProjectRequest> sendProjectCreateCommand(
       String requestId, ProjectRequest projectRequest) {
-    var command = getProjectCreateCommandSchema(requestId, projectRequest);
+    var command = getCreateProjectSchema(requestId, projectRequest);
     log.atDebug().log("Project create command {}", command);
     return send(command).thenReturn(projectRequest);
   }
 
   public Mono<ProjectVersionRequest> sendProjectVersionCreateCommand(
       String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
-    var command = getProjectVersionCreateCommandSchema(requestId, projectId, projectVersionRequest);
+    var command = getCreateVersionSchema(requestId, projectId, projectVersionRequest);
     log.atDebug().log("ProjectVersion create command {}", command);
     return send(command).thenReturn(projectVersionRequest);
   }
 
   public Mono<ProjectRequest> sendProjectDuplicatedEvent(
       String requestId, ProjectRequest projectRequest) {
-    var event = getProjectDuplicatedEventSchema(requestId, projectRequest);
+    var event = getProjectDuplicatedSchema(requestId, projectRequest);
     log.atDebug().log("Project created event {}", event);
     return send(event).thenReturn(projectRequest);
   }
 
   public Mono<Project> sendProjectCreatedEvent(String requestId, Project project) {
-    var event = getProjectCreatedEventSchema(requestId, project);
+    var event = getProjectCreatedSchema(requestId, project);
     log.atDebug().log("Project created event {}", event);
     return send(event).thenReturn(project);
   }
 
   public Mono<ProjectVersion> sendProjectVersionCreatedEvent(
       String requestId, String projectId, ProjectVersion projectVersion) {
-    var event = getProjectVersionCreatedEventSchema(requestId, projectId, projectVersion);
+    var event = getVersionCreatedSchema(requestId, projectId, projectVersion);
     log.atDebug().log("ProjectVersion created event {}", event);
     return send(event).thenReturn(projectVersion);
   }
 
-  private ProjectCreateCommandSchema getProjectCreateCommandSchema(
+  private CreateProjectSchema getCreateProjectSchema(
       String requestId, ProjectRequest projectRequest) {
-    return ProjectCreateCommandSchema.newBuilder()
+    return CreateProjectSchema.newBuilder()
         .setCommand(
-            ProjectCreateCommand.newBuilder()
+            CreateProject.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -98,30 +100,28 @@ public record KafkaProducer(
         .build();
   }
 
-  private ProjectVersionCreateCommandSchema getProjectVersionCreateCommandSchema(
+  private CreateVersionSchema getCreateVersionSchema(
       String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
-    return ProjectVersionCreateCommandSchema.newBuilder()
+    return CreateVersionSchema.newBuilder()
         .setCommand(
-            ProjectVersionCreateCommand.newBuilder()
+            CreateVersion.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Project.Version.Create")
                 .setProjectId(projectId)
                 .setPayload(
-                    NewProjectVersion.newBuilder()
-                        .setVersion(projectVersionRequest.version())
-                        .build())
+                    NewVersion.newBuilder().setVersion(projectVersionRequest.version()).build())
                 .setPublisher("Service.Project")
                 .build())
         .build();
   }
 
-  private ProjectDuplicatedEventSchema getProjectDuplicatedEventSchema(
+  private ProjectDuplicatedSchema getProjectDuplicatedSchema(
       String requestId, ProjectRequest projectRequest) {
-    return ProjectDuplicatedEventSchema.newBuilder()
+    return ProjectDuplicatedSchema.newBuilder()
         .setEvent(
-            ProjectDuplicatedEvent.newBuilder()
+            ProjectDuplicated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -132,11 +132,10 @@ public record KafkaProducer(
         .build();
   }
 
-  private ProjectCreatedEventSchema getProjectCreatedEventSchema(
-      String requestId, Project project) {
-    return ProjectCreatedEventSchema.newBuilder()
+  private ProjectCreatedSchema getProjectCreatedSchema(String requestId, Project project) {
+    return ProjectCreatedSchema.newBuilder()
         .setEvent(
-            ProjectCreatedEvent.newBuilder()
+            ProjectCreated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -147,11 +146,11 @@ public record KafkaProducer(
         .build();
   }
 
-  private ProjectVersionCreatedEventSchema getProjectVersionCreatedEventSchema(
+  private VersionCreatedSchema getVersionCreatedSchema(
       String requestId, String projectId, ProjectVersion projectVersion) {
-    return ProjectVersionCreatedEventSchema.newBuilder()
+    return VersionCreatedSchema.newBuilder()
         .setEvent(
-            ProjectVersionCreatedEvent.newBuilder()
+            VersionCreated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))

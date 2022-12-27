@@ -1,17 +1,16 @@
 package com.github.devraghav.bugtracker.issue.kafka.producer;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
-import com.github.devraghav.data_model.command.issue.IssueCreateCommand;
-import com.github.devraghav.data_model.command.issue.IssueUpdateCommand;
-import com.github.devraghav.data_model.domain.issue.Comment;
+import com.github.devraghav.data_model.command.issue.CreateIssue;
 import com.github.devraghav.data_model.domain.issue.NewIssue;
 import com.github.devraghav.data_model.domain.issue.ProjectAttachment;
 import com.github.devraghav.data_model.domain.issue.UpdateIssue;
-import com.github.devraghav.data_model.domain.project.Version;
+import com.github.devraghav.data_model.domain.issue.comment.Comment;
+import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
-import com.github.devraghav.data_model.event.issue.IssueCreatedEvent;
-import com.github.devraghav.data_model.event.issue.IssueDuplicatedEvent;
-import com.github.devraghav.data_model.event.issue.IssueUpdatedEvent;
+import com.github.devraghav.data_model.event.issue.IssueCreated;
+import com.github.devraghav.data_model.event.issue.IssueDuplicated;
+import com.github.devraghav.data_model.event.issue.IssueUpdated;
 import com.github.devraghav.data_model.schema.issue.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -45,44 +44,41 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<IssueRequest> generateAndSendIssueCreateCommand(
-      String requestId, IssueRequest issueRequest) {
-    var command = getIssueCreateCommandSchema(requestId, issueRequest);
+  public Mono<IssueRequest> sendIssueCreateCommand(String requestId, IssueRequest issueRequest) {
+    var command = getCreateIssueSchema(requestId, issueRequest);
     log.atDebug().log("Issue create command {}", command);
     return send(command).thenReturn(issueRequest);
   }
 
-  public Mono<IssueRequest> generateAndSendIssueDuplicatedEvent(
-      String requestId, IssueRequest issueRequest) {
-    var event = getIssueDuplicatedEventSchema(requestId, issueRequest);
+  public Mono<IssueRequest> sendIssueDuplicatedEvent(String requestId, IssueRequest issueRequest) {
+    var event = getIssueDuplicatedSchema(requestId, issueRequest);
     log.atDebug().log("Issue created event {}", event);
     return send(event).thenReturn(issueRequest);
   }
 
-  public Mono<Issue> generateAndSendIssueCreatedEvent(String requestId, Issue issue) {
-    var event = getIssueCreatedEventSchema(requestId, issue);
+  public Mono<Issue> sendIssueCreatedEvent(String requestId, Issue issue) {
+    var event = getIssueCreatedSchema(requestId, issue);
     log.atDebug().log("Issue created event {}", event);
     return send(event).thenReturn(issue);
   }
 
-  public Mono<IssueUpdateRequest> generateAndSendIssueUpdateCommand(
+  public Mono<IssueUpdateRequest> sendIssueUpdateCommand(
       String requestId, IssueUpdateRequest IssueUpdateRequest) {
-    var command = getIssueUpdatedCommandSchema(requestId, IssueUpdateRequest);
+    var command = getUpdateIssueSchema(requestId, IssueUpdateRequest);
     log.atDebug().log("Issue update command {}", command);
     return send(command).thenReturn(IssueUpdateRequest);
   }
 
-  public Mono<Issue> generateAndSendIssueUpdatedEvent(String requestId, Issue issue) {
-    var event = getIssueUpdatedEventSchema(requestId, issue);
+  public Mono<Issue> sendIssueUpdatedEvent(String requestId, Issue issue) {
+    var event = getIssueUpdatedSchema(requestId, issue);
     log.atDebug().log("Issue updated event {}", event);
     return send(event).thenReturn(issue);
   }
 
-  private IssueCreateCommandSchema getIssueCreateCommandSchema(
-      String requestId, IssueRequest projectRequest) {
-    return IssueCreateCommandSchema.newBuilder()
+  private CreateIssueSchema getCreateIssueSchema(String requestId, IssueRequest projectRequest) {
+    return CreateIssueSchema.newBuilder()
         .setCommand(
-            IssueCreateCommand.newBuilder()
+            CreateIssue.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -93,11 +89,11 @@ public record KafkaProducer(
         .build();
   }
 
-  private IssueUpdateCommandSchema getIssueUpdatedCommandSchema(
+  private UpdateIssueSchema getUpdateIssueSchema(
       String requestId, IssueUpdateRequest issueUpdateRequest) {
-    return IssueUpdateCommandSchema.newBuilder()
+    return UpdateIssueSchema.newBuilder()
         .setCommand(
-            IssueUpdateCommand.newBuilder()
+            com.github.devraghav.data_model.command.issue.UpdateIssue.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -108,11 +104,11 @@ public record KafkaProducer(
         .build();
   }
 
-  private IssueDuplicatedEventSchema getIssueDuplicatedEventSchema(
+  private IssueDuplicatedSchema getIssueDuplicatedSchema(
       String requestId, IssueRequest issueRequest) {
-    return IssueDuplicatedEventSchema.newBuilder()
+    return IssueDuplicatedSchema.newBuilder()
         .setEvent(
-            IssueDuplicatedEvent.newBuilder()
+            IssueDuplicated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -123,10 +119,10 @@ public record KafkaProducer(
         .build();
   }
 
-  private IssueCreatedEventSchema getIssueCreatedEventSchema(String requestId, Issue issue) {
-    return IssueCreatedEventSchema.newBuilder()
+  private IssueCreatedSchema getIssueCreatedSchema(String requestId, Issue issue) {
+    return IssueCreatedSchema.newBuilder()
         .setEvent(
-            IssueCreatedEvent.newBuilder()
+            IssueCreated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -137,10 +133,10 @@ public record KafkaProducer(
         .build();
   }
 
-  private IssueUpdatedEventSchema getIssueUpdatedEventSchema(String requestId, Issue issue) {
-    return IssueUpdatedEventSchema.newBuilder()
+  private IssueUpdatedSchema getIssueUpdatedSchema(String requestId, Issue issue) {
+    return IssueUpdatedSchema.newBuilder()
         .setEvent(
-            IssueUpdatedEvent.newBuilder()
+            IssueUpdated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))

@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.data_model.schema.issue")
+protocol IssueUpdatedSchema {
+	import idl "../../event/issue/IssueUpdated.avdl";
+	record IssueUpdatedSchema {
+		com.github.devraghav.data_model.event.issue.IssueUpdated event;
+	}
+}

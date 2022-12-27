@@ -1,7 +1,7 @@
 @namespace("com.github.devraghav.data_model.event.project")
-protocol ProjectCreatedEvent {
+protocol ProjectCreated {
 	import idl "../../domain/project/Project.avdl";
-	record ProjectCreatedEvent {
+	record ProjectCreated {
 		string id;
 		string requestId;
 		string name;

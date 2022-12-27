@@ -18,7 +18,7 @@ public record UserService(
 
   public Mono<User> save(String requestId, UserRequest userRequest) {
     return kafkaProducer
-        .generateAndSendUserCreateCommand(requestId, userRequest)
+        .sendUserCreateCommand(requestId, userRequest)
         .map(userMapper::requestToEntity)
         .flatMap(userEntity -> save(requestId, userEntity))
         .onErrorResume(
@@ -41,13 +41,13 @@ public record UserService(
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)
-        .flatMap(user -> kafkaProducer.generateAndSendUserCreatedEvent(requestId, user));
+        .flatMap(user -> kafkaProducer.sendUserCreatedEvent(requestId, user));
   }
 
   private Mono<User> duplicateUser(
       String requestId, UserRequest userRequest, DuplicateKeyException exception) {
     return kafkaProducer
-        .generateAndSendUserDuplicatedEvent(requestId, userRequest)
+        .sendUserDuplicatedEvent(requestId, userRequest)
         .flatMap(unused -> Mono.error(UserException.alreadyExistsWithEmail(userRequest.email())));
   }
 }

@@ -1,7 +1,7 @@
 @namespace("com.github.devraghav.data_model.command.user")
-protocol UserCreateCommand {
+protocol CreateUser {
 	import idl "../../domain/user/NewUser.avdl";
-	record UserCreateCommand {
+	record CreateUser {
 		string id;
 		string requestId;
 		string name;

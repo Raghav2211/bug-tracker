@@ -1,7 +1,0 @@
-@namespace("com.github.devraghav.data_model.schema.project")
-protocol ProjectVersionCreatedEventSchema {
-	import idl "../../event/project/ProjectVersionCreatedEvent.avdl";
-	record ProjectVersionCreatedEventSchema {
-		com.github.devraghav.data_model.event.project.ProjectVersionCreatedEvent event;
-	}
-}

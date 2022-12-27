@@ -1,7 +1,7 @@
 @namespace("com.github.devraghav.data_model.command.issue")
-protocol IssueCreateCommand {
+protocol CreateIssue {
 	import idl "../../domain/issue/NewIssue.avdl";
-	record IssueCreateCommand {
+	record CreateIssue {
 		string id;
 		string requestId;
 		string name;

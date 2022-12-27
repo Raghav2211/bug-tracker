@@ -1,6 +1,0 @@
-@namespace("com.github.devraghav.data_model.domain.project")
-protocol NewProjectVersion {
-	record NewProjectVersion {
-		string version;
-	}
-}

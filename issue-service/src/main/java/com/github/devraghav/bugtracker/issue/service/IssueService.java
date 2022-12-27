@@ -48,9 +48,7 @@ public record IssueService(
 
   public Mono<Issue> create(String requestId, IssueRequest issueRequest) {
     return validate(issueRequest)
-        .flatMap(
-            validRequest ->
-                kafkaProducer.generateAndSendIssueCreateCommand(requestId, validRequest))
+        .flatMap(validRequest -> kafkaProducer.sendIssueCreateCommand(requestId, validRequest))
         .map(issueMapper::issueRequestToIssueEntity)
         .flatMap(issueEntity -> save(requestId, issueEntity));
   }
@@ -60,9 +58,7 @@ public record IssueService(
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
         .flatMap(
             issueEntity ->
-                kafkaProducer
-                    .generateAndSendIssueUpdateCommand(requestId, request)
-                    .thenReturn(issueEntity))
+                kafkaProducer.sendIssueUpdateCommand(requestId, request).thenReturn(issueEntity))
         .map(issueEntity -> issueMapper.issueRequestToIssueEntity(issueEntity, request))
         .flatMap(issueEntity -> update(requestId, issueEntity))
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
@@ -72,14 +68,14 @@ public record IssueService(
     return issueRepository
         .save(issueEntity)
         .flatMap(this::generateIssue)
-        .flatMap(issue -> kafkaProducer.generateAndSendIssueCreatedEvent(requestId, issue));
+        .flatMap(issue -> kafkaProducer.sendIssueCreatedEvent(requestId, issue));
   }
 
   private Mono<Issue> update(String requestId, IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .flatMap(this::generateIssue)
-        .flatMap(issue -> kafkaProducer.generateAndSendIssueUpdatedEvent(requestId, issue));
+        .flatMap(issue -> kafkaProducer.sendIssueUpdatedEvent(requestId, issue));
   }
 
   public Mono<Boolean> exists(String issueId) {

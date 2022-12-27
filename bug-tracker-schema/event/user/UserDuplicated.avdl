@@ -1,7 +1,7 @@
 @namespace("com.github.devraghav.data_model.event.user")
-protocol UserDuplicatedEvent {
+protocol UserDuplicated {
 	import idl "../../domain/user/NewUser.avdl";
-	record UserDuplicatedEvent {
+	record UserDuplicated {
 		string id;
 		string requestId;
 		string name;

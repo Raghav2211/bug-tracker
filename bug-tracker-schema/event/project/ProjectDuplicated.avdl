@@ -1,7 +1,7 @@
-@namespace("com.github.devraghav.data_model.command.project")
-protocol ProjectCreateCommand {
+@namespace("com.github.devraghav.data_model.event.project")
+protocol ProjectDuplicated {
 	import idl "../../domain/project/NewProject.avdl";
-	record ProjectCreateCommand {
+	record ProjectDuplicated {
 		string id;
 		string requestId;
 		string name;

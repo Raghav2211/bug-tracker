@@ -17,9 +17,9 @@
 }
  */
 @namespace("com.github.devraghav.data_model.schema.user")
-protocol UserCreatedEventSchema {
-	import idl "../../event/user/UserCreatedEvent.avdl";
-	record UserCreatedEventSchema {
-		com.github.devraghav.data_model.event.user.UserCreatedEvent event;
+protocol UserCreatedSchema {
+	import idl "../../event/user/UserCreated.avdl";
+	record UserCreatedSchema {
+		com.github.devraghav.data_model.event.user.UserCreated event;
 	}
 }

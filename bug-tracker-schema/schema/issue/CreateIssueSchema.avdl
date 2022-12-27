@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.data_model.schema.issue")
+protocol CreateIssueSchema {
+	import idl "../../command/issue/CreateIssue.avdl";
+	record CreateIssueSchema {
+		com.github.devraghav.data_model.command.issue.CreateIssue command;
+	}
+}

@@ -1,6 +1,6 @@
-@namespace("com.github.devraghav.data_model.domain.issue")
+@namespace("com.github.devraghav.data_model.domain.issue.comment")
 protocol Comment {
-	import idl "../user/User.avdl";
+	import idl "../../user/User.avdl";
 	record Comment {
 		string id;
 		string content;

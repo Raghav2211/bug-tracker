@@ -15,9 +15,9 @@
 }
  */
 @namespace("com.github.devraghav.data_model.schema.user")
-protocol UserCreateCommandSchema {
-	import idl "../../command/user/UserCreateCommand.avdl";
-	record UserCreateCommandSchema {
-		com.github.devraghav.data_model.command.user.UserCreateCommand command;
+protocol CreateUserSchema {
+	import idl "../../command/user/CreateUser.avdl";
+	record CreateUserSchema {
+		com.github.devraghav.data_model.command.user.CreateUser command;
 	}
 }

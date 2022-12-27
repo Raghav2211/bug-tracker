@@ -2,13 +2,13 @@ package com.github.devraghav.bugtracker.user.kafka.producer;
 
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
-import com.github.devraghav.data_model.command.user.UserCreateCommand;
+import com.github.devraghav.data_model.command.user.CreateUser;
 import com.github.devraghav.data_model.domain.user.NewUser;
-import com.github.devraghav.data_model.event.user.UserCreatedEvent;
-import com.github.devraghav.data_model.event.user.UserDuplicatedEvent;
-import com.github.devraghav.data_model.schema.user.UserCreateCommandSchema;
-import com.github.devraghav.data_model.schema.user.UserCreatedEventSchema;
-import com.github.devraghav.data_model.schema.user.UserDuplicatedEventSchema;
+import com.github.devraghav.data_model.event.user.UserCreated;
+import com.github.devraghav.data_model.event.user.UserDuplicated;
+import com.github.devraghav.data_model.schema.user.CreateUserSchema;
+import com.github.devraghav.data_model.schema.user.UserCreatedSchema;
+import com.github.devraghav.data_model.schema.user.UserDuplicatedSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -40,31 +40,28 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<UserRequest> generateAndSendUserCreateCommand(
-      String requestId, UserRequest userRequest) {
-    var command = getUserCreateCommandSchema(requestId, userRequest);
+  public Mono<UserRequest> sendUserCreateCommand(String requestId, UserRequest userRequest) {
+    var command = getCreateUserSchema(requestId, userRequest);
     log.atDebug().log("User create command {}", command);
     return send(command).thenReturn(userRequest);
   }
 
-  public Mono<UserRequest> generateAndSendUserDuplicatedEvent(
-      String requestId, UserRequest userRequest) {
-    var event = getUserDuplicatedEventSchema(requestId, userRequest);
+  public Mono<UserRequest> sendUserDuplicatedEvent(String requestId, UserRequest userRequest) {
+    var event = getUserDuplicatedSchema(requestId, userRequest);
     log.atDebug().log("User created event {}", event);
     return send(event).thenReturn(userRequest);
   }
 
-  public Mono<User> generateAndSendUserCreatedEvent(String requestId, User user) {
-    var event = getUserCreatedEventSchema(requestId, user);
+  public Mono<User> sendUserCreatedEvent(String requestId, User user) {
+    var event = getUserCreatedSchema(requestId, user);
     log.atDebug().log("User created event {}", event);
     return send(event).thenReturn(user);
   }
 
-  private UserCreateCommandSchema getUserCreateCommandSchema(
-      String requestId, UserRequest userRequest) {
-    return UserCreateCommandSchema.newBuilder()
+  private CreateUserSchema getCreateUserSchema(String requestId, UserRequest userRequest) {
+    return CreateUserSchema.newBuilder()
         .setCommand(
-            UserCreateCommand.newBuilder()
+            CreateUser.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -75,11 +72,10 @@ public record KafkaProducer(
         .build();
   }
 
-  private UserDuplicatedEventSchema getUserDuplicatedEventSchema(
-      String requestId, UserRequest userRequest) {
-    return UserDuplicatedEventSchema.newBuilder()
+  private UserDuplicatedSchema getUserDuplicatedSchema(String requestId, UserRequest userRequest) {
+    return UserDuplicatedSchema.newBuilder()
         .setEvent(
-            UserDuplicatedEvent.newBuilder()
+            UserDuplicated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
@@ -90,10 +86,10 @@ public record KafkaProducer(
         .build();
   }
 
-  private UserCreatedEventSchema getUserCreatedEventSchema(String requestId, User user) {
-    return UserCreatedEventSchema.newBuilder()
+  private UserCreatedSchema getUserCreatedSchema(String requestId, User user) {
+    return UserCreatedSchema.newBuilder()
         .setEvent(
-            UserCreatedEvent.newBuilder()
+            UserCreated.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))

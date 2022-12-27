@@ -1,7 +1,7 @@
 @namespace("com.github.devraghav.data_model.event.issue")
-protocol IssueCreatedEvent {
+protocol IssueUpdated {
 	import idl "../../domain/issue/Issue.avdl";
-	record IssueCreatedEvent {
+	record IssueUpdated {
 		string id;
 		string requestId;
 		string name;
