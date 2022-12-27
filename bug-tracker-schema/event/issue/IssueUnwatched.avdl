@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.data_model.event.issue")
+protocol IssueUnwatched {
+	import idl "../../domain/issue/Unwatch.avdl";
+	record IssueUnwatched {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.data_model.domain.issue.Unwatch payload;
+	}
+}

@@ -1,0 +1,8 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol Unwatch {
+	import idl "../user/User.avdl";
+	record Unwatch {
+		string issueId;
+		com.github.devraghav.data_model.domain.user.User removeWatcher;
+	}
+}

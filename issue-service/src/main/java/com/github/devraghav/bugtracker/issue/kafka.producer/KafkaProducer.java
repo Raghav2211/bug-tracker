@@ -1,16 +1,13 @@
 package com.github.devraghav.bugtracker.issue.kafka.producer;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
+import com.github.devraghav.bugtracker.issue.dto.Issue;
 import com.github.devraghav.data_model.command.issue.CreateIssue;
-import com.github.devraghav.data_model.domain.issue.NewIssue;
-import com.github.devraghav.data_model.domain.issue.ProjectAttachment;
-import com.github.devraghav.data_model.domain.issue.UpdateIssue;
+import com.github.devraghav.data_model.domain.issue.*;
 import com.github.devraghav.data_model.domain.issue.comment.Comment;
 import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
-import com.github.devraghav.data_model.event.issue.IssueCreated;
-import com.github.devraghav.data_model.event.issue.IssueDuplicated;
-import com.github.devraghav.data_model.event.issue.IssueUpdated;
+import com.github.devraghav.data_model.event.issue.*;
 import com.github.devraghav.data_model.schema.issue.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -76,6 +73,33 @@ public record KafkaProducer(
     return send(event).thenReturn(issue);
   }
 
+  public Mono<String> sendIssueAssignedEvent(
+      String requestId, String issueId, com.github.devraghav.bugtracker.issue.dto.User user) {
+    var event = getIssueAssignedSchema(requestId, issueId, user);
+    log.atDebug().log("IssueAssigned {}", event);
+    return send(event).thenReturn(issueId);
+  }
+
+  public Mono<String> sendIssueUnassignedEvent(String requestId, String issueId) {
+    var event = getIssueUnassignedSchema(requestId, issueId);
+    log.atDebug().log("IssueUnassigned {}", event);
+    return send(event).thenReturn(issueId);
+  }
+
+  public Mono<String> sendIssueWatchedEvent(
+      String requestId, String issueId, com.github.devraghav.bugtracker.issue.dto.User user) {
+    var event = getIssueWatchedSchema(requestId, issueId, user);
+    log.atDebug().log("IssueWatchedEvent {}", event);
+    return send(event).thenReturn(issueId);
+  }
+
+  public Mono<String> sendIssueUnwatchedEvent(
+      String requestId, String issueId, com.github.devraghav.bugtracker.issue.dto.User user) {
+    var event = getIssueUnwatchedSchema(requestId, issueId, user);
+    log.atDebug().log("IssueUnwatched {}", event);
+    return send(event).thenReturn(issueId);
+  }
+
   private CreateIssueSchema getCreateIssueSchema(String requestId, IssueRequest projectRequest) {
     return CreateIssueSchema.newBuilder()
         .setCommand(
@@ -133,6 +157,73 @@ public record KafkaProducer(
                 .build())
         .build();
   }
+
+  private IssueAssignedSchema getIssueAssignedSchema(
+      String requestId, String issueId, com.github.devraghav.bugtracker.issue.dto.User user) {
+    return IssueAssignedSchema.newBuilder()
+        .setEvent(
+            IssueAssigned.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Assign.Added")
+                .setPayload(
+                    Assign.newBuilder().setIssueId(issueId).setAssignee(getUser(user)).build())
+                .setPublisher("Service.Issue")
+                .build())
+        .build();
+  }
+
+  private IssueUnassignedSchema getIssueUnassignedSchema(String requestId, String issueId) {
+    return IssueUnassignedSchema.newBuilder()
+        .setEvent(
+            IssueUnassigned.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Unassign.Removed")
+                .setPayload(Unassign.newBuilder().setIssueId(issueId).build())
+                .setPublisher("Service.Issue")
+                .build())
+        .build();
+  }
+
+  private IssueWatchedSchema getIssueWatchedSchema(
+      String requestId, String issueId, com.github.devraghav.bugtracker.issue.dto.User user) {
+    return IssueWatchedSchema.newBuilder()
+        .setEvent(
+            IssueWatched.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Watcher.Added")
+                .setPayload(
+                    Watcher.newBuilder().setIssueId(issueId).setWatcher(getUser(user)).build())
+                .setPublisher("Service.Issue")
+                .build())
+        .build();
+  }
+
+  private IssueUnwatchedSchema getIssueUnwatchedSchema(
+      String requestId, String issueId, com.github.devraghav.bugtracker.issue.dto.User user) {
+    return IssueUnwatchedSchema.newBuilder()
+        .setEvent(
+            IssueUnwatched.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Watcher.Removed")
+                .setPayload(
+                    Unwatch.newBuilder()
+                        .setIssueId(issueId)
+                        .setRemoveWatcher(getUser(user))
+                        .build())
+                .setPublisher("Service.Issue")
+                .build())
+        .build();
+  }
+
+  
 
   private IssueUpdatedSchema getIssueUpdatedSchema(String requestId, Issue issue) {
     return IssueUpdatedSchema.newBuilder()

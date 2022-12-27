@@ -65,7 +65,9 @@ public record IssueRouteHandler(
     var issueId = serverRequest.pathVariable("id");
     return serverRequest
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.assignee(issueId, assignRequest))
+        .flatMap(
+            assignRequest ->
+                issueService.assignee(UUID.randomUUID().toString(), issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
@@ -76,7 +78,9 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, true))
+        .flatMap(
+            assignRequest ->
+                issueService.watch(UUID.randomUUID().toString(), issueId, assignRequest, true))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -87,7 +91,9 @@ public record IssueRouteHandler(
 
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, false))
+        .flatMap(
+            assignRequest ->
+                issueService.watch(UUID.randomUUID().toString(), issueId, assignRequest, false))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));

@@ -87,40 +87,67 @@ public record IssueService(
         .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
-  public Mono<Long> assignee(String issueId, IssueAssignRequest issueAssignRequest) {
+  public Mono<Void> assignee(
+      String requestId, String issueId, IssueAssignRequest issueAssignRequest) {
     var issueMono = exists(issueId).map(unused -> issueId);
     if (issueAssignRequest.user() == null) {
-      return unassigned(issueMono);
+      return unassigned(requestId, issueMono);
     }
     var userMono = fetchUser(issueAssignRequest.user());
     var issueUserMono = Mono.zip(issueMono, userMono);
-    return assignee(issueUserMono);
+    return assignee(requestId, issueUserMono);
   }
 
-  private Mono<Long> assignee(Mono<Tuple2<String, User>> issueUserMono) {
-    return issueUserMono.flatMap(
-        tuple2 -> issueRepository.findAndSetAssigneeById(tuple2.getT1(), tuple2.getT2().id()));
+  private Mono<Void> assignee(String requestId, Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(tuple2 -> assignee(requestId, tuple2.getT1(), tuple2.getT2()));
   }
 
-  private Mono<Long> unassigned(Mono<String> issueMono) {
-    return issueMono.flatMap(issueRepository::findAndUnSetAssigneeById);
+  private Mono<Void> assignee(String requestId, String issueId, User user) {
+    return issueRepository
+        .findAndSetAssigneeById(issueId, user.id())
+        .flatMap(unused -> kafkaProducer.sendIssueAssignedEvent(requestId, issueId, user))
+        .then();
   }
 
-  public Mono<Long> watch(String issueId, IssueAssignRequest issueAssignRequest, boolean watch) {
+  private Mono<Void> unassigned(String requestId, Mono<String> issueMono) {
+    return issueMono.flatMap(issueId -> unassigned(requestId, issueId)).then();
+  }
+
+  private Mono<Void> unassigned(String requestId, String issueId) {
+    return issueRepository
+        .findAndUnSetAssigneeById(issueId)
+        .flatMap(unused -> kafkaProducer.sendIssueUnassignedEvent(requestId, issueId))
+        .then();
+  }
+
+  public Mono<Void> watch(
+      String requestId, String issueId, IssueAssignRequest issueAssignRequest, boolean watch) {
     var issueMono = exists(issueId).map(unused -> issueId);
     var userMono = fetchUser(issueAssignRequest.user());
     var issueUserMono = Mono.zip(issueMono, userMono);
-    return watch ? watch(issueUserMono) : unWatch(issueUserMono);
+    return watch ? watch(requestId, issueUserMono) : unwatch(requestId, issueUserMono);
   }
 
-  private Mono<Long> watch(Mono<Tuple2<String, User>> issueUserMono) {
-    return issueUserMono.flatMap(
-        tuple2 -> issueRepository.findAndAddWatcherById(tuple2.getT1(), tuple2.getT2().id()));
+  private Mono<Void> watch(String requestId, Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(tuple2 -> watch(requestId, tuple2.getT1(), tuple2.getT2()));
   }
 
-  private Mono<Long> unWatch(Mono<Tuple2<String, User>> issueUserMono) {
-    return issueUserMono.flatMap(
-        tuple2 -> issueRepository.findAndPullWatcherById(tuple2.getT1(), tuple2.getT2().id()));
+  private Mono<Void> watch(String requestId, String issueId, User user) {
+    return issueRepository
+        .findAndAddWatcherById(issueId, user.id())
+        .flatMap(unused -> kafkaProducer.sendIssueWatchedEvent(requestId, issueId, user))
+        .then();
+  }
+
+  private Mono<Void> unwatch(String requestId, Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(tuple2 -> unwatch(requestId, tuple2.getT1(), tuple2.getT2()));
+  }
+
+  private Mono<Void> unwatch(String requestId, String issuedId, User user) {
+    return issueRepository
+        .findAndPullWatcherById(issuedId, user.id())
+        .flatMap(unused -> kafkaProducer.sendIssueUnwatchedEvent(requestId, issuedId, user))
+        .then();
   }
 
   public Mono<Boolean> done(String issueId) {
