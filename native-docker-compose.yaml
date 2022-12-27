@@ -2,9 +2,7 @@ version: "3.9"
 services:
 
   user-service:
-    build:
-      context: user-service
-      dockerfile: Dockerfile
+    image: "user-service:1.0.0"
     container_name: user-service
     deploy:
       resources:
@@ -18,9 +16,7 @@ services:
       - "9093:9090"
 
   project-service:
-    build:
-      context: project-service
-      dockerfile: Dockerfile
+    image: "project-service:1.0.0"
     container_name: project-service
     deploy:
       resources:
@@ -34,9 +30,7 @@ services:
       - "9094:9090"
 
   issue-service:
-    build:
-      context: issue-service
-      dockerfile: Dockerfile
+    image: "issue-service:1.0.0"
     container_name: issue-service
     deploy:
       resources:
