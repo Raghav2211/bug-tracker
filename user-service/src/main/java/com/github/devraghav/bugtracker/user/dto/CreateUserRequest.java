@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
-public record UserRequest(
+public record CreateUserRequest(
     String firstName, String lastName, String email, String password, AccessLevel access) {
 
   private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
@@ -28,29 +28,30 @@ public record UserRequest(
     return pattern.matcher(this.email).matches();
   }
 
-  private Mono<UserRequest> validateEmail(UserRequest userRequest) {
-    return Mono.just(userRequest)
-        .filter(UserRequest::isEmailValid)
-        .switchIfEmpty(Mono.error(() -> UserException.invalidEmail(userRequest.email())));
+  private Mono<CreateUserRequest> validateEmail(Mono<CreateUserRequest> createUserRequestMono) {
+    return createUserRequestMono
+        .filter(CreateUserRequest::isEmailValid)
+        .switchIfEmpty(Mono.error(() -> UserException.invalidEmail(this.email())));
   }
 
-  private Mono<UserRequest> validateLastName(UserRequest userRequest) {
-    return Mono.just(userRequest)
-        .filter(UserRequest::hasLastName)
+  private Mono<CreateUserRequest> validateLastName(Mono<CreateUserRequest> createUserRequestMono) {
+    return createUserRequestMono
+        .filter(CreateUserRequest::hasLastName)
         .switchIfEmpty(Mono.error(UserException::nullLastName));
   }
 
-  private Mono<UserRequest> validateFirstName(UserRequest userRequest) {
-    return Mono.just(userRequest)
-        .filter(UserRequest::hasFirstName)
+  private Mono<CreateUserRequest> validateFirstName(Mono<CreateUserRequest> createUserRequestMono) {
+    return createUserRequestMono
+        .filter(CreateUserRequest::hasFirstName)
         .switchIfEmpty(Mono.error(UserException::nullFirstName));
   }
 
-  public Mono<UserRequest> validate() {
-    return Mono.just(this)
-        .and(validateFirstName(this))
-        .and(validateLastName(this))
-        .and(validateEmail(this))
+  public Mono<CreateUserRequest> validate() {
+    var userRequestMono = Mono.just(this);
+    return userRequestMono
+        .and(validateFirstName(userRequestMono))
+        .and(validateLastName(userRequestMono))
+        .and(validateEmail(userRequestMono))
         .thenReturn(this);
   }
 }

@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.user.kafka.producer;
 
+import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.data_model.command.user.CreateUser;
 import com.github.devraghav.data_model.domain.user.NewUser;
 import com.github.devraghav.data_model.event.user.UserCreated;
@@ -40,16 +40,18 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<UserRequest> sendUserCreateCommand(String requestId, UserRequest userRequest) {
-    var command = getCreateUserSchema(requestId, userRequest);
+  public Mono<CreateUserRequest> sendUserCreateCommand(
+      String requestId, CreateUserRequest createUserRequest) {
+    var command = getCreateUserSchema(requestId, createUserRequest);
     log.atDebug().log("User create command {}", command);
-    return send(command).thenReturn(userRequest);
+    return send(command).thenReturn(createUserRequest);
   }
 
-  public Mono<UserRequest> sendUserDuplicatedEvent(String requestId, UserRequest userRequest) {
-    var event = getUserDuplicatedSchema(requestId, userRequest);
+  public Mono<CreateUserRequest> sendUserDuplicatedEvent(
+      String requestId, CreateUserRequest createUserRequest) {
+    var event = getUserDuplicatedSchema(requestId, createUserRequest);
     log.atDebug().log("User created event {}", event);
-    return send(event).thenReturn(userRequest);
+    return send(event).thenReturn(createUserRequest);
   }
 
   public Mono<User> sendUserCreatedEvent(String requestId, User user) {
@@ -58,7 +60,8 @@ public record KafkaProducer(
     return send(event).thenReturn(user);
   }
 
-  private CreateUserSchema getCreateUserSchema(String requestId, UserRequest userRequest) {
+  private CreateUserSchema getCreateUserSchema(
+      String requestId, CreateUserRequest createUserRequest) {
     return CreateUserSchema.newBuilder()
         .setCommand(
             CreateUser.newBuilder()
@@ -66,13 +69,14 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("User.User.Create")
-                .setPayload(getNewUSer(userRequest))
+                .setPayload(getNewUSer(createUserRequest))
                 .setPublisher("Service.User")
                 .build())
         .build();
   }
 
-  private UserDuplicatedSchema getUserDuplicatedSchema(String requestId, UserRequest userRequest) {
+  private UserDuplicatedSchema getUserDuplicatedSchema(
+      String requestId, CreateUserRequest createUserRequest) {
     return UserDuplicatedSchema.newBuilder()
         .setEvent(
             UserDuplicated.newBuilder()
@@ -80,7 +84,7 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("User.User.Duplicated")
-                .setPayload(getNewUSer(userRequest))
+                .setPayload(getNewUSer(createUserRequest))
                 .setPublisher("Service.User")
                 .build())
         .build();
@@ -100,12 +104,12 @@ public record KafkaProducer(
         .build();
   }
 
-  private NewUser getNewUSer(UserRequest userRequest) {
+  private NewUser getNewUSer(CreateUserRequest createUserRequest) {
     return NewUser.newBuilder()
-        .setAccessLevel(userRequest.access().name())
-        .setEmail(userRequest.email())
-        .setFirstName(userRequest.firstName())
-        .setLastName(userRequest.lastName())
+        .setAccessLevel(createUserRequest.access().name())
+        .setEmail(createUserRequest.email())
+        .setFirstName(createUserRequest.firstName())
+        .setLastName(createUserRequest.lastName())
         .build();
   }
 

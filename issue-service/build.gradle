@@ -37,7 +37,9 @@ dependencies {
 
 	implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.10.2'
 	implementation 'org.projectlombok:lombok'
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webflux-api' , version: '2.0.2'
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webflux-ui' , version: '2.0.2'
+
 	implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.2'
 
 	annotationProcessor group: 'org.projectlombok', name: 'lombok-mapstruct-binding', version: '0.2.0'

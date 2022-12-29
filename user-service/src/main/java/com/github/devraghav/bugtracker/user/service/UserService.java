@@ -1,8 +1,8 @@
 package com.github.devraghav.bugtracker.user.service;
 
+import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
 import com.github.devraghav.bugtracker.user.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
@@ -16,14 +16,14 @@ import reactor.core.publisher.Mono;
 public record UserService(
     UserMapper userMapper, UserRepository userRepository, KafkaProducer kafkaProducer) {
 
-  public Mono<User> save(String requestId, UserRequest userRequest) {
+  public Mono<User> save(String requestId, CreateUserRequest createUserRequest) {
     return kafkaProducer
-        .sendUserCreateCommand(requestId, userRequest)
+        .sendUserCreateCommand(requestId, createUserRequest)
         .map(userMapper::requestToEntity)
         .flatMap(userEntity -> save(requestId, userEntity))
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> duplicateUser(requestId, userRequest, exception));
+            exception -> duplicateUser(requestId, createUserRequest, exception));
   }
 
   public Flux<User> findAll() {
@@ -45,9 +45,10 @@ public record UserService(
   }
 
   private Mono<User> duplicateUser(
-      String requestId, UserRequest userRequest, DuplicateKeyException exception) {
+      String requestId, CreateUserRequest createUserRequest, DuplicateKeyException exception) {
     return kafkaProducer
-        .sendUserDuplicatedEvent(requestId, userRequest)
-        .flatMap(unused -> Mono.error(UserException.alreadyExistsWithEmail(userRequest.email())));
+        .sendUserDuplicatedEvent(requestId, createUserRequest)
+        .flatMap(
+            unused -> Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
   }
 }

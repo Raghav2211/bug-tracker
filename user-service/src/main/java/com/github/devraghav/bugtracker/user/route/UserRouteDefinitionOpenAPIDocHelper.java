@@ -8,9 +8,9 @@ import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuil
 import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserErrorResponse;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,8 @@ class UserRouteDefinitionOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder().schema(schemaBuilder().implementation(UserRequest.class))))
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(CreateUserRequest.class))))
         .response(saveUser201ResponseDoc())
         .response(savUser400ResponseDoc())
         .build();

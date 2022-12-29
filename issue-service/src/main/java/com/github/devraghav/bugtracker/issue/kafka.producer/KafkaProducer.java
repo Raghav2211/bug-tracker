@@ -8,6 +8,8 @@ import com.github.devraghav.data_model.domain.issue.comment.Comment;
 import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.*;
+import com.github.devraghav.data_model.event.issue.comment.CommentAdded;
+import com.github.devraghav.data_model.event.issue.comment.CommentUpdated;
 import com.github.devraghav.data_model.schema.issue.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -41,16 +43,18 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<IssueRequest> sendIssueCreateCommand(String requestId, IssueRequest issueRequest) {
-    var command = getCreateIssueSchema(requestId, issueRequest);
+  public Mono<CreateIssueRequest> sendIssueCreateCommand(
+      String requestId, CreateIssueRequest createIssueRequest) {
+    var command = getCreateIssueSchema(requestId, createIssueRequest);
     log.atDebug().log("IssueCreateCommand {}", command);
-    return send(command).thenReturn(issueRequest);
+    return send(command).thenReturn(createIssueRequest);
   }
 
-  public Mono<IssueRequest> sendIssueDuplicatedEvent(String requestId, IssueRequest issueRequest) {
-    var event = getIssueDuplicatedSchema(requestId, issueRequest);
+  public Mono<CreateIssueRequest> sendIssueDuplicatedEvent(
+      String requestId, CreateIssueRequest createIssueRequest) {
+    var event = getIssueDuplicatedSchema(requestId, createIssueRequest);
     log.atDebug().log("IssueDuplicatedEvent {}", event);
-    return send(event).thenReturn(issueRequest);
+    return send(event).thenReturn(createIssueRequest);
   }
 
   public Mono<Issue> sendIssueCreatedEvent(String requestId, Issue issue) {
@@ -60,11 +64,11 @@ public record KafkaProducer(
     return send(event).thenReturn(issue);
   }
 
-  public Mono<IssueUpdateRequest> sendIssueUpdateCommand(
-      String requestId, IssueUpdateRequest IssueUpdateRequest) {
-    var command = getUpdateIssueSchema(requestId, IssueUpdateRequest);
+  public Mono<UpdateIssueRequest> sendIssueUpdateCommand(
+      String requestId, UpdateIssueRequest UpdateIssueRequest) {
+    var command = getUpdateIssueSchema(requestId, UpdateIssueRequest);
     log.atDebug().log("IssueUpdateCommand {}", command);
-    return send(command).thenReturn(IssueUpdateRequest);
+    return send(command).thenReturn(UpdateIssueRequest);
   }
 
   public Mono<Issue> sendIssueUpdatedEvent(String requestId, Issue issue) {
@@ -100,7 +104,29 @@ public record KafkaProducer(
     return send(event).thenReturn(issueId);
   }
 
-  private CreateIssueSchema getCreateIssueSchema(String requestId, IssueRequest projectRequest) {
+  public Mono<IssueComment> sendCommentAddedEvent(
+      String requestId, String issueId, IssueComment issueComment) {
+    var event = getCommentAddedSchema(requestId, issueId, issueComment);
+    log.atDebug().log("CommentAddedEvent {}", event);
+    return send(event).thenReturn(issueComment);
+  }
+
+  public Mono<IssueComment> sendCommentUpdatedEvent(
+      String requestId, String issueId, IssueComment issueComment) {
+    var event = getCommentUpdatedSchema(requestId, issueId, issueComment);
+    log.atDebug().log("CommentUpdatedEvent {}", event);
+    return send(event).thenReturn(issueComment);
+  }
+
+  public Mono<String> sendIssueResolvedEvent(
+      String requestId, String issueId, LocalDateTime resolveLocalDateTime) {
+    var event = getIssueResolvedSchema(requestId, issueId, resolveLocalDateTime);
+    log.atDebug().log("IssueResolvedEvent {}", event);
+    return send(event).thenReturn(issueId);
+  }
+
+  private CreateIssueSchema getCreateIssueSchema(
+      String requestId, CreateIssueRequest projectRequest) {
     return CreateIssueSchema.newBuilder()
         .setCommand(
             CreateIssue.newBuilder()
@@ -115,7 +141,7 @@ public record KafkaProducer(
   }
 
   private UpdateIssueSchema getUpdateIssueSchema(
-      String requestId, IssueUpdateRequest issueUpdateRequest) {
+      String requestId, UpdateIssueRequest updateIssueRequest) {
     return UpdateIssueSchema.newBuilder()
         .setCommand(
             com.github.devraghav.data_model.command.issue.UpdateIssue.newBuilder()
@@ -123,14 +149,14 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Issue.Issue.Update")
-                .setPayload(getUpdateIssue(issueUpdateRequest))
+                .setPayload(getUpdateIssue(updateIssueRequest))
                 .setPublisher("Service.Issue")
                 .build())
         .build();
   }
 
   private IssueDuplicatedSchema getIssueDuplicatedSchema(
-      String requestId, IssueRequest issueRequest) {
+      String requestId, CreateIssueRequest createIssueRequest) {
     return IssueDuplicatedSchema.newBuilder()
         .setEvent(
             IssueDuplicated.newBuilder()
@@ -138,7 +164,7 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Issue.Issue.Duplicated")
-                .setPayload(getNewIssue(issueRequest))
+                .setPayload(getNewIssue(createIssueRequest))
                 .setPublisher("Service.Issue")
                 .build())
         .build();
@@ -237,35 +263,83 @@ public record KafkaProducer(
         .build();
   }
 
-  private NewIssue getNewIssue(IssueRequest issueRequest) {
-    var tags =
-        issueRequest.tags().entrySet().stream()
-            .collect(Collectors.toMap(Objects::toString, Object::toString));
-    return NewIssue.newBuilder()
-        .setHeader(issueRequest.header())
-        .setDescription(issueRequest.description())
-        .setBusinessUnit(issueRequest.businessUnit())
-        .setPriority(issueRequest.priority().name())
-        .setSeverity(issueRequest.severity().name())
-        .setProjectAttachments(getProjectAttachments(issueRequest.projects()))
-        .setReporterId(issueRequest.reporter())
-        .setTags(issueRequest.tags())
+  private CommentAddedSchema getCommentAddedSchema(
+      String requestId, String issueId, IssueComment issueComment) {
+    return CommentAddedSchema.newBuilder()
+        .setEvent(
+            CommentAdded.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Comment.Added")
+                .setPayload(getComment(issueComment))
+                .setPublisher("Service.Issue")
+                .build())
         .build();
   }
 
-  private UpdateIssue getUpdateIssue(IssueUpdateRequest issueUpdateRequest) {
+  private CommentUpdatedSchema getCommentUpdatedSchema(
+      String requestId, String issueId, IssueComment issueComment) {
+    return CommentUpdatedSchema.newBuilder()
+        .setEvent(
+            CommentUpdated.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Comment.Updated")
+                .setPayload(getComment(issueComment))
+                .setPublisher("Service.Issue")
+                .build())
+        .build();
+  }
+
+  private IssueResolvedSchema getIssueResolvedSchema(
+      String requestId, String issueId, LocalDateTime localDateTime) {
+    return IssueResolvedSchema.newBuilder()
+        .setEvent(
+            IssueResolved.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setRequestId(requestId)
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName("Issue.Issue.Resolved")
+                .setPayload(
+                    Resolve.newBuilder()
+                        .setEndedAt(localDateTime.toEpochSecond(ZoneOffset.UTC))
+                        .build())
+                .setPublisher("Service.Issue")
+                .build())
+        .build();
+  }
+
+  private NewIssue getNewIssue(CreateIssueRequest createIssueRequest) {
     var tags =
-        issueUpdateRequest.tags().entrySet().stream()
+        createIssueRequest.tags().entrySet().stream()
+            .collect(Collectors.toMap(Objects::toString, Object::toString));
+    return NewIssue.newBuilder()
+        .setHeader(createIssueRequest.header())
+        .setDescription(createIssueRequest.description())
+        .setBusinessUnit(createIssueRequest.businessUnit())
+        .setPriority(createIssueRequest.priority().name())
+        .setSeverity(createIssueRequest.severity().name())
+        .setProjectAttachments(getProjectAttachments(createIssueRequest.projects()))
+        .setReporterId(createIssueRequest.reporter())
+        .setTags(createIssueRequest.tags())
+        .build();
+  }
+
+  private UpdateIssue getUpdateIssue(UpdateIssueRequest updateIssueRequest) {
+    var tags =
+        updateIssueRequest.tags().entrySet().stream()
             .collect(Collectors.toMap(Objects::toString, Object::toString));
     return UpdateIssue.newBuilder()
-        .setHeader(issueUpdateRequest.header())
-        .setDescription(issueUpdateRequest.description())
-        .setBusinessUnit(issueUpdateRequest.businessUnit())
-        .setPriority(issueUpdateRequest.priority().name())
-        .setSeverity(issueUpdateRequest.severity().name())
+        .setHeader(updateIssueRequest.header())
+        .setDescription(updateIssueRequest.description())
+        .setBusinessUnit(updateIssueRequest.businessUnit())
+        .setPriority(updateIssueRequest.priority().name())
+        .setSeverity(updateIssueRequest.severity().name())
         // TODO : update project attachment feature
         //            .setProjectAttachments(getProjectAttachments(issueUpdateRequest.projects()))
-        .setTags(issueUpdateRequest.tags())
+        .setTags(updateIssueRequest.tags())
         .build();
   }
 

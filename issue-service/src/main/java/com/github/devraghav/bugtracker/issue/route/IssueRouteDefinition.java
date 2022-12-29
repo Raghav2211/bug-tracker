@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.route;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
 import java.util.function.Consumer;
@@ -27,11 +27,19 @@ public class IssueRouteDefinition {
             SpringdocRouteBuilder.route()
                 .GET("", issueRouteHandler::get, docHelper::getIssueByIdOperationDoc)
                 .PATCH("", issueRouteHandler::update, docHelper::updateIssueOperationDoc)
+                .POST(
+                    path("/files").and(accept(asMediaType(MULTIPART_FORM_DATA))),
+                    issueRouteHandler::uploadFile,
+                    docHelper::uploadFileOperationDoc)
                 .POST("/comment", issueRouteHandler::addComment, docHelper::addCommentOperationDoc)
+                .PUT(
+                    "/comment/{commentId}",
+                    issueRouteHandler::updateComment,
+                    docHelper::updateCommentOperationDoc)
                 .PATCH("/assignee", issueRouteHandler::assignee, docHelper::assigneeOperationDoc)
                 .PATCH("/watch", issueRouteHandler::watch, docHelper::watcherOperationDoc)
-                .DELETE("/watch", issueRouteHandler::unWatch, docHelper::removeWatcherOperationDoc)
-                .PATCH("/resolve", issueRouteHandler::done, docHelper::resolveIssueOperationDoc)
+                .DELETE("/watch", issueRouteHandler::unwatch, docHelper::removeWatcherOperationDoc)
+                .PATCH("/resolve", issueRouteHandler::resolve, docHelper::resolveIssueOperationDoc)
                 .build();
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =

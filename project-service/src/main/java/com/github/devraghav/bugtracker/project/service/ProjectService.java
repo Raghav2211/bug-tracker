@@ -20,15 +20,15 @@ public record ProjectService(
     ProjectRepository projectRepository,
     KafkaProducer kafkaProducer) {
 
-  public Mono<Project> save(String requestId, ProjectRequest projectRequest) {
-    return Mono.just(projectRequest)
+  public Mono<Project> save(String requestId, CreateProjectRequest createProjectRequest) {
+    return Mono.just(createProjectRequest)
         .flatMap(this::validate)
         .flatMap(request -> kafkaProducer.sendProjectCreateCommand(requestId, request))
         .map(projectMapper::requestToEntity)
         .flatMap(entity -> save(requestId, entity))
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> duplicateProject(requestId, projectRequest, exception));
+            exception -> duplicateProject(requestId, createProjectRequest, exception));
   }
 
   public Flux<Project> findAll() {
@@ -50,8 +50,8 @@ public record ProjectService(
   }
 
   public Mono<ProjectVersion> addVersionToProjectId(
-      String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
-    return Mono.just(projectVersionRequest)
+      String requestId, String projectId, CreateProjectVersionRequest createProjectVersionRequest) {
+    return Mono.just(createProjectVersionRequest)
         .flatMap(versionRequest -> this.exists(projectId).thenReturn(versionRequest))
         .flatMap(
             validVersionRequest ->
@@ -79,11 +79,11 @@ public record ProjectService(
         .map(author -> projectMapper.entityToResponse(projectEntity).author(author).build());
   }
 
-  public Mono<ProjectRequest> validate(ProjectRequest projectRequest) {
-    return projectRequest
+  public Mono<CreateProjectRequest> validate(CreateProjectRequest createProjectRequest) {
+    return createProjectRequest
         .validate()
-        .and(fetchAndValidateAuthorAccess(projectRequest.author()))
-        .thenReturn(projectRequest);
+        .and(fetchAndValidateAuthorAccess(createProjectRequest.author()))
+        .thenReturn(createProjectRequest);
   }
 
   private Mono<Project> save(String requestId, ProjectEntity projectEntity) {
@@ -104,10 +104,14 @@ public record ProjectService(
   }
 
   private Mono<Project> duplicateProject(
-      String requestId, ProjectRequest projectRequest, DuplicateKeyException exception) {
+      String requestId,
+      CreateProjectRequest createProjectRequest,
+      DuplicateKeyException exception) {
     return kafkaProducer
-        .sendProjectDuplicatedEvent(requestId, projectRequest)
-        .flatMap(unused -> Mono.error(ProjectException.alreadyExistsByName(projectRequest.name())));
+        .sendProjectDuplicatedEvent(requestId, createProjectRequest)
+        .flatMap(
+            unused ->
+                Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
   }
 
   private Mono<Boolean> fetchAndValidateAuthorAccess(String author) {

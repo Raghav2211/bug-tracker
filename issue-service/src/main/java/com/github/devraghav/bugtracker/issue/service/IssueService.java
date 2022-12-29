@@ -5,12 +5,16 @@ import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import com.github.devraghav.bugtracker.issue.entity.ProjectInfoRef;
 import com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
+import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,6 +27,7 @@ public record IssueService(
     UserReactiveClient userReactiveClient,
     ProjectReactiveClient projectReactiveClient,
     IssueRepository issueRepository,
+    IssueAttachmentRepository issueAttachmentRepository,
     IssueCommentFetchService issueCommentFetchService,
     KafkaProducer kafkaProducer) {
 
@@ -48,14 +53,14 @@ public record IssueService(
     return findById(issueId).flatMap(this::generateIssue);
   }
 
-  public Mono<Issue> create(String requestId, IssueRequest issueRequest) {
-    return validate(issueRequest)
+  public Mono<Issue> create(String requestId, CreateIssueRequest createIssueRequest) {
+    return validate(createIssueRequest)
         .flatMap(validRequest -> kafkaProducer.sendIssueCreateCommand(requestId, validRequest))
         .map(issueMapper::issueRequestToIssueEntity)
         .flatMap(issueEntity -> save(requestId, issueEntity));
   }
 
-  public Mono<Issue> update(String requestId, String issueId, IssueUpdateRequest request) {
+  public Mono<Issue> update(String requestId, String issueId, UpdateIssueRequest request) {
     return findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
         .flatMap(
@@ -150,8 +155,16 @@ public record IssueService(
         .then();
   }
 
-  public Mono<Boolean> done(String issueId) {
-    return issueRepository.done(issueId);
+  public Mono<Void> resolve(String requestId, String issueId) {
+    var resolveTime = LocalDateTime.now();
+    return issueRepository
+        .findAndSetEndedAtById(issueId, resolveTime.toEpochSecond(ZoneOffset.UTC))
+        .flatMap(unused -> kafkaProducer.sendIssueResolvedEvent(requestId, issueId, resolveTime))
+        .then();
+  }
+
+  public Mono<String> uploadAttachment(String issueId , FilePart filePart) {
+    return issueAttachmentRepository.upload(issueId , filePart.filename() , filePart.content());
   }
 
   private Flux<Issue> getAllByProjectId(String projectId) {
@@ -217,20 +230,20 @@ public record IssueService(
         .doOnNext(project -> project.removeProjectVersionIfNotEqual(projectInfoRef.getVersionId()));
   }
 
-  private Mono<IssueRequest> validate(IssueRequest issueRequest) {
-    return issueRequest
+  private Mono<CreateIssueRequest> validate(CreateIssueRequest createIssueRequest) {
+    return createIssueRequest
         .validate()
-        .and(validatedProjectInfo(issueRequest))
-        .and(validateReporter(issueRequest))
-        .thenReturn(issueRequest);
+        .and(validatedProjectInfo(createIssueRequest))
+        .and(validateReporter(createIssueRequest))
+        .thenReturn(createIssueRequest);
   }
 
-  private Mono<IssueRequest> validatedProjectInfo(IssueRequest issueRequest) {
-    return Flux.fromIterable(issueRequest.projects())
+  private Mono<CreateIssueRequest> validatedProjectInfo(CreateIssueRequest createIssueRequest) {
+    return Flux.fromIterable(createIssueRequest.projects())
         .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
         .flatMap(this::validateProjectInfo)
         .last()
-        .thenReturn(issueRequest);
+        .thenReturn(createIssueRequest);
   }
 
   private Mono<Boolean> validateProjectInfo(ProjectInfo projectInfo) {
@@ -264,8 +277,8 @@ public record IssueService(
             exception -> Mono.error(IssueException.projectServiceException(exception)));
   }
 
-  private Mono<IssueRequest> validateReporter(IssueRequest issueRequest) {
-    return fetchUser(issueRequest.reporter()).thenReturn(issueRequest);
+  private Mono<CreateIssueRequest> validateReporter(CreateIssueRequest createIssueRequest) {
+    return fetchUser(createIssueRequest.reporter()).thenReturn(createIssueRequest);
   }
 
   private Mono<User> fetchUser(String userId) {

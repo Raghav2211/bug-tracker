@@ -9,8 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface IssueRepository
-    extends ReactiveMongoRepository<IssueEntity, String>, CustomIssueRepository {
+public interface IssueRepository extends ReactiveMongoRepository<IssueEntity, String> {
 
   @Update("{ '$set' : { 'assignee' : '?1' } }")
   Mono<Long> findAndSetAssigneeById(String id, String userId);
@@ -28,4 +27,7 @@ public interface IssueRepository
   Flux<IssueEntity> findAllByProjectId(String projectId);
 
   Flux<IssueEntity> findAllByReporter(String reporter);
+
+  @Update("{ '$set' : { 'endedAt' : '?1' } }")
+  Mono<Long> findAndSetEndedAtById(String id, Long endedAt);
 }

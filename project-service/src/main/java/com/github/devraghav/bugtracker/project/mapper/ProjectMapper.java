@@ -1,8 +1,8 @@
 package com.github.devraghav.bugtracker.project.mapper;
 
+import com.github.devraghav.bugtracker.project.dto.CreateProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.Project;
 import com.github.devraghav.bugtracker.project.dto.ProjectException;
-import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.ProjectStatus;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ public interface ProjectMapper {
     @Mapping(target = "versions", expression = "java(List.of())"),
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())")
   })
-  ProjectEntity requestToEntity(ProjectRequest projectRequest);
+  ProjectEntity requestToEntity(CreateProjectRequest createProjectRequest);
 
   @Mappings({
     @Mapping(target = "status", source = "status", qualifiedByName = "valueToStatus"),

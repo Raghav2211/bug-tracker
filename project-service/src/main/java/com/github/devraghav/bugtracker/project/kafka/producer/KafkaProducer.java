@@ -1,9 +1,9 @@
 package com.github.devraghav.bugtracker.project.kafka.producer;
 
+import com.github.devraghav.bugtracker.project.dto.CreateProjectRequest;
+import com.github.devraghav.bugtracker.project.dto.CreateProjectVersionRequest;
 import com.github.devraghav.bugtracker.project.dto.Project;
-import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.ProjectVersion;
-import com.github.devraghav.bugtracker.project.dto.ProjectVersionRequest;
 import com.github.devraghav.data_model.command.project.CreateProject;
 import com.github.devraghav.data_model.command.project.version.CreateVersion;
 import com.github.devraghav.data_model.domain.project.NewProject;
@@ -51,25 +51,25 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<ProjectRequest> sendProjectCreateCommand(
-      String requestId, ProjectRequest projectRequest) {
-    var command = getCreateProjectSchema(requestId, projectRequest);
+  public Mono<CreateProjectRequest> sendProjectCreateCommand(
+      String requestId, CreateProjectRequest createProjectRequest) {
+    var command = getCreateProjectSchema(requestId, createProjectRequest);
     log.atDebug().log("CreateProjectSchema {}", command);
-    return send(command).thenReturn(projectRequest);
+    return send(command).thenReturn(createProjectRequest);
   }
 
-  public Mono<ProjectVersionRequest> sendProjectVersionCreateCommand(
-      String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
-    var command = getCreateVersionSchema(requestId, projectId, projectVersionRequest);
+  public Mono<CreateProjectVersionRequest> sendProjectVersionCreateCommand(
+      String requestId, String projectId, CreateProjectVersionRequest createProjectVersionRequest) {
+    var command = getCreateVersionSchema(requestId, projectId, createProjectVersionRequest);
     log.atDebug().log("ProjectVersion create command {}", command);
-    return send(command).thenReturn(projectVersionRequest);
+    return send(command).thenReturn(createProjectVersionRequest);
   }
 
-  public Mono<ProjectRequest> sendProjectDuplicatedEvent(
-      String requestId, ProjectRequest projectRequest) {
-    var event = getProjectDuplicatedSchema(requestId, projectRequest);
+  public Mono<CreateProjectRequest> sendProjectDuplicatedEvent(
+      String requestId, CreateProjectRequest createProjectRequest) {
+    var event = getProjectDuplicatedSchema(requestId, createProjectRequest);
     log.atDebug().log("ProjectDuplicatedSchema {}", event);
-    return send(event).thenReturn(projectRequest);
+    return send(event).thenReturn(createProjectRequest);
   }
 
   public Mono<Project> sendProjectCreatedEvent(String requestId, Project project) {
@@ -91,7 +91,7 @@ public record KafkaProducer(
   }
 
   private CreateProjectSchema getCreateProjectSchema(
-      String requestId, ProjectRequest projectRequest) {
+      String requestId, CreateProjectRequest createProjectRequest) {
     return CreateProjectSchema.newBuilder()
         .setCommand(
             CreateProject.newBuilder()
@@ -99,14 +99,14 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Project.Project.Create")
-                .setPayload(getNewProject(projectRequest))
+                .setPayload(getNewProject(createProjectRequest))
                 .setPublisher("Service.Project")
                 .build())
         .build();
   }
 
   private CreateVersionSchema getCreateVersionSchema(
-      String requestId, String projectId, ProjectVersionRequest projectVersionRequest) {
+      String requestId, String projectId, CreateProjectVersionRequest createProjectVersionRequest) {
     return CreateVersionSchema.newBuilder()
         .setCommand(
             CreateVersion.newBuilder()
@@ -116,14 +116,16 @@ public record KafkaProducer(
                 .setName("Project.Version.Create")
                 .setProjectId(projectId)
                 .setPayload(
-                    NewVersion.newBuilder().setVersion(projectVersionRequest.version()).build())
+                    NewVersion.newBuilder()
+                        .setVersion(createProjectVersionRequest.version())
+                        .build())
                 .setPublisher("Service.Project")
                 .build())
         .build();
   }
 
   private ProjectDuplicatedSchema getProjectDuplicatedSchema(
-      String requestId, ProjectRequest projectRequest) {
+      String requestId, CreateProjectRequest createProjectRequest) {
     return ProjectDuplicatedSchema.newBuilder()
         .setEvent(
             ProjectDuplicated.newBuilder()
@@ -131,7 +133,7 @@ public record KafkaProducer(
                 .setRequestId(requestId)
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName("Project.Project.Duplicated")
-                .setPayload(getNewProject(projectRequest))
+                .setPayload(getNewProject(createProjectRequest))
                 .setPublisher("Service.Project")
                 .build())
         .build();
@@ -167,15 +169,15 @@ public record KafkaProducer(
         .build();
   }
 
-  private NewProject getNewProject(ProjectRequest projectRequest) {
+  private NewProject getNewProject(CreateProjectRequest createProjectRequest) {
     var tags =
-        projectRequest.tags().entrySet().stream()
+        createProjectRequest.tags().entrySet().stream()
             .collect(Collectors.toMap(Objects::toString, Object::toString));
     return NewProject.newBuilder()
-        .setName(projectRequest.name())
-        .setAuthorId(projectRequest.author())
-        .setDescription(projectRequest.description())
-        .setStatus(projectRequest.status().name())
+        .setName(createProjectRequest.name())
+        .setAuthorId(createProjectRequest.author())
+        .setDescription(createProjectRequest.description())
+        .setStatus(createProjectRequest.status().name())
         .setTags(tags)
         .build();
   }

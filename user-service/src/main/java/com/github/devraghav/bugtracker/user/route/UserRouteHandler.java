@@ -1,8 +1,8 @@
 package com.github.devraghav.bugtracker.user.route;
 
+import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.dto.UserResponse;
 import com.github.devraghav.bugtracker.user.service.UserService;
 import java.util.UUID;
@@ -22,8 +22,8 @@ public record UserRouteHandler(UserService userService) {
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
-        .bodyToMono(UserRequest.class)
-        .flatMap(UserRequest::validate)
+        .bodyToMono(CreateUserRequest.class)
+        .flatMap(CreateUserRequest::validate)
         .flatMap(userRequest -> userService.save(UUID.randomUUID().toString(), userRequest))
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))

@@ -21,37 +21,37 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "endedAt", ignore = true)
   })
-  IssueEntity issueRequestToIssueEntity(IssueRequest issueRequest);
+  IssueEntity issueRequestToIssueEntity(CreateIssueRequest createIssueRequest);
 
   @Mappings({
     @Mapping(
         target = "priority",
         expression =
-            "java(Optional.ofNullable(issueUpdateRequest.priority()).map(Priority::getValue).orElse(issueEntity.getPriority()))"),
+            "java(Optional.ofNullable(updateIssueRequest.priority()).map(Priority::getValue).orElse(issueEntity.getPriority()))"),
     @Mapping(
         target = "severity",
         expression =
-            "java(Optional.ofNullable(issueUpdateRequest.severity()).map(Severity::getValue).orElse(issueEntity.getSeverity()))"),
+            "java(Optional.ofNullable(updateIssueRequest.severity()).map(Severity::getValue).orElse(issueEntity.getSeverity()))"),
     @Mapping(
         target = "businessUnit",
         expression =
-            "java(Optional.ofNullable(issueUpdateRequest.businessUnit()).orElse(issueEntity.getBusinessUnit()))"),
+            "java(Optional.ofNullable(updateIssueRequest.businessUnit()).orElse(issueEntity.getBusinessUnit()))"),
     @Mapping(
         target = "header",
         expression =
-            "java(Optional.ofNullable(issueUpdateRequest.header()).orElse(issueEntity.getHeader()))"),
+            "java(Optional.ofNullable(updateIssueRequest.header()).orElse(issueEntity.getHeader()))"),
     @Mapping(
         target = "description",
         expression =
-            "java(Optional.ofNullable(issueUpdateRequest.description()).orElse(issueEntity.getDescription()))"),
+            "java(Optional.ofNullable(updateIssueRequest.description()).orElse(issueEntity.getDescription()))"),
     @Mapping(
         target = "tags",
         expression =
-            "java(Optional.ofNullable(issueUpdateRequest.tags()).orElse(issueEntity.getTags()))"),
+            "java(Optional.ofNullable(updateIssueRequest.tags()).orElse(issueEntity.getTags()))"),
     @Mapping(target = "assignee", ignore = true)
   })
   IssueEntity issueRequestToIssueEntity(
-      IssueEntity issueEntity, IssueUpdateRequest issueUpdateRequest);
+      IssueEntity issueEntity, UpdateIssueRequest updateIssueRequest);
 
   @Mappings({
     @Mapping(target = "priority", source = "priority", qualifiedByName = "valueToPriority"),

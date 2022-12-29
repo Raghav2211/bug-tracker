@@ -45,7 +45,8 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
             requestBodyBuilder()
                 .content(
                     contentBuilder()
-                        .schema(schemaBuilder().implementation(ProjectVersionRequest.class))));
+                        .schema(
+                            schemaBuilder().implementation(CreateProjectVersionRequest.class))));
   }
 
   void getProjectByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
@@ -137,7 +138,8 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder().schema(schemaBuilder().implementation(ProjectRequest.class))))
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(CreateProjectRequest.class))))
         .response(saveProject201ResponseDoc())
         .response(badResponseDoc())
         .build();

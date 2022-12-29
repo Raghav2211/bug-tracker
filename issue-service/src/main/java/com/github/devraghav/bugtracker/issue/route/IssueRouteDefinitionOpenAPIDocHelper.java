@@ -26,7 +26,8 @@ class IssueRouteDefinitionOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder().schema(schemaBuilder().implementation(IssueRequest.class))))
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(CreateIssueRequest.class))))
         .response(saveIssue201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -39,7 +40,7 @@ class IssueRouteDefinitionOpenAPIDocHelper {
             requestBodyBuilder()
                 .content(
                     contentBuilder()
-                        .schema(schemaBuilder().implementation(IssueUpdateRequest.class))))
+                        .schema(schemaBuilder().implementation(UpdateIssueRequest.class))))
         .response(updateIssue200ResponseDoc())
         .response(badResponseDoc())
         .parameter(
@@ -63,6 +64,20 @@ class IssueRouteDefinitionOpenAPIDocHelper {
         .build();
   }
 
+  void uploadFileOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("uploadFile")
+        .summary("Upload a file in issue")
+        .requestBody(requestBodyBuilder().required(true).description("Upload issue attachments"))
+        .response(responseBuilder().responseCode("200"))
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")))
+        .build();
+  }
+
   void addCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("addComment")
         .summary("Add comment in issue")
@@ -70,13 +85,36 @@ class IssueRouteDefinitionOpenAPIDocHelper {
             requestBodyBuilder()
                 .content(
                     contentBuilder()
-                        .schema(schemaBuilder().implementation(IssueCommentRequest.class))))
-        .response(addComment200ResponseDoc())
+                        .schema(schemaBuilder().implementation(CreateCommentRequest.class))))
+        .response(addOrUpdateComment200ResponseDoc())
         .response(badResponseDoc())
         .parameter(
             parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("id")
+                .schema(schemaBuilder().type("string")))
+        .build();
+  }
+
+  void updateCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("updateComment")
+        .summary("Update comment in issue")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(UpdateCommentRequest.class))))
+        .response(addOrUpdateComment200ResponseDoc())
+        .response(badResponseDoc())
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("id")
+                .schema(schemaBuilder().type("string")))
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("commentId")
                 .schema(schemaBuilder().type("string")))
         .build();
   }
@@ -181,10 +219,10 @@ class IssueRouteDefinitionOpenAPIDocHelper {
                 .schema(schemaBuilder().implementation(Issue.class)));
   }
 
-  private org.springdoc.core.fn.builders.apiresponse.Builder addComment200ResponseDoc() {
+  private org.springdoc.core.fn.builders.apiresponse.Builder addOrUpdateComment200ResponseDoc() {
     return responseBuilder()
         .responseCode("200")
-        .description("Add comment in issue successfully")
+        .description("Add/Update comment in issue successfully")
         .content(
             contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
