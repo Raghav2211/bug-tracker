@@ -3,7 +3,6 @@ protocol UserDuplicated {
 	import idl "../../domain/user/NewUser.avdl";
 	record UserDuplicated {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

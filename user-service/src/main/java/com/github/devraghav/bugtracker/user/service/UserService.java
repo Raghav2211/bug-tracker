@@ -4,9 +4,12 @@ import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.kafka.producer.KafkaProducer;
+import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
+import com.github.devraghav.bugtracker.user.validation.RequestValidator;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -14,16 +17,17 @@ import reactor.core.publisher.Mono;
 
 @Service
 public record UserService(
-    UserMapper userMapper, UserRepository userRepository, KafkaProducer kafkaProducer) {
+    RequestValidator requestValidator,
+    UserMapper userMapper,
+    UserRepository userRepository,
+    UserAPIEventHandler userAPIEventHandler) {
 
-  public Mono<User> save(String requestId, CreateUserRequest createUserRequest) {
-    return kafkaProducer
-        .sendUserCreateCommand(requestId, createUserRequest)
+  public Mono<User> save(CreateUserRequest createUserRequest) {
+    return requestValidator
+        .validate(createUserRequest)
         .map(userMapper::requestToEntity)
-        .flatMap(userEntity -> save(requestId, userEntity))
-        .onErrorResume(
-            DuplicateKeyException.class,
-            exception -> duplicateUser(requestId, createUserRequest, exception));
+        .flatMap(this::save)
+        .onErrorResume(DuplicateKeyException.class, exception -> duplicateUser(createUserRequest));
   }
 
   public Flux<User> findAll() {
@@ -37,17 +41,22 @@ public record UserService(
         .switchIfEmpty(Mono.error(() -> UserException.notFound(userId)));
   }
 
-  private Mono<User> save(String requestId, UserEntity userEntity) {
+  private Mono<User> save(UserEntity userEntity) {
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)
-        .flatMap(user -> kafkaProducer.sendUserCreatedEvent(requestId, user));
+        .flatMap(
+            user ->
+                userAPIEventHandler.handleUserCreated(getUserCreatedEvent(user)).thenReturn(user));
   }
 
-  private Mono<User> duplicateUser(
-      String requestId, CreateUserRequest createUserRequest, DuplicateKeyException exception) {
-    return kafkaProducer
-        .sendUserDuplicatedEvent(requestId, createUserRequest)
+  private UserCreatedEvent getUserCreatedEvent(User user) {
+    return new UserCreatedEvent(UUID.randomUUID(), user, LocalDateTime.now());
+  }
+
+  private Mono<User> duplicateUser(CreateUserRequest createUserRequest) {
+    return userAPIEventHandler
+        .handleUserDuplicated(createUserRequest)
         .flatMap(
             unused -> Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
   }

@@ -3,7 +3,6 @@ protocol UserCreated {
 	import idl "../../domain/user/User.avdl";
 	record UserCreated {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

@@ -163,8 +163,8 @@ public record IssueService(
         .then();
   }
 
-  public Mono<String> uploadAttachment(String issueId , FilePart filePart) {
-    return issueAttachmentRepository.upload(issueId , filePart.filename() , filePart.content());
+  public Mono<String> uploadAttachment(String issueId, FilePart filePart) {
+    return issueAttachmentRepository.upload(issueId, filePart.filename(), filePart.content());
   }
 
   private Flux<Issue> getAllByProjectId(String projectId) {

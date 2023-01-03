@@ -71,11 +71,13 @@ public record IssueRouteHandler(
     return request
         .body(BodyExtractors.toParts())
         .filter(part -> part instanceof FilePart)
-        .ofType(FilePart.class).single()
-        .flatMap(filePart -> issueService.uploadAttachment(issueId , filePart))
+        .ofType(FilePart.class)
+        .single()
+        .flatMap(filePart -> issueService.uploadAttachment(issueId, filePart))
         .flatMap(
             uploadFileHex ->
-                ServerResponse.ok().body(BodyInserters.fromValue(Map.of("fileUploadId", uploadFileHex))));
+                ServerResponse.ok()
+                    .body(BodyInserters.fromValue(Map.of("fileUploadId", uploadFileHex))));
   }
 
   public Mono<ServerResponse> assignee(ServerRequest serverRequest) {

@@ -5,7 +5,6 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserResponse;
 import com.github.devraghav.bugtracker.user.service.UserService;
-import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -23,8 +22,7 @@ public record UserRouteHandler(UserService userService) {
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(CreateUserRequest.class)
-        .flatMap(CreateUserRequest::validate)
-        .flatMap(userRequest -> userService.save(UUID.randomUUID().toString(), userRequest))
+        .flatMap(userService::save)
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))
         .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception));

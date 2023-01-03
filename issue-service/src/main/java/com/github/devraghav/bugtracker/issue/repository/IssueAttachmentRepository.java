@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 
 public interface IssueAttachmentRepository {
 
-  Mono<String> upload(String issueId ,String filename, Publisher<DataBuffer> content);
+  Mono<String> upload(String issueId, String filename, Publisher<DataBuffer> content);
 }

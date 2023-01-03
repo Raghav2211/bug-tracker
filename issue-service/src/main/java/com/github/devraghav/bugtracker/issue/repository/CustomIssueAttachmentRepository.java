@@ -15,9 +15,9 @@ public class CustomIssueAttachmentRepository implements IssueAttachmentRepositor
   private final ReactiveGridFsTemplate reactiveGridFsTemplate;
 
   @Override
-  public Mono<String> upload(String issueId ,String filename,Publisher<DataBuffer> content) {
+  public Mono<String> upload(String issueId, String filename, Publisher<DataBuffer> content) {
     var metadData = new Document();
-    metadData.append("issueId" ,issueId );
+    metadData.append("issueId", issueId);
     return reactiveGridFsTemplate.store(content, filename, metadData).map(ObjectId::toHexString);
   }
 }
