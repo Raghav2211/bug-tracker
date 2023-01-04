@@ -60,11 +60,11 @@ public class KafkaEventPublisherSubscriber extends Subscriber<DomainEvent> {
     return switch (event) {
       case UserCreatedEvent userCreatedEvent -> eventConverterFactory
           .getConverter(UserCreatedEvent.class)
-          .domainToIntegrationFunc()
+          .convertFunc()
           .apply(userCreatedEvent);
       case UserDuplicatedEvent userDuplicatedEvent -> eventConverterFactory
           .getConverter(UserDuplicatedEvent.class)
-          .domainToIntegrationFunc()
+          .convertFunc()
           .apply(userDuplicatedEvent);
       default -> throw new IllegalArgumentException("No handler found");
     };

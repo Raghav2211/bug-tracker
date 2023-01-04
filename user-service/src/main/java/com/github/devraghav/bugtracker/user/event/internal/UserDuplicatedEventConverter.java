@@ -22,7 +22,7 @@ public class UserDuplicatedEventConverter
   }
 
   @Override
-  public Function<UserDuplicatedEvent, UserDuplicatedSchema> domainToIntegrationFunc() {
+  public Function<UserDuplicatedEvent, UserDuplicatedSchema> convertFunc() {
     return event ->
         UserDuplicatedSchema.newBuilder()
             .setEvent(

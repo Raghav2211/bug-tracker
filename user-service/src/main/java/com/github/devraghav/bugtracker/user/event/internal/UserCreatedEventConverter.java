@@ -21,7 +21,7 @@ public class UserCreatedEventConverter
   }
 
   @Override
-  public Function<UserCreatedEvent, UserCreatedSchema> domainToIntegrationFunc() {
+  public Function<UserCreatedEvent, UserCreatedSchema> convertFunc() {
     return event ->
         UserCreatedSchema.newBuilder()
             .setEvent(

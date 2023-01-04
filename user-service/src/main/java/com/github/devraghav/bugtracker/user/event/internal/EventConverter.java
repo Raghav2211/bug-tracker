@@ -5,5 +5,5 @@ import org.apache.avro.specific.SpecificRecordBase;
 
 @FunctionalInterface
 public interface EventConverter<T extends DomainEvent, R extends SpecificRecordBase> {
-  Function<T, R> domainToIntegrationFunc();
+  Function<T, R> convertFunc();
 }
