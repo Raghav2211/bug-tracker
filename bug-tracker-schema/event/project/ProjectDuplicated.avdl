@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.data_model.event.project")
+protocol ProjectDuplicated {
+	import idl "../../domain/project/NewProject.avdl";
+	record ProjectDuplicated {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.data_model.domain.project.NewProject payload;
+	}
+}

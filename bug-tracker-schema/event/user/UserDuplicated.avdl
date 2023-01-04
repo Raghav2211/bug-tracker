@@ -1,0 +1,11 @@
+@namespace("com.github.devraghav.data_model.event.user")
+protocol UserDuplicated {
+	import idl "../../domain/user/NewUser.avdl";
+	record UserDuplicated {
+		string id;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.data_model.domain.user.NewUser payload;
+	}
+}

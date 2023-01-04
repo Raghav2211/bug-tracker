@@ -18,22 +18,18 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: [ 'mongoexporter:9216' ]
-  - job_name: 'bug-tracker'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['bug-tracker:8080']
   - job_name: 'user-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: [ 'user-service:8080' ]
+      - targets: [ 'user-service:9091' ]
   - job_name: 'project-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: [ 'project-service:8080' ]
+      - targets: [ 'project-service:9092' ]
   - job_name: 'issue-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: [ 'issue-service:8080' ]
+      - targets: [ 'issue-service:9093' ]

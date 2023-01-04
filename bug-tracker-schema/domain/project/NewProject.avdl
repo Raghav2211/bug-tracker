@@ -1,0 +1,10 @@
+@namespace("com.github.devraghav.data_model.domain.project")
+protocol NewProject {
+	record NewProject {
+		string name;
+		string description;
+		string status;
+		string authorId;
+		union {null,map<string>} tags = null;
+	}
+}

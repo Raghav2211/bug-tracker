@@ -1,0 +1,22 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol Issue {
+	import idl "../user/User.avdl";
+	import idl "./comment/Comment.avdl";
+	import idl "../project/Project.avdl";
+	record Issue {
+		string id;
+		string header;
+		string description;
+		string businessUnit;
+		string priority;
+		string severity;
+		union {null, com.github.devraghav.data_model.domain.user.User} assignee = null;
+		array<com.github.devraghav.data_model.domain.project.Project> projects;
+		array<com.github.devraghav.data_model.domain.user.User> watchers = [];
+		com.github.devraghav.data_model.domain.user.User reporter;
+		array<com.github.devraghav.data_model.domain.issue.comment.Comment> comments = [];
+		union {null, map<string>} tags = null;
+		long createdAt;
+		union {null,long } endedAt = null;
+	}
+}

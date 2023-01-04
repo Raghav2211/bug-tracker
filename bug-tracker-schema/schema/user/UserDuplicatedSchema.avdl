@@ -1,0 +1,23 @@
+/**
+ {
+  "event": {
+    "id": "6b7d6a79-478b-434f-8530-668e8b77c99a",
+    "name": "Identity.User.Duplicated",
+    "publisher": "Service.User",
+    "createAt": 1671827114,
+    "payload": {
+      "firstName": "Kafka",
+      "lastName": "kafka",
+      "email": "kafka@kafka.com",
+      "accessLevel": "READ"
+    }
+  }
+}
+ */
+@namespace("com.github.devraghav.data_model.schema.user")
+protocol UserDuplicatedSchema {
+	import idl "../../event/user/UserDuplicated.avdl";
+	record UserDuplicatedSchema {
+		com.github.devraghav.data_model.event.user.UserDuplicated event;
+	}
+}

@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.data_model.event.issue")
+protocol IssueResolved {
+	import idl "../../domain/issue/Resolve.avdl";
+	record IssueResolved {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.data_model.domain.issue.Resolve payload;
+	}
+}

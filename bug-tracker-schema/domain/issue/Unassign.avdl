@@ -1,0 +1,6 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol Unassign {
+	record Unassign {
+		string issueId;
+	}
+}

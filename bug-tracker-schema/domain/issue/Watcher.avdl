@@ -1,0 +1,8 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol Watcher {
+	import idl "../user/User.avdl";
+	record Watcher {
+		string issueId;
+		com.github.devraghav.data_model.domain.user.User watcher;
+	}
+}

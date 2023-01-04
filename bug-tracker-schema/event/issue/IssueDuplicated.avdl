@@ -1,0 +1,12 @@
+@namespace("com.github.devraghav.data_model.event.issue")
+protocol IssueDuplicated {
+	import idl "../../domain/issue/NewIssue.avdl";
+	record IssueDuplicated {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		com.github.devraghav.data_model.domain.issue.NewIssue payload;
+	}
+}

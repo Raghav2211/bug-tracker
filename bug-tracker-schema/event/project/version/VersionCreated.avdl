@@ -1,0 +1,13 @@
+@namespace("com.github.devraghav.data_model.event.project.version")
+protocol VersionCreated {
+	import idl "../../../domain/project/version/Version.avdl";
+	record VersionCreated {
+		string id;
+		string requestId;
+		string name;
+		string publisher;
+		long createAt;
+		string projectId;
+		com.github.devraghav.data_model.domain.project.version.Version payload;
+	}
+}

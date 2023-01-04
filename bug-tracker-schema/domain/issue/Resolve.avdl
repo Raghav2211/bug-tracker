@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol Resolve {
+	record Resolve {
+		string issueId;
+		long endedAt;
+	}
+}

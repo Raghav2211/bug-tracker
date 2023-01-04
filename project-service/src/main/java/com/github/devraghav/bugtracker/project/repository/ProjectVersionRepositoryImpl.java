@@ -14,11 +14,12 @@ public record ProjectVersionRepositoryImpl(ReactiveMongoTemplate reactiveMongoTe
     implements ProjectVersionRepository {
   @Override
   public Mono<ProjectVersionEntity> saveVersion(String projectId, ProjectVersionEntity entity) {
-
-    return reactiveMongoTemplate.findAndModify(
-        Query.query(Criteria.where("_id").is(projectId)),
-        new Update().push("versions").value(entity),
-        ProjectVersionEntity.class,
-        reactiveMongoTemplate.getCollectionName(ProjectEntity.class));
+    return reactiveMongoTemplate
+        .updateFirst(
+            Query.query(Criteria.where("_id").is(projectId)),
+            new Update().push("versions").value(entity),
+            reactiveMongoTemplate.getCollectionName(ProjectEntity.class))
+        .filter(updateResult -> updateResult.getModifiedCount() == 1)
+        .map(unused -> entity);
   }
 }

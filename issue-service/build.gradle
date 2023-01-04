@@ -12,8 +12,10 @@ sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 	maven { url 'https://repo.spring.io/milestone' }
+	maven { url "https://packages.confluent.io/maven" }
 }
 
 dependencies {
@@ -23,9 +25,21 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-graphql'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
+
+	// kafka
+	implementation ('io.confluent:kafka-avro-serializer:7.3.0') {
+		exclude (group: "jakarta.ws.rs", module: "jakarta.ws.rs-api")
+		exclude (group: "io.swagger.core.v3", module: "swagger-annotations")
+	}
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'io.projectreactor.kafka:reactor-kafka'
+	implementation 'com.github.devraghav.bugtracker:bug-tracker-schema:1.0.0'
+
 	implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.10.2'
 	implementation 'org.projectlombok:lombok'
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webflux-api' , version: '2.0.2'
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webflux-ui' , version: '2.0.2'
+
 	implementation group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.2'
 
 	annotationProcessor group: 'org.projectlombok', name: 'lombok-mapstruct-binding', version: '0.2.0'

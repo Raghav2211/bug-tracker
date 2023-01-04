@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.data_model.schema.issue")
+protocol CommentUpdatedSchema {
+	import idl "../../../event/issue/comment/CommentUpdated.avdl";
+	record CommentUpdatedSchema {
+		com.github.devraghav.data_model.event.issue.comment.CommentUpdated event;
+	}
+}

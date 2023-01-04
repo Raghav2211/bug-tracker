@@ -2,6 +2,8 @@ package com.github.devraghav.bugtracker.project.route;
 
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
+import java.util.UUID;
+import java.util.function.Supplier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -11,6 +13,9 @@ import reactor.core.publisher.Mono;
 
 @Component
 public record ProjectRouteHandler(ProjectService projectService) {
+
+  private static final Supplier<UUID> REQUEST_ID = UUID::randomUUID;
+
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
     return projectService
         .findAll()
@@ -22,8 +27,8 @@ public record ProjectRouteHandler(ProjectService projectService) {
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
-        .bodyToMono(ProjectRequest.class)
-        .flatMap(projectService::save)
+        .bodyToMono(CreateProjectRequest.class)
+        .flatMap(projectRequest -> projectService.save(REQUEST_ID.get().toString(), projectRequest))
         .flatMap(project -> ProjectResponse.create(request, project))
         .switchIfEmpty(ProjectResponse.noBody(request))
         .onErrorResume(
@@ -42,10 +47,11 @@ public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> addVersion(ServerRequest request) {
     var projectId = request.pathVariable("id");
     return request
-        .bodyToMono(ProjectVersionRequest.class)
+        .bodyToMono(CreateProjectVersionRequest.class)
         .flatMap(
             projectVersionRequest ->
-                projectService.addVersionToProjectId(projectId, projectVersionRequest))
+                projectService.addVersionToProjectId(
+                    REQUEST_ID.get().toString(), projectId, projectVersionRequest))
         .flatMap(ProjectResponse::ok)
         .onErrorResume(
             ProjectException.class, exception -> ProjectResponse.invalid(request, exception));

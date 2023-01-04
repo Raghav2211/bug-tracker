@@ -1,0 +1,7 @@
+@namespace("com.github.devraghav.data_model.domain.issue")
+protocol ProjectAttachment {
+	record ProjectAttachment {
+		string projectId;
+		string projectVersionId;
+	}
+}

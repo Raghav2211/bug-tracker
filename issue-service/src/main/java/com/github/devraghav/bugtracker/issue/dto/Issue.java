@@ -6,6 +6,7 @@ import lombok.*;
 
 @Getter
 @Builder
+@ToString
 public class Issue {
   private String id;
   private Priority priority;

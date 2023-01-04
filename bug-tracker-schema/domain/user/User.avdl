@@ -1,0 +1,11 @@
+@namespace("com.github.devraghav.data_model.domain.user")
+protocol User {
+	record User {
+		string id;
+		string firstName;
+		string lastName;
+		string email;
+		boolean enabled;
+		string accessLevel;
+	}
+}
