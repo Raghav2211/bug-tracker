@@ -4,12 +4,13 @@ import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
+import com.github.devraghav.bugtracker.user.event.Publisher;
+import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
+import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import com.github.devraghav.bugtracker.user.validation.RequestValidator;
-import java.time.LocalDateTime;
-import java.util.UUID;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -20,7 +21,7 @@ public record UserService(
     RequestValidator requestValidator,
     UserMapper userMapper,
     UserRepository userRepository,
-    UserAPIEventHandler userAPIEventHandler) {
+    Publisher<DomainEvent> domainEventPublisher) {
 
   public Mono<User> save(CreateUserRequest createUserRequest) {
     return requestValidator
@@ -45,19 +46,15 @@ public record UserService(
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)
-        .flatMap(
-            user ->
-                userAPIEventHandler.handleUserCreated(getUserCreatedEvent(user)).thenReturn(user));
-  }
-
-  private UserCreatedEvent getUserCreatedEvent(User user) {
-    return new UserCreatedEvent(UUID.randomUUID(), user, LocalDateTime.now());
+        .flatMap(user -> domainEventPublisher.publish(new UserCreatedEvent(user)).thenReturn(user));
   }
 
   private Mono<User> duplicateUser(CreateUserRequest createUserRequest) {
-    return userAPIEventHandler
-        .handleUserDuplicated(createUserRequest)
+    return domainEventPublisher
+        .publish(new UserDuplicatedEvent(createUserRequest))
+        .thenReturn(createUserRequest)
         .flatMap(
-            unused -> Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
+            duplicateRequest ->
+                Mono.error(UserException.alreadyExistsWithEmail(duplicateRequest.email())));
   }
 }

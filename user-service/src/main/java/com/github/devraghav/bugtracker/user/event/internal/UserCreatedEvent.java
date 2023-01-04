@@ -1,7 +1,14 @@
 package com.github.devraghav.bugtracker.user.event.internal;
 
 import com.github.devraghav.bugtracker.user.dto.User;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.Getter;
 
-public record UserCreatedEvent(UUID uuid, User user, LocalDateTime createdAt) {}
+@Getter
+public class UserCreatedEvent extends DomainEvent {
+  private final User createdUser;
+
+  public UserCreatedEvent(User createdUser) {
+    super("User", "Created", User.class);
+    this.createdUser = createdUser;
+  }
+}

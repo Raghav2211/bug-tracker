@@ -9,11 +9,8 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 import java.util.function.Function;
 
-public class UserDuplicatedDomainIntegrationEventConverter
-    implements DomainIntegrationEventConverter<CreateUserRequest, UserDuplicatedSchema> {
-  public UserDuplicatedDomainIntegrationEventConverter() {
-    System.out.println("Call");
-  }
+public class UserDuplicatedEventConverter
+    implements EventConverter<UserDuplicatedEvent, UserDuplicatedSchema> {
 
   private NewUser getUser(CreateUserRequest createUserRequest) {
     return NewUser.newBuilder()
@@ -25,16 +22,16 @@ public class UserDuplicatedDomainIntegrationEventConverter
   }
 
   @Override
-  public Function<CreateUserRequest, UserDuplicatedSchema> domainToIntegrationFunc() {
-    return createUserRequest ->
+  public Function<UserDuplicatedEvent, UserDuplicatedSchema> domainToIntegrationFunc() {
+    return event ->
         UserDuplicatedSchema.newBuilder()
             .setEvent(
                 UserDuplicated.newBuilder()
                     .setId(UUID.randomUUID().toString())
                     .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                    .setName("User.User.Duplicated")
-                    .setPayload(getUser(createUserRequest))
-                    .setPublisher("Service.User")
+                    .setName(event.getName())
+                    .setPayload(getUser(event.getDuplicateUser()))
+                    .setPublisher(event.getPublisher())
                     .build())
             .build();
   }

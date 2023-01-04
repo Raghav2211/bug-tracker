@@ -3,13 +3,11 @@ package com.github.devraghav.bugtracker.user.event.internal;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.data_model.event.user.UserCreated;
 import com.github.devraghav.data_model.schema.user.UserCreatedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 import java.util.function.Function;
 
-public class UserCreatedDomainIntegrationEventConverter
-    implements DomainIntegrationEventConverter<User, UserCreatedSchema> {
+public class UserCreatedEventConverter
+    implements EventConverter<UserCreatedEvent, UserCreatedSchema> {
 
   private com.github.devraghav.data_model.domain.user.User getUser(User user) {
     return com.github.devraghav.data_model.domain.user.User.newBuilder()
@@ -23,16 +21,16 @@ public class UserCreatedDomainIntegrationEventConverter
   }
 
   @Override
-  public Function<User, UserCreatedSchema> domainToIntegrationFunc() {
-    return user ->
+  public Function<UserCreatedEvent, UserCreatedSchema> domainToIntegrationFunc() {
+    return event ->
         UserCreatedSchema.newBuilder()
             .setEvent(
                 UserCreated.newBuilder()
-                    .setId(UUID.randomUUID().toString())
-                    .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                    .setName("User.User.Created")
-                    .setPayload(getUser(user))
-                    .setPublisher("Service.User")
+                    .setId(event.getId().toString())
+                    .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
+                    .setName(event.getName())
+                    .setPayload(getUser(event.getCreatedUser()))
+                    .setPublisher(event.getPublisher())
                     .build())
             .build();
   }

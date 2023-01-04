@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
 @Component
 public record RequestValidator(
     ValidationStrategy<CreateUserRequest> createUserRequestValidationStrategy) {
+
   public Mono<CreateUserRequest> validate(final CreateUserRequest request) {
     return createUserRequestValidationStrategy.validate(request);
   }

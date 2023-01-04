@@ -1,5 +1,7 @@
 package com.github.devraghav.bugtracker.user.event;
 
+import reactor.core.publisher.Mono;
+
 public interface Publisher<T> {
-  void publish(T message);
+  Mono<Void> publish(T message);
 }
