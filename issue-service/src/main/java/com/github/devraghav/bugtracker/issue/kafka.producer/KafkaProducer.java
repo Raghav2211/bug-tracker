@@ -2,7 +2,6 @@ package com.github.devraghav.bugtracker.issue.kafka.producer;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.dto.Issue;
-import com.github.devraghav.data_model.command.issue.CreateIssue;
 import com.github.devraghav.data_model.domain.issue.*;
 import com.github.devraghav.data_model.domain.issue.comment.Comment;
 import com.github.devraghav.data_model.domain.project.version.Version;
@@ -43,13 +42,6 @@ public record KafkaProducer(
                 log.info("sent {} offset : {}", record, senderResult.recordMetadata().offset()));
   }
 
-  public Mono<CreateIssueRequest> sendIssueCreateCommand(
-      String requestId, CreateIssueRequest createIssueRequest) {
-    var command = getCreateIssueSchema(requestId, createIssueRequest);
-    log.atDebug().log("IssueCreateCommand {}", command);
-    return send(command).thenReturn(createIssueRequest);
-  }
-
   public Mono<CreateIssueRequest> sendIssueDuplicatedEvent(
       String requestId, CreateIssueRequest createIssueRequest) {
     var event = getIssueDuplicatedSchema(requestId, createIssueRequest);
@@ -62,13 +54,6 @@ public record KafkaProducer(
     var event = getIssueCreatedSchema(requestId, issue);
     log.atDebug().log("IssueCreatedEvent {}", event);
     return send(event).thenReturn(issue);
-  }
-
-  public Mono<UpdateIssueRequest> sendIssueUpdateCommand(
-      String requestId, UpdateIssueRequest UpdateIssueRequest) {
-    var command = getUpdateIssueSchema(requestId, UpdateIssueRequest);
-    log.atDebug().log("IssueUpdateCommand {}", command);
-    return send(command).thenReturn(UpdateIssueRequest);
   }
 
   public Mono<Issue> sendIssueUpdatedEvent(String requestId, Issue issue) {
@@ -123,36 +108,6 @@ public record KafkaProducer(
     var event = getIssueResolvedSchema(requestId, issueId, resolveLocalDateTime);
     log.atDebug().log("IssueResolvedEvent {}", event);
     return send(event).thenReturn(issueId);
-  }
-
-  private CreateIssueSchema getCreateIssueSchema(
-      String requestId, CreateIssueRequest projectRequest) {
-    return CreateIssueSchema.newBuilder()
-        .setCommand(
-            CreateIssue.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setRequestId(requestId)
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Issue.Issue.Create")
-                .setPayload(getNewIssue(projectRequest))
-                .setPublisher("Service.Issue")
-                .build())
-        .build();
-  }
-
-  private UpdateIssueSchema getUpdateIssueSchema(
-      String requestId, UpdateIssueRequest updateIssueRequest) {
-    return UpdateIssueSchema.newBuilder()
-        .setCommand(
-            com.github.devraghav.data_model.command.issue.UpdateIssue.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setRequestId(requestId)
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Issue.Issue.Update")
-                .setPayload(getUpdateIssue(updateIssueRequest))
-                .setPublisher("Service.Issue")
-                .build())
-        .build();
   }
 
   private IssueDuplicatedSchema getIssueDuplicatedSchema(
@@ -324,22 +279,6 @@ public record KafkaProducer(
         .setProjectAttachments(getProjectAttachments(createIssueRequest.projects()))
         .setReporterId(createIssueRequest.reporter())
         .setTags(createIssueRequest.tags())
-        .build();
-  }
-
-  private UpdateIssue getUpdateIssue(UpdateIssueRequest updateIssueRequest) {
-    var tags =
-        updateIssueRequest.tags().entrySet().stream()
-            .collect(Collectors.toMap(Objects::toString, Object::toString));
-    return UpdateIssue.newBuilder()
-        .setHeader(updateIssueRequest.header())
-        .setDescription(updateIssueRequest.description())
-        .setBusinessUnit(updateIssueRequest.businessUnit())
-        .setPriority(updateIssueRequest.priority().name())
-        .setSeverity(updateIssueRequest.severity().name())
-        // TODO : update project attachment feature
-        //            .setProjectAttachments(getProjectAttachments(issueUpdateRequest.projects()))
-        .setTags(updateIssueRequest.tags())
         .build();
   }
 

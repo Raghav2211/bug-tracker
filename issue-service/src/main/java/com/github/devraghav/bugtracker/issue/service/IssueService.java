@@ -58,7 +58,6 @@ public record IssueService(
   public Mono<Issue> create(String requestId, CreateIssueRequest createIssueRequest) {
     return requestValidator
         .validate(createIssueRequest)
-        .flatMap(validRequest -> kafkaProducer.sendIssueCreateCommand(requestId, validRequest))
         .map(issueMapper::issueRequestToIssueEntity)
         .flatMap(issueEntity -> save(requestId, issueEntity));
   }
@@ -66,9 +65,6 @@ public record IssueService(
   public Mono<Issue> update(String requestId, String issueId, UpdateIssueRequest request) {
     return findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
-        .flatMap(
-            issueEntity ->
-                kafkaProducer.sendIssueUpdateCommand(requestId, request).thenReturn(issueEntity))
         .map(issueEntity -> issueMapper.issueRequestToIssueEntity(issueEntity, request))
         .flatMap(issueEntity -> update(requestId, issueEntity))
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
