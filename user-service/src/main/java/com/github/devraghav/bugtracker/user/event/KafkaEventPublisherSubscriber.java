@@ -1,9 +1,6 @@
 package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.user.event.internal.EventConverterFactory;
-import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
-import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
+import com.github.devraghav.bugtracker.user.event.internal.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +13,7 @@ import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-public class KafkaEventPublisherSubscriber extends Subscriber<DomainEvent> {
+public class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEvent> {
   private final String eventStoreTopic;
   private final EventConverterFactory eventConverterFactory;
   private final ReactiveKafkaProducerTemplate<String, SpecificRecordBase>
@@ -35,7 +32,7 @@ public class KafkaEventPublisherSubscriber extends Subscriber<DomainEvent> {
   }
 
   @Override
-  void subscribe(Flux<DomainEvent> stream) {
+  protected void subscribe(Flux<DomainEvent> stream) {
     stream
         .map(this::getKeyValue)
         .flatMap(keyValue -> send(keyValue.getKey(), keyValue.getValue()))
@@ -60,12 +57,10 @@ public class KafkaEventPublisherSubscriber extends Subscriber<DomainEvent> {
     return switch (event) {
       case UserCreatedEvent userCreatedEvent -> eventConverterFactory
           .getConverter(UserCreatedEvent.class)
-          .convertFunc()
-          .apply(userCreatedEvent);
+          .convert(userCreatedEvent);
       case UserDuplicatedEvent userDuplicatedEvent -> eventConverterFactory
           .getConverter(UserDuplicatedEvent.class)
-          .convertFunc()
-          .apply(userDuplicatedEvent);
+          .convert(userDuplicatedEvent);
       default -> throw new IllegalArgumentException("No handler found");
     };
   }

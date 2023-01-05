@@ -1,6 +1,6 @@
-package com.github.devraghav.bugtracker.user.event.internal;
+package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.user.event.ReactiveMessageBroker;
+import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Sinks;
 

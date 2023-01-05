@@ -4,7 +4,7 @@ import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.event.Publisher;
+import com.github.devraghav.bugtracker.user.event.ReactivePublisher;
 import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
 import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
@@ -21,7 +21,7 @@ public record UserService(
     RequestValidator requestValidator,
     UserMapper userMapper,
     UserRepository userRepository,
-    Publisher<DomainEvent> domainEventPublisher) {
+    ReactivePublisher<DomainEvent> domainEventReactivePublisher) {
 
   public Mono<User> save(CreateUserRequest createUserRequest) {
     return requestValidator
@@ -46,11 +46,13 @@ public record UserService(
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)
-        .flatMap(user -> domainEventPublisher.publish(new UserCreatedEvent(user)).thenReturn(user));
+        .flatMap(
+            user ->
+                domainEventReactivePublisher.publish(new UserCreatedEvent(user)).thenReturn(user));
   }
 
   private Mono<User> duplicateUser(CreateUserRequest createUserRequest) {
-    return domainEventPublisher
+    return domainEventReactivePublisher
         .publish(new UserDuplicatedEvent(createUserRequest))
         .thenReturn(createUserRequest)
         .flatMap(

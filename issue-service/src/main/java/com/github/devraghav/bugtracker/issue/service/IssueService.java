@@ -7,6 +7,7 @@ import com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
+import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -23,6 +24,7 @@ import reactor.util.function.Tuple5;
 
 @Service
 public record IssueService(
+    RequestValidator requestValidator,
     IssueMapper issueMapper,
     UserReactiveClient userReactiveClient,
     ProjectReactiveClient projectReactiveClient,
@@ -54,7 +56,8 @@ public record IssueService(
   }
 
   public Mono<Issue> create(String requestId, CreateIssueRequest createIssueRequest) {
-    return validate(createIssueRequest)
+    return requestValidator
+        .validate(createIssueRequest)
         .flatMap(validRequest -> kafkaProducer.sendIssueCreateCommand(requestId, validRequest))
         .map(issueMapper::issueRequestToIssueEntity)
         .flatMap(issueEntity -> save(requestId, issueEntity));
@@ -230,55 +233,12 @@ public record IssueService(
         .doOnNext(project -> project.removeProjectVersionIfNotEqual(projectInfoRef.getVersionId()));
   }
 
-  private Mono<CreateIssueRequest> validate(CreateIssueRequest createIssueRequest) {
-    return createIssueRequest
-        .validate()
-        .and(validatedProjectInfo(createIssueRequest))
-        .and(validateReporter(createIssueRequest))
-        .thenReturn(createIssueRequest);
-  }
-
-  private Mono<CreateIssueRequest> validatedProjectInfo(CreateIssueRequest createIssueRequest) {
-    return Flux.fromIterable(createIssueRequest.projects())
-        .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
-        .flatMap(this::validateProjectInfo)
-        .last()
-        .thenReturn(createIssueRequest);
-  }
-
-  private Mono<Boolean> validateProjectInfo(ProjectInfo projectInfo) {
-    return Mono.just(projectInfo)
-        .filter(ProjectInfo::isValid)
-        .flatMap(this::isProjectInfoExists)
-        .switchIfEmpty(Mono.error(() -> IssueException.invalidProject(projectInfo)));
-  }
-
-  private Mono<Boolean> isProjectInfoExists(ProjectInfo projectInfo) {
-    return Mono.zip(
-            validateProjectId(projectInfo.projectId()),
-            validateProjectVersion(projectInfo.projectId(), projectInfo.versionId()),
-            Boolean::logicalAnd)
-        .map(Boolean::booleanValue);
-  }
-
   private Mono<Boolean> validateProjectId(String projectId) {
     return projectReactiveClient
         .isProjectExists(projectId)
         .onErrorResume(
             ProjectClientException.class,
             exception -> Mono.error(IssueException.projectServiceException(exception)));
-  }
-
-  private Mono<Boolean> validateProjectVersion(String projectId, String versionId) {
-    return projectReactiveClient
-        .isProjectVersionExists(projectId, versionId)
-        .onErrorResume(
-            ProjectClientException.class,
-            exception -> Mono.error(IssueException.projectServiceException(exception)));
-  }
-
-  private Mono<CreateIssueRequest> validateReporter(CreateIssueRequest createIssueRequest) {
-    return fetchUser(createIssueRequest.reporter()).thenReturn(createIssueRequest);
   }
 
   private Mono<User> fetchUser(String userId) {

@@ -12,9 +12,15 @@ public abstract class DomainEvent {
   private final String name;
   private final String publisher;
 
-  public DomainEvent(String serviceName, String eventType, Class<?> domainClass) {
+  record PublisherInfo(String name, Class<?> domain) {}
+
+  public DomainEvent(String action, PublisherInfo publisherInfo) {
     name =
-        new StringJoiner(".").add(serviceName).add(domainClass.getName()).add(eventType).toString();
-    publisher = new StringJoiner(".").add("Service").add(serviceName).toString();
+        new StringJoiner("#")
+            .add(publisherInfo.name())
+            .add(publisherInfo.domain().getName())
+            .add(action)
+            .toString();
+    this.publisher = new StringJoiner("#").add("Service").add(publisherInfo.name()).toString();
   }
 }

@@ -4,7 +4,6 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.data_model.event.user.UserCreated;
 import com.github.devraghav.data_model.schema.user.UserCreatedSchema;
 import java.time.ZoneOffset;
-import java.util.function.Function;
 
 public class UserCreatedEventConverter
     implements EventConverter<UserCreatedEvent, UserCreatedSchema> {
@@ -21,17 +20,16 @@ public class UserCreatedEventConverter
   }
 
   @Override
-  public Function<UserCreatedEvent, UserCreatedSchema> convertFunc() {
-    return event ->
-        UserCreatedSchema.newBuilder()
-            .setEvent(
-                UserCreated.newBuilder()
-                    .setId(event.getId().toString())
-                    .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
-                    .setName(event.getName())
-                    .setPayload(getUser(event.getCreatedUser()))
-                    .setPublisher(event.getPublisher())
-                    .build())
-            .build();
+  public UserCreatedSchema convert(UserCreatedEvent event) {
+    return UserCreatedSchema.newBuilder()
+        .setEvent(
+            UserCreated.newBuilder()
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
+                .setName(event.getName())
+                .setPayload(getUser(event.getCreatedUser()))
+                .setPublisher(event.getPublisher())
+                .build())
+        .build();
   }
 }

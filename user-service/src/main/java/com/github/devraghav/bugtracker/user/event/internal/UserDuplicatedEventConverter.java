@@ -7,7 +7,6 @@ import com.github.devraghav.data_model.schema.user.UserDuplicatedSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class UserDuplicatedEventConverter
     implements EventConverter<UserDuplicatedEvent, UserDuplicatedSchema> {
@@ -22,17 +21,16 @@ public class UserDuplicatedEventConverter
   }
 
   @Override
-  public Function<UserDuplicatedEvent, UserDuplicatedSchema> convertFunc() {
-    return event ->
-        UserDuplicatedSchema.newBuilder()
-            .setEvent(
-                UserDuplicated.newBuilder()
-                    .setId(UUID.randomUUID().toString())
-                    .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                    .setName(event.getName())
-                    .setPayload(getUser(event.getDuplicateUser()))
-                    .setPublisher(event.getPublisher())
-                    .build())
-            .build();
+  public UserDuplicatedSchema convert(UserDuplicatedEvent event) {
+    return UserDuplicatedSchema.newBuilder()
+        .setEvent(
+            UserDuplicated.newBuilder()
+                .setId(UUID.randomUUID().toString())
+                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setName(event.getName())
+                .setPayload(getUser(event.getDuplicateUser()))
+                .setPublisher(event.getPublisher())
+                .build())
+        .build();
   }
 }
