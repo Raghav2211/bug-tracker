@@ -43,7 +43,7 @@ public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> addVersion(ServerRequest request) {
     var projectId = request.pathVariable("id");
     return request
-        .bodyToMono(CreateProjectVersionRequest.class)
+        .bodyToMono(CreateVersionRequest.class)
         .flatMap(
             projectVersionRequest ->
                 projectService.addVersionToProjectId(projectId, projectVersionRequest))
@@ -56,7 +56,7 @@ public record ProjectRouteHandler(ProjectService projectService) {
     var projectId = request.pathVariable("id");
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findAllVersionByProjectId(projectId), ProjectVersion.class);
+        .body(projectService.findAllVersionByProjectId(projectId), Version.class);
   }
 
   public Mono<ServerResponse> getProjectVersionById(ServerRequest request) {
@@ -65,7 +65,6 @@ public record ProjectRouteHandler(ProjectService projectService) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(
-            projectService.findVersionByProjectIdAndVersionId(projectId, versionId),
-            ProjectVersion.class);
+            projectService.findVersionByProjectIdAndVersionId(projectId, versionId), Version.class);
   }
 }

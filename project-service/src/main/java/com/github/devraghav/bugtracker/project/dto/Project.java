@@ -16,7 +16,7 @@ public class Project {
   private ProjectStatus status;
   private User author;
   private LocalDateTime createdAt;
-  private Set<ProjectVersion> versions;
+  private Set<Version> versions;
   private Map<String, Object> tags;
 
   public static class ProjectBuilder {

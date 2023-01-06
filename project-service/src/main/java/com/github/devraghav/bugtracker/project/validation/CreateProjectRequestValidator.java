@@ -10,8 +10,8 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public record CreateProjectRequestValidationStrategy(UserReactiveClient userReactiveClient)
-    implements ValidationStrategy<CreateProjectRequest> {
+public record CreateProjectRequestValidator(UserReactiveClient userReactiveClient)
+    implements Validator<CreateProjectRequest> {
   @Override
   public Mono<CreateProjectRequest> validate(CreateProjectRequest createProjectRequest) {
     return validateName(createProjectRequest.name())

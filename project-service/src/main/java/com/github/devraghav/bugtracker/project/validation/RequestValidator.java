@@ -5,10 +5,9 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public record RequestValidator(
-    ValidationStrategy<CreateProjectRequest> createUserRequestValidationStrategy) {
+public record RequestValidator(Validator<CreateProjectRequest> createUserRequestValidator) {
 
   public Mono<CreateProjectRequest> validate(final CreateProjectRequest request) {
-    return createUserRequestValidationStrategy.validate(request);
+    return createUserRequestValidator.validate(request);
   }
 }

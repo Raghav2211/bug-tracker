@@ -22,8 +22,8 @@ public class ProjectResponse {
         .body(BodyInserters.fromValue(project));
   }
 
-  public static Mono<ServerResponse> ok(ProjectVersion projectVersion) {
-    return ServerResponse.ok().body(BodyInserters.fromValue(projectVersion));
+  public static Mono<ServerResponse> ok(Version version) {
+    return ServerResponse.ok().body(BodyInserters.fromValue(version));
   }
 
   public static Mono<ServerResponse> noBody(ServerRequest request) {

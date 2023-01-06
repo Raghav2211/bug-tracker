@@ -45,8 +45,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
             requestBodyBuilder()
                 .content(
                     contentBuilder()
-                        .schema(
-                            schemaBuilder().implementation(CreateProjectVersionRequest.class))));
+                        .schema(schemaBuilder().implementation(CreateVersionRequest.class))));
   }
 
   void getProjectByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
@@ -129,7 +128,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
         .content(
             contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(ProjectVersion.class)));
+                .schema(schemaBuilder().implementation(Version.class)));
   }
 
   void saveProjectOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
@@ -149,7 +148,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("201")
         .description("Create project version successfully")
-        .content(contentBuilder().schema(schemaBuilder().implementation(ProjectVersion.class)));
+        .content(contentBuilder().schema(schemaBuilder().implementation(Version.class)));
   }
 
   private Builder getAllProjectVersion200ResponseDoc() {
@@ -161,7 +160,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
                 .mediaType(APPLICATION_JSON_VALUE)
                 .array(
                     arraySchemaBuilder()
-                        .arraySchema(schemaBuilder().implementation(ProjectVersion.class))));
+                        .arraySchema(schemaBuilder().implementation(Version.class))));
   }
 
   private Builder errorResponseDoc(HttpStatus httpStatus, String message) {
