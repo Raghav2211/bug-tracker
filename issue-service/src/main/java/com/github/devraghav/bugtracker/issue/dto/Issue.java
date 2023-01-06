@@ -18,7 +18,7 @@ public class Issue {
   private User assignee;
   private User reporter;
   private Set<User> watchers;
-  private List<IssueComment> comments;
+  private List<Comment> comments;
   private Map<String, String> tags;
   private LocalDateTime createdAt;
   private LocalDateTime endedAt;

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface IssueCommentRepository
-    extends ReactiveMongoRepository<IssueCommentEntity, String> {
+public interface CommentRepository extends ReactiveMongoRepository<IssueCommentEntity, String> {
   Flux<IssueCommentEntity> findAllByIssueId(String issueId);
 }

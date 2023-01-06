@@ -1,7 +1,6 @@
 package com.github.devraghav.bugtracker.issue.event.internal;
 
-import com.github.devraghav.bugtracker.issue.dto.IssueComment;
-import com.github.devraghav.data_model.domain.issue.comment.Comment;
+import com.github.devraghav.bugtracker.issue.dto.Comment;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.comment.CommentUpdated;
 import com.github.devraghav.data_model.schema.issue.CommentUpdatedSchema;
@@ -23,13 +22,14 @@ public class IssueCommentUpdatedEventConverter
         .build();
   }
 
-  private Comment getComment(String issueId, IssueComment issueComment) {
-    return Comment.newBuilder()
-        .setId(issueComment.getId())
+  private com.github.devraghav.data_model.domain.issue.comment.Comment getComment(
+      String issueId, Comment comment) {
+    return com.github.devraghav.data_model.domain.issue.comment.Comment.newBuilder()
+        .setId(comment.getId())
         .setIssueId(issueId)
-        .setContent(issueComment.getContent())
-        .setCommenter(getUser(issueComment.getUser()))
-        .setCreatedAt(issueComment.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
+        .setContent(comment.getContent())
+        .setCommenter(getUser(comment.getUser()))
+        .setCreatedAt(comment.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
         .build();
   }
 

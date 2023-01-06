@@ -2,8 +2,9 @@ package com.github.devraghav.bugtracker.issue.route;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
-import com.github.devraghav.bugtracker.issue.service.IssueCommentService;
-import com.github.devraghav.bugtracker.issue.service.IssueService;
+import com.github.devraghav.bugtracker.issue.service.CommentCommandService;
+import com.github.devraghav.bugtracker.issue.service.IssueCommandService;
+import com.github.devraghav.bugtracker.issue.service.IssueQueryService;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -18,14 +19,16 @@ import reactor.core.publisher.Mono;
 @Component
 @Slf4j
 public record IssueRouteHandler(
-    IssueService issueService, IssueCommentService issueCommentService) {
+    IssueCommandService issueCommandService,
+    IssueQueryService issueQueryService,
+    CommentCommandService commentCommandService) {
 
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
     IssueFilter issueFilter = new IssueFilter();
     issueFilter.setProjectId(serverRequest.queryParam("projectId"));
     issueFilter.setReportedBy(serverRequest.queryParam("reportedBy"));
-    return issueService
-        .getAll(issueFilter)
+    return issueQueryService
+        .findAllByFilter(issueFilter)
         .collectList()
         .flatMap(IssueResponse::retrieve)
         .onErrorResume(
@@ -35,7 +38,7 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(CreateIssueRequest.class)
-        .flatMap(issueService::create)
+        .flatMap(issueCommandService::create)
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -46,7 +49,7 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(UpdateIssueRequest.class)
-        .flatMap(updateRequest -> issueService.update(issueId, updateRequest))
+        .flatMap(updateRequest -> issueCommandService.update(issueId, updateRequest))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -55,7 +58,7 @@ public record IssueRouteHandler(
 
   public Mono<ServerResponse> get(ServerRequest request) {
     var id = request.pathVariable("id");
-    return issueService
+    return issueQueryService
         .get(id)
         .flatMap(issue -> ServerResponse.ok().body(BodyInserters.fromValue(issue)))
         .onErrorResume(
@@ -64,25 +67,12 @@ public record IssueRouteHandler(
             IssueException.class, exception -> IssueResponse.invalid(request, exception));
   }
 
-  public Mono<ServerResponse> uploadFile(ServerRequest request) {
-    var issueId = request.pathVariable("id");
-    return request
-        .body(BodyExtractors.toParts())
-        .filter(part -> part instanceof FilePart)
-        .ofType(FilePart.class)
-        .single()
-        .flatMap(filePart -> issueService.uploadAttachment(issueId, filePart))
-        .flatMap(
-            uploadFileHex ->
-                ServerResponse.ok()
-                    .body(BodyInserters.fromValue(Map.of("fileUploadId", uploadFileHex))));
-  }
-
   public Mono<ServerResponse> assignee(ServerRequest serverRequest) {
     var issueId = serverRequest.pathVariable("id");
     return serverRequest
-        .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.assignee(issueId, assignRequest))
+        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
+        .map(body -> new AssignRequest(issueId, body.get("user")))
+        .flatMap(assignRequest -> issueCommandService.assignee(issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
@@ -92,8 +82,9 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> watch(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return request
-        .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, true))
+        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
+        .map(body -> new AssignRequest(issueId, body.get("user")))
+        .flatMap(assignRequest -> issueCommandService.watch(issueId, assignRequest, true))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -103,8 +94,9 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
 
     return request
-        .bodyToMono(IssueAssignRequest.class)
-        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, false))
+        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
+        .map(body -> new AssignRequest(issueId, body.get("user")))
+        .flatMap(assignRequest -> issueCommandService.watch(issueId, assignRequest, false))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -115,7 +107,7 @@ public record IssueRouteHandler(
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
         .map(body -> new CreateCommentRequest(body.get("user"), issueId, body.get("content")))
-        .flatMap(issueCommentService::save)
+        .flatMap(commentCommandService::save)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -130,16 +122,30 @@ public record IssueRouteHandler(
         .map(
             body ->
                 new UpdateCommentRequest(body.get("user"), issueId, commentId, body.get("content")))
-        .flatMap(issueCommentService::update)
+        .flatMap(commentCommandService::update)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(request, exception));
   }
 
+  public Mono<ServerResponse> addAttachment(ServerRequest request) {
+    var issueId = request.pathVariable("id");
+    return request
+        .body(BodyExtractors.toParts())
+        .filter(part -> part instanceof FilePart)
+        .ofType(FilePart.class)
+        .single()
+        .flatMap(filePart -> issueCommandService.uploadAttachment(issueId, filePart))
+        .flatMap(
+            uploadFileHex ->
+                ServerResponse.ok()
+                    .body(BodyInserters.fromValue(Map.of("fileUploadId", uploadFileHex))));
+  }
+
   public Mono<ServerResponse> resolve(ServerRequest request) {
     return Mono.just(request.pathVariable("id"))
-        .flatMap(issueService::resolve)
+        .flatMap(issueCommandService::resolve)
         .flatMap(done -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class,

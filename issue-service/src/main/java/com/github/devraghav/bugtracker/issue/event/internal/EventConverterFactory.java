@@ -45,13 +45,13 @@ public final class EventConverterFactory {
         return ISSUE_CREATED_EVENT_CONVERTER;
       }
     },
-    ISSUE_UPDATED_EVENT(IssueCreatedEvent.class) {
+    ISSUE_UPDATED_EVENT(IssueUpdatedEvent.class) {
       @Override
       EventConverter<IssueUpdatedEvent, IssueUpdatedSchema> getConverter() {
         return ISSUE_UPDATED_EVENT_CONVERTER;
       }
     },
-    ISSUE_ASSIGNED_EVENT(IssueCreatedEvent.class) {
+    ISSUE_ASSIGNED_EVENT(IssueAssignedEvent.class) {
       @Override
       EventConverter<IssueAssignedEvent, IssueAssignedSchema> getConverter() {
         return ISSUE_ASSIGNED_EVENT_CONVERTER;
@@ -63,19 +63,19 @@ public final class EventConverterFactory {
         return ISSUE_RESOLVED_EVENT_CONVERTER;
       }
     },
-    ISSUE_UNASSIGNED_EVENT(IssueCreatedEvent.class) {
+    ISSUE_UNASSIGNED_EVENT(IssueUnassignedEvent.class) {
       @Override
       EventConverter<IssueUnassignedEvent, IssueUnassignedSchema> getConverter() {
         return ISSUE_UNASSIGNED_EVENT_CONVERTER;
       }
     },
-    ISSUE_WATCH_STARTED_EVENT(IssueCreatedEvent.class) {
+    ISSUE_WATCH_STARTED_EVENT(IssueWatchStartedEvent.class) {
       @Override
       EventConverter<IssueWatchStartedEvent, IssueWatchedSchema> getConverter() {
         return ISSUE_WATCH_STARTED_EVENT_CONVERTER;
       }
     },
-    ISSUE_WATCH_ENDED_EVENT(IssueCreatedEvent.class) {
+    ISSUE_WATCH_ENDED_EVENT(IssueWatchEndedEvent.class) {
       @Override
       EventConverter<IssueWatchEndedEvent, IssueUnwatchedSchema> getConverter() {
         return ISSUE_WATCH_ENDED_EVENT_CONVERTER;

@@ -6,18 +6,18 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class IssueComment implements Comparable<IssueComment> {
+public class Comment implements Comparable<Comment> {
   private String id;
   private User user;
   private String content;
   private LocalDateTime createdAt;
 
-  public static class IssueCommentBuilder {
-    public IssueCommentBuilder() {}
+  public static class CommentBuilder {
+    public CommentBuilder() {}
   }
 
   @Override
-  public int compareTo(IssueComment o) {
+  public int compareTo(Comment o) {
     return o.createdAt.compareTo(this.getCreatedAt());
   }
 }

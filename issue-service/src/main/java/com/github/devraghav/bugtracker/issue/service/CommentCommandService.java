@@ -6,27 +6,27 @@ import com.github.devraghav.bugtracker.issue.event.ReactivePublisher;
 import com.github.devraghav.bugtracker.issue.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentAddedEvent;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentUpdatedEvent;
-import com.github.devraghav.bugtracker.issue.mapper.IssueCommentMapper;
-import com.github.devraghav.bugtracker.issue.repository.IssueCommentRepository;
+import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
+import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
-public record IssueCommentService(
+public record CommentCommandService(
     RequestValidator requestValidator,
-    IssueCommentMapper issueCommentMapper,
-    IssueCommentFetchService issueCommentFetchService,
-    IssueCommentRepository issueCommentRepository,
+    CommentMapper commentMapper,
+    CommentQueryService commentQueryService,
+    CommentRepository commentRepository,
     ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<IssueComment> save(CreateCommentRequest createCommentRequest) {
+  public Mono<Comment> save(CreateCommentRequest createCommentRequest) {
     return requestValidator
         .validate(createCommentRequest)
         .thenReturn(createCommentRequest)
-        .map(issueCommentMapper::requestToEntity)
-        .flatMap(issueCommentRepository::save)
-        .flatMap(issueCommentFetchService::getComment)
+        .map(commentMapper::requestToEntity)
+        .flatMap(commentRepository::save)
+        .flatMap(commentQueryService::getComment)
         .flatMap(
             issueComment ->
                 eventReactivePublisher
@@ -35,15 +35,15 @@ public record IssueCommentService(
                     .thenReturn(issueComment));
   }
 
-  public Mono<IssueComment> update(UpdateCommentRequest updateCommentRequest) {
+  public Mono<Comment> update(UpdateCommentRequest updateCommentRequest) {
     return requestValidator
         .validate(updateCommentRequest)
         .flatMap(
             validCommentUpdateRequest ->
                 findAndUpdateCommentContentById(
                     validCommentUpdateRequest.commentId(), validCommentUpdateRequest.content()))
-        .flatMap(issueCommentRepository::save)
-        .flatMap(issueCommentFetchService::getComment)
+        .flatMap(commentRepository::save)
+        .flatMap(commentQueryService::getComment)
         .flatMap(
             issueComment ->
                 eventReactivePublisher
@@ -53,7 +53,7 @@ public record IssueCommentService(
   }
 
   private Mono<IssueCommentEntity> findCommentById(String commentId) {
-    return issueCommentRepository
+    return commentRepository
         .findById(commentId)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidComment(commentId)));
   }

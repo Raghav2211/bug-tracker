@@ -125,8 +125,7 @@ class IssueRouteDefinitionOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(IssueAssignRequest.class))))
+                    contentBuilder().schema(schemaBuilder().implementation(AssignRequest.class))))
         .response(responseBuilder().description("Assigned issue successfully").responseCode("204"))
         .response(badResponseDoc())
         .parameter(
@@ -142,8 +141,7 @@ class IssueRouteDefinitionOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(IssueAssignRequest.class))))
+                    contentBuilder().schema(schemaBuilder().implementation(AssignRequest.class))))
         .response(
             responseBuilder().description("Add watcher to issue successfully").responseCode("204"))
         .response(badResponseDoc())
@@ -160,8 +158,7 @@ class IssueRouteDefinitionOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(IssueAssignRequest.class))))
+                    contentBuilder().schema(schemaBuilder().implementation(AssignRequest.class))))
         .response(
             responseBuilder()
                 .description("Remove watcher from issue successfully")
@@ -226,7 +223,7 @@ class IssueRouteDefinitionOpenAPIDocHelper {
         .content(
             contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(IssueComment.class)));
+                .schema(schemaBuilder().implementation(Comment.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder badResponseDoc() {

@@ -29,7 +29,7 @@ public class IssueRouteDefinition {
                 .PATCH("", issueRouteHandler::update, docHelper::updateIssueOperationDoc)
                 .POST(
                     path("/files").and(accept(asMediaType(MULTIPART_FORM_DATA))),
-                    issueRouteHandler::uploadFile,
+                    issueRouteHandler::addAttachment,
                     docHelper::uploadFileOperationDoc)
                 .POST("/comment", issueRouteHandler::addComment, docHelper::addCommentOperationDoc)
                 .PUT(

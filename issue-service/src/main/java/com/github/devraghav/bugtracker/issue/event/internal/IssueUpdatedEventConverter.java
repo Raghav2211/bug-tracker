@@ -1,10 +1,9 @@
 package com.github.devraghav.bugtracker.issue.event.internal;
 
+import com.github.devraghav.bugtracker.issue.dto.Comment;
 import com.github.devraghav.bugtracker.issue.dto.Issue;
-import com.github.devraghav.bugtracker.issue.dto.IssueComment;
 import com.github.devraghav.bugtracker.issue.dto.Project;
 import com.github.devraghav.bugtracker.issue.dto.ProjectVersion;
-import com.github.devraghav.data_model.domain.issue.comment.Comment;
 import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUpdated;
@@ -47,12 +46,12 @@ public class IssueUpdatedEventConverter
     return Version.newBuilder().setId(version.id()).setVersion(version.version()).build();
   }
 
-  private Comment getComment(IssueComment issueComment) {
-    return Comment.newBuilder()
-        .setId(issueComment.getId())
-        .setContent(issueComment.getContent())
-        .setCommenter(getUser(issueComment.getUser()))
-        .setCreatedAt(issueComment.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
+  private com.github.devraghav.data_model.domain.issue.comment.Comment getComment(Comment comment) {
+    return com.github.devraghav.data_model.domain.issue.comment.Comment.newBuilder()
+        .setId(comment.getId())
+        .setContent(comment.getContent())
+        .setCommenter(getUser(comment.getUser()))
+        .setCreatedAt(comment.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
         .build();
   }
 
@@ -75,7 +74,8 @@ public class IssueUpdatedEventConverter
     return projects.stream().map(this::getProject).collect(Collectors.toList());
   }
 
-  private List<Comment> getComments(List<IssueComment> comments) {
+  private List<com.github.devraghav.data_model.domain.issue.comment.Comment> getComments(
+      List<Comment> comments) {
     return comments == null
         ? null
         : comments.stream().map(this::getComment).collect(Collectors.toList());
