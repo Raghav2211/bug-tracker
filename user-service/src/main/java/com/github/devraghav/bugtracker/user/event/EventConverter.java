@@ -1,5 +1,6 @@
-package com.github.devraghav.bugtracker.user.event.internal;
+package com.github.devraghav.bugtracker.user.event;
 
+import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
 import org.apache.avro.specific.SpecificRecordBase;
 
 @FunctionalInterface

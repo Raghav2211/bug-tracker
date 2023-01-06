@@ -1,6 +1,7 @@
-package com.github.devraghav.bugtracker.user.event.internal;
+package com.github.devraghav.bugtracker.user.event;
 
 import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
+import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
 import com.github.devraghav.data_model.domain.user.NewUser;
 import com.github.devraghav.data_model.event.user.UserDuplicated;
 import com.github.devraghav.data_model.schema.user.UserDuplicatedSchema;

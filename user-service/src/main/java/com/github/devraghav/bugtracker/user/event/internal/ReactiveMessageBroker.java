@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.user.event;
+package com.github.devraghav.bugtracker.user.event.internal;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;

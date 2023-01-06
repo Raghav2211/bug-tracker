@@ -1,6 +1,5 @@
-package com.github.devraghav.bugtracker.user.event;
+package com.github.devraghav.bugtracker.user.event.internal;
 
-import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;

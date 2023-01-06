@@ -1,6 +1,7 @@
-package com.github.devraghav.bugtracker.user.event.internal;
+package com.github.devraghav.bugtracker.user.event;
 
 import com.github.devraghav.bugtracker.user.dto.User;
+import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
 import com.github.devraghav.data_model.event.user.UserCreated;
 import com.github.devraghav.data_model.schema.user.UserCreatedSchema;
 import java.time.ZoneOffset;
