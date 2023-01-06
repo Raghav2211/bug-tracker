@@ -5,8 +5,8 @@ import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
 import com.github.devraghav.bugtracker.issue.service.IssueCommentService;
 import com.github.devraghav.bugtracker.issue.service.IssueService;
 import java.util.Map;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -35,7 +35,7 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(CreateIssueRequest.class)
-        .flatMap(issueRequest -> issueService.create(UUID.randomUUID().toString(), issueRequest))
+        .flatMap(issueService::create)
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -46,9 +46,7 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(UpdateIssueRequest.class)
-        .flatMap(
-            updateRequest ->
-                issueService.update(UUID.randomUUID().toString(), issueId, updateRequest))
+        .flatMap(updateRequest -> issueService.update(issueId, updateRequest))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -84,9 +82,7 @@ public record IssueRouteHandler(
     var issueId = serverRequest.pathVariable("id");
     return serverRequest
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            assignRequest ->
-                issueService.assignee(UUID.randomUUID().toString(), issueId, assignRequest))
+        .flatMap(assignRequest -> issueService.assignee(issueId, assignRequest))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
@@ -97,9 +93,7 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            assignRequest ->
-                issueService.watch(UUID.randomUUID().toString(), issueId, assignRequest, true))
+        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, true))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -110,9 +104,7 @@ public record IssueRouteHandler(
 
     return request
         .bodyToMono(IssueAssignRequest.class)
-        .flatMap(
-            assignRequest ->
-                issueService.watch(UUID.randomUUID().toString(), issueId, assignRequest, false))
+        .flatMap(assignRequest -> issueService.watch(issueId, assignRequest, false))
         .flatMap(unused -> IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
@@ -121,10 +113,9 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> addComment(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return request
-        .bodyToMono(CreateCommentRequest.class)
-        .flatMap(
-            commentRequest ->
-                issueCommentService.save(UUID.randomUUID().toString(), issueId, commentRequest))
+        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
+        .map(body -> new CreateCommentRequest(body.get("user"), issueId, body.get("content")))
+        .flatMap(issueCommentService::save)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -135,11 +126,11 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     var commentId = request.pathVariable("commentId");
     return request
-        .bodyToMono(UpdateCommentRequest.class)
-        .flatMap(
-            commentRequest ->
-                issueCommentService.update(
-                    UUID.randomUUID().toString(), issueId, commentId, commentRequest))
+        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
+        .map(
+            body ->
+                new UpdateCommentRequest(body.get("user"), issueId, commentId, body.get("content")))
+        .flatMap(issueCommentService::update)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -148,7 +139,7 @@ public record IssueRouteHandler(
 
   public Mono<ServerResponse> resolve(ServerRequest request) {
     return Mono.just(request.pathVariable("id"))
-        .flatMap(issueId -> issueService.resolve(UUID.randomUUID().toString(), issueId))
+        .flatMap(issueService::resolve)
         .flatMap(done -> IssueResponse.noContent())
         .onErrorResume(
             IssueException.class,

@@ -3,7 +3,6 @@ protocol ProjectDuplicated {
 	import idl "../../domain/project/NewProject.avdl";
 	record ProjectDuplicated {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

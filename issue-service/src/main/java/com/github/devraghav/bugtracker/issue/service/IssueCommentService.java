@@ -2,90 +2,71 @@ package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueCommentEntity;
-import com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer;
+import com.github.devraghav.bugtracker.issue.event.ReactivePublisher;
+import com.github.devraghav.bugtracker.issue.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentAddedEvent;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentUpdatedEvent;
 import com.github.devraghav.bugtracker.issue.mapper.IssueCommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueCommentRepository;
+import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
 public record IssueCommentService(
-    UserReactiveClient userReactiveClient,
+    RequestValidator requestValidator,
     IssueCommentMapper issueCommentMapper,
-    IssueService issueService,
     IssueCommentFetchService issueCommentFetchService,
     IssueCommentRepository issueCommentRepository,
-    KafkaProducer kafkaProducer) {
+    ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<IssueComment> save(
-      String requestId, String issueId, CreateCommentRequest createCommentRequest) {
-    return validate(issueId, createCommentRequest)
+  public Mono<IssueComment> save(CreateCommentRequest createCommentRequest) {
+    return requestValidator
+        .validate(createCommentRequest)
         .thenReturn(createCommentRequest)
-        .map(
-            validCommentRequest -> issueCommentMapper.requestToEntity(issueId, validCommentRequest))
-        .flatMap(issueCommentRepository::save)
-        .flatMap(issueCommentFetchService::getComment)
-        .flatMap(
-            issueComment -> kafkaProducer.sendCommentAddedEvent(requestId, issueId, issueComment));
-  }
-
-  public Mono<IssueComment> update(
-      String requestId,
-      String issueId,
-      String commentId,
-      UpdateCommentRequest updateCommentRequest) {
-    return validateAndUpdateIssueCommentEntity(issueId, commentId, updateCommentRequest)
+        .map(issueCommentMapper::requestToEntity)
         .flatMap(issueCommentRepository::save)
         .flatMap(issueCommentFetchService::getComment)
         .flatMap(
             issueComment ->
-                kafkaProducer.sendCommentUpdatedEvent(requestId, issueId, issueComment));
+                eventReactivePublisher
+                    .publish(
+                        new IssueCommentAddedEvent(createCommentRequest.issueId(), issueComment))
+                    .thenReturn(issueComment));
   }
 
-  private Mono<IssueCommentEntity> validateAndUpdateIssueCommentEntity(
-      String issueId, String commentId, UpdateCommentRequest updateCommentRequest) {
-
-    var issueExistsMono = issueService.exists(issueId);
-    var commentMono =
-        issueCommentRepository
-            .findById(commentId)
-            .switchIfEmpty(Mono.error(() -> IssueException.invalidComment(commentId)));
-    return validate(updateCommentRequest)
-        .zipWith(
-            Mono.zip(issueExistsMono, commentMono, (issueExists, comment) -> comment),
-            this::updateIssueCommentEntity);
+  public Mono<IssueComment> update(UpdateCommentRequest updateCommentRequest) {
+    return requestValidator
+        .validate(updateCommentRequest)
+        .flatMap(
+            validCommentUpdateRequest ->
+                findAndUpdateCommentContentById(
+                    validCommentUpdateRequest.commentId(), validCommentUpdateRequest.content()))
+        .flatMap(issueCommentRepository::save)
+        .flatMap(issueCommentFetchService::getComment)
+        .flatMap(
+            issueComment ->
+                eventReactivePublisher
+                    .publish(
+                        new IssueCommentUpdatedEvent(updateCommentRequest.issueId(), issueComment))
+                    .thenReturn(issueComment));
   }
 
-  private Mono<CreateCommentRequest> validate(
-      String issueId, CreateCommentRequest createCommentRequest) {
-    return validateCommentContent(createCommentRequest)
-        .and(
-            Mono.zip(
-                validateCommentUserId(createCommentRequest.userId()), issueService.exists(issueId)))
-        .thenReturn(createCommentRequest);
+  private Mono<IssueCommentEntity> findCommentById(String commentId) {
+    return issueCommentRepository
+        .findById(commentId)
+        .switchIfEmpty(Mono.error(() -> IssueException.invalidComment(commentId)));
   }
 
-  private Mono<UpdateCommentRequest> validate(UpdateCommentRequest updateCommentRequest) {
-    return validateCommentContent(updateCommentRequest).thenReturn(updateCommentRequest);
-  }
-
-  private Mono<User> validateCommentUserId(String userId) {
-    return userReactiveClient
-        .fetchUser(userId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(IssueException.userServiceException(exception)));
-  }
-
-  private Mono<CommentRequest> validateCommentContent(CommentRequest commentRequest) {
-    return Mono.just(commentRequest)
-        .filter(CommentRequest::isContentValid)
-        .switchIfEmpty(Mono.error(() -> IssueException.invalidComment(commentRequest.content())));
+  private Mono<IssueCommentEntity> findAndUpdateCommentContentById(
+      String commentId, String content) {
+    return findCommentById(commentId)
+        .map(commentEntity -> updateIssueCommentEntity(content, commentEntity));
   }
 
   private IssueCommentEntity updateIssueCommentEntity(
-      UpdateCommentRequest updateCommentRequest, IssueCommentEntity issueCommentEntity) {
-    issueCommentEntity.setContent(updateCommentRequest.content());
+      String content, IssueCommentEntity issueCommentEntity) {
+    issueCommentEntity.setContent(content);
     return issueCommentEntity;
   }
 }

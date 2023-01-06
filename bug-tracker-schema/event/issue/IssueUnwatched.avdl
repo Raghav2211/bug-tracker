@@ -3,7 +3,6 @@ protocol IssueUnwatched {
 	import idl "../../domain/issue/Unwatch.avdl";
 	record IssueUnwatched {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

@@ -14,10 +14,9 @@ public interface IssueCommentMapper {
 
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
-    @Mapping(target = "issueId", source = "issueId"),
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())"),
   })
-  IssueCommentEntity requestToEntity(String issueId, CreateCommentRequest createCommentRequest);
+  IssueCommentEntity requestToEntity(CreateCommentRequest createCommentRequest);
 
   @Mappings({@Mapping(target = "user", ignore = true)})
   IssueComment.IssueCommentBuilder entityToResponse(IssueCommentEntity issueCommentEntity);

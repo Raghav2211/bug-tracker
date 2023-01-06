@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+// TODO: check user have write access
 @Component
 public record CreateIssueRequestValidationStrategy(
     ProjectReactiveClient projectReactiveClient, UserReactiveClient userReactiveClient)

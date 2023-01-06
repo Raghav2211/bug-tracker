@@ -3,7 +3,6 @@ protocol CommentAdded {
 	import idl "../../../domain/issue/comment/Comment.avdl";
 	record CommentAdded {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

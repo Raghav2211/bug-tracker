@@ -3,7 +3,8 @@ package com.github.devraghav.bugtracker.issue.service;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import com.github.devraghav.bugtracker.issue.entity.ProjectInfoRef;
-import com.github.devraghav.bugtracker.issue.kafka.producer.KafkaProducer;
+import com.github.devraghav.bugtracker.issue.event.ReactivePublisher;
+import com.github.devraghav.bugtracker.issue.event.internal.*;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
@@ -31,7 +32,7 @@ public record IssueService(
     IssueRepository issueRepository,
     IssueAttachmentRepository issueAttachmentRepository,
     IssueCommentFetchService issueCommentFetchService,
-    KafkaProducer kafkaProducer) {
+    ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
   public Flux<Issue> getAll(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
@@ -55,33 +56,37 @@ public record IssueService(
     return findById(issueId).flatMap(this::generateIssue);
   }
 
-  public Mono<Issue> create(String requestId, CreateIssueRequest createIssueRequest) {
+  public Mono<Issue> create(CreateIssueRequest createIssueRequest) {
     return requestValidator
         .validate(createIssueRequest)
         .map(issueMapper::issueRequestToIssueEntity)
-        .flatMap(issueEntity -> save(requestId, issueEntity));
+        .flatMap(this::save);
   }
 
-  public Mono<Issue> update(String requestId, String issueId, UpdateIssueRequest request) {
+  public Mono<Issue> update(String issueId, UpdateIssueRequest request) {
     return findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
         .map(issueEntity -> issueMapper.issueRequestToIssueEntity(issueEntity, request))
-        .flatMap(issueEntity -> update(requestId, issueEntity))
+        .flatMap(this::update)
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  private Mono<Issue> save(String requestId, IssueEntity issueEntity) {
+  private Mono<Issue> save(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .flatMap(this::generateIssue)
-        .flatMap(issue -> kafkaProducer.sendIssueCreatedEvent(requestId, issue));
+        .flatMap(
+            issue ->
+                eventReactivePublisher.publish(new IssueCreatedEvent(issue)).thenReturn(issue));
   }
 
-  private Mono<Issue> update(String requestId, IssueEntity issueEntity) {
+  private Mono<Issue> update(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .flatMap(this::generateIssue)
-        .flatMap(issue -> kafkaProducer.sendIssueUpdatedEvent(requestId, issue));
+        .flatMap(
+            issue ->
+                eventReactivePublisher.publish(new IssueUpdatedEvent(issue)).thenReturn(issue));
   }
 
   public Mono<Boolean> exists(String issueId) {
@@ -91,74 +96,69 @@ public record IssueService(
         .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
-  public Mono<Void> assignee(
-      String requestId, String issueId, IssueAssignRequest issueAssignRequest) {
+  public Mono<Void> assignee(String issueId, IssueAssignRequest issueAssignRequest) {
     var issueMono = exists(issueId).map(unused -> issueId);
     if (issueAssignRequest.user() == null) {
-      return unassigned(requestId, issueMono);
+      return unassigned(issueMono);
     }
     var userMono = fetchUser(issueAssignRequest.user());
     var issueUserMono = Mono.zip(issueMono, userMono);
-    return assignee(requestId, issueUserMono);
+    return assignee(issueUserMono);
   }
 
-  private Mono<Void> assignee(String requestId, Mono<Tuple2<String, User>> issueUserMono) {
-    return issueUserMono.flatMap(tuple2 -> assignee(requestId, tuple2.getT1(), tuple2.getT2()));
+  private Mono<Void> assignee(Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(tuple2 -> assignee(tuple2.getT1(), tuple2.getT2()));
   }
 
-  private Mono<Void> assignee(String requestId, String issueId, User user) {
+  private Mono<Void> assignee(String issueId, User user) {
     return issueRepository
         .findAndSetAssigneeById(issueId, user.id())
-        .flatMap(unused -> kafkaProducer.sendIssueAssignedEvent(requestId, issueId, user))
-        .then();
+        .flatMap(unused -> eventReactivePublisher.publish(new IssueAssignedEvent(issueId, user)));
   }
 
-  private Mono<Void> unassigned(String requestId, Mono<String> issueMono) {
-    return issueMono.flatMap(issueId -> unassigned(requestId, issueId)).then();
+  private Mono<Void> unassigned(Mono<String> issueMono) {
+    return issueMono.flatMap(this::unassigned).then();
   }
 
-  private Mono<Void> unassigned(String requestId, String issueId) {
+  private Mono<Void> unassigned(String issueId) {
     return issueRepository
         .findAndUnSetAssigneeById(issueId)
-        .flatMap(unused -> kafkaProducer.sendIssueUnassignedEvent(requestId, issueId))
-        .then();
+        .flatMap(unused -> eventReactivePublisher.publish(new IssueUnassignedEvent(issueId)));
   }
 
-  public Mono<Void> watch(
-      String requestId, String issueId, IssueAssignRequest issueAssignRequest, boolean watch) {
+  public Mono<Void> watch(String issueId, IssueAssignRequest issueAssignRequest, boolean watch) {
     var issueMono = exists(issueId).map(unused -> issueId);
     var userMono = fetchUser(issueAssignRequest.user());
     var issueUserMono = Mono.zip(issueMono, userMono);
-    return watch ? watch(requestId, issueUserMono) : unwatch(requestId, issueUserMono);
+    return watch ? watch(issueUserMono) : unwatch(issueUserMono);
   }
 
-  private Mono<Void> watch(String requestId, Mono<Tuple2<String, User>> issueUserMono) {
-    return issueUserMono.flatMap(tuple2 -> watch(requestId, tuple2.getT1(), tuple2.getT2()));
+  private Mono<Void> watch(Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(tuple2 -> watch(tuple2.getT1(), tuple2.getT2()));
   }
 
-  private Mono<Void> watch(String requestId, String issueId, User user) {
+  private Mono<Void> watch(String issueId, User user) {
     return issueRepository
         .findAndAddWatcherById(issueId, user.id())
-        .flatMap(unused -> kafkaProducer.sendIssueWatchedEvent(requestId, issueId, user))
-        .then();
+        .flatMap(
+            unused -> eventReactivePublisher.publish(new IssueWatchStartedEvent(issueId, user)));
   }
 
-  private Mono<Void> unwatch(String requestId, Mono<Tuple2<String, User>> issueUserMono) {
-    return issueUserMono.flatMap(tuple2 -> unwatch(requestId, tuple2.getT1(), tuple2.getT2()));
+  private Mono<Void> unwatch(Mono<Tuple2<String, User>> issueUserMono) {
+    return issueUserMono.flatMap(tuple2 -> unwatch(tuple2.getT1(), tuple2.getT2()));
   }
 
-  private Mono<Void> unwatch(String requestId, String issuedId, User user) {
+  private Mono<Void> unwatch(String issueId, User user) {
     return issueRepository
-        .findAndPullWatcherById(issuedId, user.id())
-        .flatMap(unused -> kafkaProducer.sendIssueUnwatchedEvent(requestId, issuedId, user))
-        .then();
+        .findAndPullWatcherById(issueId, user.id())
+        .flatMap(unused -> eventReactivePublisher.publish(new IssueWatchEndedEvent(issueId, user)));
   }
 
-  public Mono<Void> resolve(String requestId, String issueId) {
+  public Mono<Void> resolve(String issueId) {
     var resolveTime = LocalDateTime.now();
     return issueRepository
         .findAndSetEndedAtById(issueId, resolveTime.toEpochSecond(ZoneOffset.UTC))
-        .flatMap(unused -> kafkaProducer.sendIssueResolvedEvent(requestId, issueId, resolveTime))
+        .flatMap(unused -> eventReactivePublisher.publish(new IssueResolvedEvent(issueId)))
         .then();
   }
 
