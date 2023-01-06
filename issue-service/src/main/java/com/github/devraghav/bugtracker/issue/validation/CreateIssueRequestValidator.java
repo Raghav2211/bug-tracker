@@ -12,9 +12,9 @@ import reactor.core.publisher.Mono;
 
 // TODO: check user have write access
 @Component
-public record CreateIssueRequestValidationStrategy(
+public record CreateIssueRequestValidator(
     ProjectReactiveClient projectReactiveClient, UserReactiveClient userReactiveClient)
-    implements ValidationStrategy<CreateIssueRequest> {
+    implements Validator<CreateIssueRequest, CreateIssueRequest> {
 
   @Override
   public Mono<CreateIssueRequest> validate(CreateIssueRequest createIssueRequest) {

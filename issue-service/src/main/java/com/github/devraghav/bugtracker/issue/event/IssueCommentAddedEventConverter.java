@@ -1,6 +1,7 @@
-package com.github.devraghav.bugtracker.issue.event.internal;
+package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.dto.Comment;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentAddedEvent;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.comment.CommentAdded;
 import com.github.devraghav.data_model.schema.issue.CommentAddedSchema;

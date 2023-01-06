@@ -1,5 +1,6 @@
-package com.github.devraghav.bugtracker.issue.event.internal;
+package com.github.devraghav.bugtracker.issue.event;
 
+import com.github.devraghav.bugtracker.issue.event.internal.IssueWatchEndedEvent;
 import com.github.devraghav.data_model.domain.issue.Unwatch;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUnwatched;

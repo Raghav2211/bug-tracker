@@ -1,5 +1,6 @@
-package com.github.devraghav.bugtracker.issue.event.internal;
+package com.github.devraghav.bugtracker.issue.event;
 
+import com.github.devraghav.bugtracker.issue.event.internal.*;
 import com.github.devraghav.data_model.schema.issue.*;
 import java.util.Arrays;
 import java.util.Map;

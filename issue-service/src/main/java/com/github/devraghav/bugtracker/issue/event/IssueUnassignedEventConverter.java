@@ -1,15 +1,16 @@
-package com.github.devraghav.bugtracker.issue.event.internal;
+package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.data_model.domain.issue.Assign;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueUnassignedEvent;
+import com.github.devraghav.data_model.domain.issue.Unassign;
 import com.github.devraghav.data_model.domain.user.User;
-import com.github.devraghav.data_model.event.issue.IssueAssigned;
-import com.github.devraghav.data_model.schema.issue.IssueAssignedSchema;
+import com.github.devraghav.data_model.event.issue.IssueUnassigned;
+import com.github.devraghav.data_model.schema.issue.IssueUnassignedSchema;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-public class IssueAssignedEventConverter
-    implements EventConverter<IssueAssignedEvent, IssueAssignedSchema> {
+public class IssueUnassignedEventConverter
+    implements EventConverter<IssueUnassignedEvent, IssueUnassignedSchema> {
 
   private User getAssignee(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
@@ -23,18 +24,14 @@ public class IssueAssignedEventConverter
   }
 
   @Override
-  public IssueAssignedSchema convert(IssueAssignedEvent event) {
-    return IssueAssignedSchema.newBuilder()
+  public IssueUnassignedSchema convert(IssueUnassignedEvent event) {
+    return IssueUnassignedSchema.newBuilder()
         .setEvent(
-            IssueAssigned.newBuilder()
+            IssueUnassigned.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setName(event.getName())
-                .setPayload(
-                    Assign.newBuilder()
-                        .setIssueId(event.getIssueId())
-                        .setAssignee(getAssignee(event.getAssignee()))
-                        .build())
+                .setPayload(Unassign.newBuilder().setIssueId(event.getIssueId()).build())
                 .setPublisher(event.getPublisher())
                 .build())
         .build();

@@ -1,22 +1,21 @@
-package com.github.devraghav.bugtracker.issue.event.internal;
+package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.dto.Comment;
 import com.github.devraghav.bugtracker.issue.dto.Issue;
 import com.github.devraghav.bugtracker.issue.dto.Project;
 import com.github.devraghav.bugtracker.issue.dto.ProjectVersion;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueCreatedEvent;
 import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
-import com.github.devraghav.data_model.event.issue.IssueUpdated;
-import com.github.devraghav.data_model.schema.issue.IssueUpdatedSchema;
-import java.time.LocalDateTime;
+import com.github.devraghav.data_model.event.issue.IssueCreated;
+import com.github.devraghav.data_model.schema.issue.IssueCreatedSchema;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class IssueUpdatedEventConverter
-    implements EventConverter<IssueUpdatedEvent, IssueUpdatedSchema> {
+public class IssueCreatedEventConverter
+    implements EventConverter<IssueCreatedEvent, IssueCreatedSchema> {
 
   private User getUser(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
@@ -104,14 +103,14 @@ public class IssueUpdatedEventConverter
   }
 
   @Override
-  public IssueUpdatedSchema convert(IssueUpdatedEvent event) {
-    return IssueUpdatedSchema.newBuilder()
+  public IssueCreatedSchema convert(IssueCreatedEvent event) {
+    return IssueCreatedSchema.newBuilder()
         .setEvent(
-            IssueUpdated.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+            IssueCreated.newBuilder()
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
                 .setName(event.getName())
-                .setPayload(getIssue(event.getUpdatedIssue()))
+                .setPayload(getIssue(event.getCreatedIssue()))
                 .setPublisher(event.getPublisher())
                 .build())
         .build();

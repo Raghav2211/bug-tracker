@@ -2,8 +2,8 @@ package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
-import com.github.devraghav.bugtracker.issue.event.ReactivePublisher;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
+import com.github.devraghav.bugtracker.issue.event.internal.ReactivePublisher;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;

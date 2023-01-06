@@ -8,18 +8,18 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public record CreateCommentRequestValidationStrategy(
+public record UpdateCommentRequestValidator(
     IssueRepository issueRepository, UserReactiveClient userReactiveClient)
-    implements ValidationStrategy<CreateCommentRequest> {
+    implements Validator<UpdateCommentRequest, UpdateCommentRequest> {
 
   @Override
-  public Mono<CreateCommentRequest> validate(CreateCommentRequest createCommentRequest) {
-    return validateCommentContent(createCommentRequest.content())
+  public Mono<UpdateCommentRequest> validate(UpdateCommentRequest updateCommentRequest) {
+    return validateCommentContent(updateCommentRequest.content())
         .and(
             Mono.zip(
-                validateCommentUserId(createCommentRequest.userId()),
-                validateIssueId(createCommentRequest.issueId())))
-        .thenReturn(createCommentRequest);
+                validateCommentUserId(updateCommentRequest.userId()),
+                validateIssueId(updateCommentRequest.issueId())))
+        .thenReturn(updateCommentRequest);
   }
 
   private Mono<Void> validateCommentContent(String content) {

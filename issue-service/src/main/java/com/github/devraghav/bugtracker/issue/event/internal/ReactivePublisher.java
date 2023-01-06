@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.issue.event;
+package com.github.devraghav.bugtracker.issue.event.internal;
 
 import reactor.core.publisher.Mono;
 

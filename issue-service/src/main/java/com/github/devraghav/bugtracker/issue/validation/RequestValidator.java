@@ -8,19 +8,19 @@ import reactor.core.publisher.Mono;
 
 @Component
 public record RequestValidator(
-    ValidationStrategy<CreateIssueRequest> createIssueRequestValidationStrategy,
-    CreateCommentRequestValidationStrategy createCommentRequestValidationStrategy,
-    UpdateCommentRequestValidationStrategy updateCommentRequestValidationStrategy) {
+    Validator<CreateIssueRequest, CreateIssueRequest> createIssueRequestValidator,
+    Validator<CreateCommentRequest, CreateCommentRequest> createCommentRequestValidator,
+    Validator<UpdateCommentRequest, UpdateCommentRequest> updateCommentRequestValidator) {
 
   public Mono<CreateIssueRequest> validate(final CreateIssueRequest request) {
-    return createIssueRequestValidationStrategy.validate(request);
+    return createIssueRequestValidator.validate(request);
   }
 
   public Mono<CreateCommentRequest> validate(final CreateCommentRequest request) {
-    return createCommentRequestValidationStrategy.validate(request);
+    return createCommentRequestValidator.validate(request);
   }
 
   public Mono<UpdateCommentRequest> validate(final UpdateCommentRequest request) {
-    return updateCommentRequestValidationStrategy.validate(request);
+    return updateCommentRequestValidator.validate(request);
   }
 }
