@@ -31,11 +31,6 @@ public class IssueRouteDefinition {
                     path("/files").and(accept(asMediaType(MULTIPART_FORM_DATA))),
                     issueRouteHandler::addAttachment,
                     docHelper::uploadFileOperationDoc)
-                .POST("/comment", issueRouteHandler::addComment, docHelper::addCommentOperationDoc)
-                .PUT(
-                    "/comment/{commentId}",
-                    issueRouteHandler::updateComment,
-                    docHelper::updateCommentOperationDoc)
                 .PATCH("/assignee", issueRouteHandler::assignee, docHelper::assigneeOperationDoc)
                 .PATCH("/watch", issueRouteHandler::watch, docHelper::watcherOperationDoc)
                 .DELETE("/watch", issueRouteHandler::unwatch, docHelper::removeWatcherOperationDoc)

@@ -102,33 +102,6 @@ public record IssueRouteHandler(
         .switchIfEmpty(IssueResponse.noBody(request));
   }
 
-  public Mono<ServerResponse> addComment(ServerRequest request) {
-    var issueId = request.pathVariable("id");
-    return request
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new CreateCommentRequest(body.get("user"), issueId, body.get("content")))
-        .flatMap(commentCommandService::save)
-        .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
-        .switchIfEmpty(IssueResponse.noBody(request))
-        .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
-  }
-
-  public Mono<ServerResponse> updateComment(ServerRequest request) {
-    var issueId = request.pathVariable("id");
-    var commentId = request.pathVariable("commentId");
-    return request
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(
-            body ->
-                new UpdateCommentRequest(body.get("user"), issueId, commentId, body.get("content")))
-        .flatMap(commentCommandService::update)
-        .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
-        .switchIfEmpty(IssueResponse.noBody(request))
-        .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
-  }
-
   public Mono<ServerResponse> addAttachment(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return request

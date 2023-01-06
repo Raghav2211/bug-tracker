@@ -21,7 +21,6 @@ public record IssueCommandService(
     RequestValidator requestValidator,
     IssueMapper issueMapper,
     IssueQueryService issueQueryService,
-    CommentQueryService commentQueryService,
     IssueRepository issueRepository,
     IssueAttachmentRepository issueAttachmentRepository,
     ReactivePublisher<DomainEvent> eventReactivePublisher) {
