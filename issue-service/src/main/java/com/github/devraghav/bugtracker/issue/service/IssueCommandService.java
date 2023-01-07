@@ -9,7 +9,6 @@ import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepositor
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
 import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
@@ -106,8 +105,9 @@ public record IssueCommandService(
   public Mono<Void> resolve(String issueId) {
     var resolveTime = LocalDateTime.now();
     return issueRepository
-        .findAndSetEndedAtById(issueId, resolveTime.toEpochSecond(ZoneOffset.UTC))
-        .flatMap(unused -> eventReactivePublisher.publish(new IssueResolvedEvent(issueId)))
+        .findAndSetEndedAtById(issueId, resolveTime)
+        .flatMap(
+            unused -> eventReactivePublisher.publish(new IssueResolvedEvent(issueId, resolveTime)))
         .then();
   }
 

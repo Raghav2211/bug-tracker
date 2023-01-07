@@ -1,6 +1,8 @@
 package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.Comment;
+import com.github.devraghav.bugtracker.issue.dto.CommentException;
+import com.github.devraghav.bugtracker.issue.dto.UserClientException;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
@@ -18,9 +20,19 @@ public record CommentQueryService(
     return commentRepository.findAllByIssueId(issueId).flatMap(this::getComment);
   }
 
-  public Mono<Comment> getComment(CommentEntity commentEntity) {
+  public Mono<Comment> getComment(String id) {
+    return commentRepository
+        .findById(id)
+        .flatMap(this::getComment)
+        .switchIfEmpty(Mono.error(() -> CommentException.notFound(id)));
+  }
+
+  private Mono<Comment> getComment(CommentEntity commentEntity) {
     return userReactiveClient
         .fetchUser(commentEntity.getUserId())
+        .onErrorResume(
+            UserClientException.class,
+            exception -> Mono.error(CommentException.userServiceException(exception)))
         .map(
             commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
   }

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple5;
+import reactor.util.function.Tuple4;
 
 @Service
 public record IssueQueryService(
@@ -21,8 +21,7 @@ public record IssueQueryService(
     UserReactiveClient userReactiveClient,
     ProjectReactiveClient projectReactiveClient,
     IssueRepository issueRepository,
-    IssueAttachmentRepository issueAttachmentRepository,
-    CommentQueryService commentQueryService) {
+    IssueAttachmentRepository issueAttachmentRepository) {
 
   public Flux<Issue> findAllByFilter(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
@@ -51,7 +50,6 @@ public record IssueQueryService(
 
   public Mono<Issue> generateIssue(IssueEntity issueEntity) {
     var watchersMono = getWatchers(issueEntity.getWatchers()).collect(Collectors.toSet());
-    var commentsMono = commentQueryService.getComments(issueEntity.getId()).collectList();
     var projectsMono = getProjects(issueEntity.getProjects()).collectList();
     var reporterMono = fetchUser(issueEntity.getReporter());
 
@@ -61,8 +59,8 @@ public record IssueQueryService(
             .map(this::getAssignee)
             .or(() -> Optional.of(Mono.just(Optional.empty())))
             .get();
-    return Mono.zip(watchersMono, commentsMono, projectsMono, assigneeMono, reporterMono)
-        .map(tuple5 -> generateIssue(issueEntity, tuple5));
+    return Mono.zip(watchersMono, projectsMono, assigneeMono, reporterMono)
+        .map(tuple4 -> generateIssue(issueEntity, tuple4));
   }
 
   public Mono<User> fetchUser(String userId) {
@@ -74,17 +72,15 @@ public record IssueQueryService(
   }
 
   private Issue generateIssue(
-      IssueEntity issueEntity,
-      Tuple5<Set<User>, List<Comment>, List<Project>, Optional<User>, User> tuple5) {
+      IssueEntity issueEntity, Tuple4<Set<User>, List<Project>, Optional<User>, User> tuple5) {
     var issueBuilder =
         issueMapper
             .issueEntityToIssue(issueEntity)
             .watchers(tuple5.getT1())
-            .comments(tuple5.getT2())
-            .projects(tuple5.getT3())
-            .reporter(tuple5.getT5())
+            .projects(tuple5.getT2())
+            .reporter(tuple5.getT4())
             .endedAt(issueEntity.getEndedAt());
-    tuple5.getT4().ifPresent(issueBuilder::assignee);
+    tuple5.getT3().ifPresent(issueBuilder::assignee);
     return issueBuilder.build();
   }
 
@@ -116,7 +112,9 @@ public record IssueQueryService(
   }
 
   public Mono<IssueEntity> findById(String issueId) {
-    return issueRepository.findById(issueId);
+    return issueRepository
+        .findById(issueId)
+        .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
   private Flux<Issue> getAllByProjectId(String projectId) {

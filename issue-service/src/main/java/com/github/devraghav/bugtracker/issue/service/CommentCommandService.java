@@ -16,8 +16,8 @@ import reactor.core.publisher.Mono;
 public record CommentCommandService(
     RequestValidator requestValidator,
     CommentMapper commentMapper,
-    CommentQueryService commentQueryService,
     CommentRepository commentRepository,
+    UserReactiveClient userReactiveClient,
     ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
   public Mono<Comment> save(CreateCommentRequest createCommentRequest) {
@@ -26,7 +26,7 @@ public record CommentCommandService(
         .thenReturn(createCommentRequest)
         .map(commentMapper::requestToEntity)
         .flatMap(commentRepository::save)
-        .flatMap(commentQueryService::getComment)
+        .flatMap(this::getComment)
         .flatMap(
             issueComment ->
                 eventReactivePublisher
@@ -42,7 +42,7 @@ public record CommentCommandService(
                 findAndUpdateCommentContentById(
                     validCommentUpdateRequest.commentId(), validCommentUpdateRequest.content()))
         .flatMap(commentRepository::save)
-        .flatMap(commentQueryService::getComment)
+        .flatMap(this::getComment)
         .flatMap(
             issueComment ->
                 eventReactivePublisher
@@ -53,7 +53,7 @@ public record CommentCommandService(
   private Mono<CommentEntity> findCommentById(String commentId) {
     return commentRepository
         .findById(commentId)
-        .switchIfEmpty(Mono.error(() -> IssueException.invalidComment(commentId)));
+        .switchIfEmpty(Mono.error(() -> CommentException.notFound(commentId)));
   }
 
   private Mono<CommentEntity> findAndUpdateCommentContentById(String commentId, String content) {
@@ -64,5 +64,15 @@ public record CommentCommandService(
   private CommentEntity updateIssueCommentEntity(String content, CommentEntity commentEntity) {
     commentEntity.setContent(content);
     return commentEntity;
+  }
+
+  private Mono<Comment> getComment(CommentEntity commentEntity) {
+    return userReactiveClient
+        .fetchUser(commentEntity.getUserId())
+        .onErrorResume(
+            UserClientException.class,
+            exception -> Mono.error(CommentException.userServiceException(exception)))
+        .map(
+            commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
   }
 }

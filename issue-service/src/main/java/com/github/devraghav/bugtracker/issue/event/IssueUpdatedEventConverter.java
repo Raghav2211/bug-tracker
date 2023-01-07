@@ -1,6 +1,5 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.dto.Comment;
 import com.github.devraghav.bugtracker.issue.dto.Issue;
 import com.github.devraghav.bugtracker.issue.dto.Project;
 import com.github.devraghav.bugtracker.issue.dto.ProjectVersion;
@@ -47,15 +46,6 @@ public class IssueUpdatedEventConverter
     return Version.newBuilder().setId(version.id()).setVersion(version.version()).build();
   }
 
-  private com.github.devraghav.data_model.domain.issue.comment.Comment getComment(Comment comment) {
-    return com.github.devraghav.data_model.domain.issue.comment.Comment.newBuilder()
-        .setId(comment.getId())
-        .setContent(comment.getContent())
-        .setCommenter(getUser(comment.getUser()))
-        .setCreatedAt(comment.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
-        .build();
-  }
-
   private List<Version> getVersions(Set<ProjectVersion> versions) {
     return versions.stream().map(this::getVersion).collect(Collectors.toList());
   }
@@ -75,13 +65,6 @@ public class IssueUpdatedEventConverter
     return projects.stream().map(this::getProject).collect(Collectors.toList());
   }
 
-  private List<com.github.devraghav.data_model.domain.issue.comment.Comment> getComments(
-      List<Comment> comments) {
-    return comments == null
-        ? null
-        : comments.stream().map(this::getComment).collect(Collectors.toList());
-  }
-
   private com.github.devraghav.data_model.domain.issue.Issue getIssue(Issue issue) {
     var issueBuilder =
         com.github.devraghav.data_model.domain.issue.Issue.newBuilder()
@@ -94,7 +77,6 @@ public class IssueUpdatedEventConverter
             .setAssignee(getAssignee(issue.getAssignee()))
             .setProjects(getProjects(issue.getProjects()))
             .setWatchers(getWatchers(issue.getWatchers()))
-            .setComments(getComments(issue.getComments()))
             .setReporter(getUser(issue.getReporter()))
             .setTags(issue.getTags())
             .setCreatedAt(issue.getCreatedAt().toEpochSecond(ZoneOffset.UTC));

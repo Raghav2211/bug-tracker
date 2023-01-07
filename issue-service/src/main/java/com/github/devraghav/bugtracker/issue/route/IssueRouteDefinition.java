@@ -19,7 +19,7 @@ public class IssueRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> issueRoutes(
-      IssueRouteDefinitionOpenAPIDocHelper docHelper, IssueRouteHandler issueRouteHandler) {
+      IssueOpenAPIDocHelper docHelper, IssueRouteHandler issueRouteHandler) {
     Consumer<Builder> emptyOperationsConsumer = builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =

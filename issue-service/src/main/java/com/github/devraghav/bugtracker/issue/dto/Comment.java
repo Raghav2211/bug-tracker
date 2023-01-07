@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 public class Comment implements Comparable<Comment> {
   private String id;
+  private String issueId;
   private User user;
   private String content;
   private LocalDateTime createdAt;

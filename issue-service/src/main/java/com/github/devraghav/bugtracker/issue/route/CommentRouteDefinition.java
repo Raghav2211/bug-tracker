@@ -18,25 +18,30 @@ public class CommentRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> commentRoutes(
-      IssueRouteDefinitionOpenAPIDocHelper docHelper, CommentRouteHandler commentRouteHandler) {
+      CommentOpenAPIDocHelper docHelper, CommentRouteHandler commentRouteHandler) {
     Consumer<Builder> emptyOperationsConsumer = builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .POST("", commentRouteHandler::save, docHelper::addCommentOperationDoc)
+                .GET("/comment", commentRouteHandler::getAll, docHelper::getAllCommentOperationDoc)
+                .POST("/comment", commentRouteHandler::save, docHelper::addCommentOperationDoc)
                 .PUT(
-                    "/{commentId}",
+                    "/comment/{commentId}",
                     commentRouteHandler::update,
                     docHelper::updateCommentOperationDoc)
                 .build();
 
     return SpringdocRouteBuilder.route()
         .nest(
-            path("/api/rest/v1/issue/{id}/comment")
+            path("/api/rest/v1/issue/{issueId}")
                 .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
             routerFunctionSupplier,
             emptyOperationsConsumer)
+        .GET(
+            "/api/rest/v1/comment/{commentId}",
+            commentRouteHandler::get,
+            docHelper::getCommentByIdOperationDoc)
         .build();
   }
 }
