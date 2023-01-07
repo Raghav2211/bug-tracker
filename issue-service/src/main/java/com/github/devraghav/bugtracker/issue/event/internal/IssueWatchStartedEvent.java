@@ -14,7 +14,7 @@ public class IssueWatchStartedEvent extends DomainEvent {
   private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
 
   public IssueWatchStartedEvent(String issueId, User watcher) {
-    super("WatchEnded", publisherInfo);
+    super("WatchStarted", publisherInfo);
     this.issueId = issueId;
     this.watcher = watcher;
   }

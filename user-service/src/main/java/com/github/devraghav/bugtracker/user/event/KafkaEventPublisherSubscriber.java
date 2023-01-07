@@ -53,15 +53,16 @@ public class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEven
     return Pair.of(event.getPublisher(), getAvroRecord(event));
   }
 
-  private SpecificRecordBase getAvroRecord(DomainEvent event) {
-    return switch (event) {
+  private SpecificRecordBase getAvroRecord(DomainEvent domainEvent) {
+    return switch (domainEvent) {
       case UserCreatedEvent userCreatedEvent -> eventConverterFactory
           .getConverter(UserCreatedEvent.class)
           .convert(userCreatedEvent);
       case UserDuplicatedEvent userDuplicatedEvent -> eventConverterFactory
           .getConverter(UserDuplicatedEvent.class)
           .convert(userDuplicatedEvent);
-      default -> throw new IllegalArgumentException("No handler found");
+      default -> throw new IllegalArgumentException(
+          String.format("No handler found for %s", domainEvent.getName()));
     };
   }
 }

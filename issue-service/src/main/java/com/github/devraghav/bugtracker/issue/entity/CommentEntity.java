@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Document("comments")
 @NoArgsConstructor
-public class IssueCommentEntity {
+public class CommentEntity {
   @Id private String id;
   private String issueId;
   private String userId;

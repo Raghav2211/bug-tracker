@@ -61,8 +61,8 @@ public class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEven
       case IssueUpdatedEvent event -> eventConverterFactory
           .getConverter(IssueUpdatedEvent.class)
           .convert(event);
-      case IssueAssignedEvent event -> eventConverterFactory
-          .getConverter(IssueAssignedEvent.class)
+      case AssignedEvent event -> eventConverterFactory
+          .getConverter(AssignedEvent.class)
           .convert(event);
       case IssueResolvedEvent event -> eventConverterFactory
           .getConverter(IssueResolvedEvent.class)
@@ -76,7 +76,14 @@ public class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEven
       case IssueWatchEndedEvent event -> eventConverterFactory
           .getConverter(IssueWatchEndedEvent.class)
           .convert(event);
-      default -> throw new IllegalArgumentException("No handler found");
+      case CommentAddedEvent event -> eventConverterFactory
+          .getConverter(CommentAddedEvent.class)
+          .convert(event);
+      case CommentUpdatedEvent event -> eventConverterFactory
+          .getConverter(CommentUpdatedEvent.class)
+          .convert(event);
+      default -> throw new IllegalArgumentException(
+          String.format("No handler found for %s", domainEvent.getName()));
     };
   }
 }

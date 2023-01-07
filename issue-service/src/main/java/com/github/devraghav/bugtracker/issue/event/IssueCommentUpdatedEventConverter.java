@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.dto.Comment;
-import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentUpdatedEvent;
+import com.github.devraghav.bugtracker.issue.event.internal.CommentUpdatedEvent;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.comment.CommentUpdated;
 import com.github.devraghav.data_model.schema.issue.CommentUpdatedSchema;
@@ -10,7 +10,7 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 
 public class IssueCommentUpdatedEventConverter
-    implements EventConverter<IssueCommentUpdatedEvent, CommentUpdatedSchema> {
+    implements EventConverter<CommentUpdatedEvent, CommentUpdatedSchema> {
 
   private User getUser(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
@@ -35,7 +35,7 @@ public class IssueCommentUpdatedEventConverter
   }
 
   @Override
-  public CommentUpdatedSchema convert(IssueCommentUpdatedEvent event) {
+  public CommentUpdatedSchema convert(CommentUpdatedEvent event) {
     return CommentUpdatedSchema.newBuilder()
         .setEvent(
             CommentUpdated.newBuilder()

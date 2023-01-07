@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.Comment;
-import com.github.devraghav.bugtracker.issue.entity.IssueCommentEntity;
+import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import org.springframework.stereotype.Service;
@@ -18,11 +18,10 @@ public record CommentQueryService(
     return commentRepository.findAllByIssueId(issueId).flatMap(this::getComment);
   }
 
-  public Mono<Comment> getComment(IssueCommentEntity issueCommentEntity) {
+  public Mono<Comment> getComment(CommentEntity commentEntity) {
     return userReactiveClient
-        .fetchUser(issueCommentEntity.getUserId())
+        .fetchUser(commentEntity.getUserId())
         .map(
-            commentUser ->
-                commentMapper.entityToResponse(issueCommentEntity).user(commentUser).build());
+            commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
   }
 }

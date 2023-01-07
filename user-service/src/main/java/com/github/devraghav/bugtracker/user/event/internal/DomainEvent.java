@@ -18,7 +18,7 @@ public abstract class DomainEvent {
     name =
         new StringJoiner("#")
             .add(publisherInfo.name())
-            .add(publisherInfo.domain().getName())
+            .add(publisherInfo.domain().getSimpleName())
             .add(action)
             .toString();
     this.publisher = new StringJoiner("#").add("Service").add(publisherInfo.name()).toString();

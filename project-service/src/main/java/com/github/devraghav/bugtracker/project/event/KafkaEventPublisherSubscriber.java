@@ -61,7 +61,8 @@ class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEvent> {
       case VersionCreatedEvent event -> eventConverterFactory
           .getConverter(VersionCreatedEvent.class)
           .convert(event);
-      default -> throw new IllegalArgumentException("No handler found");
+      default -> throw new IllegalArgumentException(
+          String.format("No handler found for %s", domainEvent.getName()));
     };
   }
 }

@@ -11,6 +11,8 @@ public abstract class DomainEvent {
   private final LocalDateTime logTime = LocalDateTime.now();
   private final String name;
   private final String publisher;
+  // TODO : add gateway and pass requestedBy to the event layer
+  private String requestedBy;
 
   record PublisherInfo(String name, Class<?> domain) {}
 
@@ -18,7 +20,7 @@ public abstract class DomainEvent {
     name =
         new StringJoiner("#")
             .add(publisherInfo.name())
-            .add(publisherInfo.domain().getName())
+            .add(publisherInfo.domain().getSimpleName())
             .add(action)
             .toString();
     this.publisher = new StringJoiner("#").add("Service").add(publisherInfo.name()).toString();

@@ -5,9 +5,7 @@ import com.github.devraghav.data_model.domain.issue.Watcher;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueWatched;
 import com.github.devraghav.data_model.schema.issue.IssueWatchedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 public class IssueWatchStartedEventConverter
     implements EventConverter<IssueWatchStartedEvent, IssueWatchedSchema> {
@@ -27,15 +25,15 @@ public class IssueWatchStartedEventConverter
     return IssueWatchedSchema.newBuilder()
         .setEvent(
             IssueWatched.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Issue.Watcher.Added")
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
+                .setName(event.getName())
                 .setPayload(
                     Watcher.newBuilder()
                         .setIssueId(event.getIssueId())
                         .setWatcher(getWatcher(event.getWatcher()))
                         .build())
-                .setPublisher("Service.Issue")
+                .setPublisher(event.getPublisher())
                 .build())
         .build();
   }

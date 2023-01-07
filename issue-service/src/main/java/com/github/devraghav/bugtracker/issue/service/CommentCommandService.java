@@ -1,10 +1,10 @@
 package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
-import com.github.devraghav.bugtracker.issue.entity.IssueCommentEntity;
+import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
+import com.github.devraghav.bugtracker.issue.event.internal.CommentAddedEvent;
+import com.github.devraghav.bugtracker.issue.event.internal.CommentUpdatedEvent;
 import com.github.devraghav.bugtracker.issue.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentAddedEvent;
-import com.github.devraghav.bugtracker.issue.event.internal.IssueCommentUpdatedEvent;
 import com.github.devraghav.bugtracker.issue.event.internal.ReactivePublisher;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
@@ -30,8 +30,7 @@ public record CommentCommandService(
         .flatMap(
             issueComment ->
                 eventReactivePublisher
-                    .publish(
-                        new IssueCommentAddedEvent(createCommentRequest.issueId(), issueComment))
+                    .publish(new CommentAddedEvent(createCommentRequest.issueId(), issueComment))
                     .thenReturn(issueComment));
   }
 
@@ -47,26 +46,23 @@ public record CommentCommandService(
         .flatMap(
             issueComment ->
                 eventReactivePublisher
-                    .publish(
-                        new IssueCommentUpdatedEvent(updateCommentRequest.issueId(), issueComment))
+                    .publish(new CommentUpdatedEvent(updateCommentRequest.issueId(), issueComment))
                     .thenReturn(issueComment));
   }
 
-  private Mono<IssueCommentEntity> findCommentById(String commentId) {
+  private Mono<CommentEntity> findCommentById(String commentId) {
     return commentRepository
         .findById(commentId)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidComment(commentId)));
   }
 
-  private Mono<IssueCommentEntity> findAndUpdateCommentContentById(
-      String commentId, String content) {
+  private Mono<CommentEntity> findAndUpdateCommentContentById(String commentId, String content) {
     return findCommentById(commentId)
         .map(commentEntity -> updateIssueCommentEntity(content, commentEntity));
   }
 
-  private IssueCommentEntity updateIssueCommentEntity(
-      String content, IssueCommentEntity issueCommentEntity) {
-    issueCommentEntity.setContent(content);
-    return issueCommentEntity;
+  private CommentEntity updateIssueCommentEntity(String content, CommentEntity commentEntity) {
+    commentEntity.setContent(content);
+    return commentEntity;
   }
 }

@@ -71,9 +71,11 @@ public record IssueRouteHandler(
     var issueId = serverRequest.pathVariable("id");
     return serverRequest
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new AssignRequest(issueId, body.get("user")))
-        .flatMap(assignRequest -> issueCommandService.assignee(issueId, assignRequest))
-        .flatMap(unused -> IssueResponse.noContent())
+        .mapNotNull(body -> body.get("user"))
+        .map(user -> new AssignRequest(issueId, user, MonitorType.ASSIGN))
+        .switchIfEmpty(Mono.just(new AssignRequest(issueId, null, MonitorType.UNASSIGN)))
+        .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
+        .then(IssueResponse.noContent())
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
         .switchIfEmpty(IssueResponse.noBody(serverRequest));
@@ -83,9 +85,9 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new AssignRequest(issueId, body.get("user")))
-        .flatMap(assignRequest -> issueCommandService.watch(issueId, assignRequest, true))
-        .flatMap(unused -> IssueResponse.noContent())
+        .map(body -> new AssignRequest(issueId, body.get("user"), MonitorType.WATCH))
+        .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
+        .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
   }
@@ -95,9 +97,9 @@ public record IssueRouteHandler(
 
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new AssignRequest(issueId, body.get("user")))
-        .flatMap(assignRequest -> issueCommandService.watch(issueId, assignRequest, false))
-        .flatMap(unused -> IssueResponse.noContent())
+        .map(body -> new AssignRequest(issueId, body.get("user"), MonitorType.UNWATCH))
+        .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
+        .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
         .switchIfEmpty(IssueResponse.noBody(request));
   }
@@ -119,7 +121,7 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> resolve(ServerRequest request) {
     return Mono.just(request.pathVariable("id"))
         .flatMap(issueCommandService::resolve)
-        .flatMap(done -> IssueResponse.noContent())
+        .then(IssueResponse.noContent())
         .onErrorResume(
             IssueException.class,
             issueNotFoundException -> IssueResponse.invalid(request, issueNotFoundException));

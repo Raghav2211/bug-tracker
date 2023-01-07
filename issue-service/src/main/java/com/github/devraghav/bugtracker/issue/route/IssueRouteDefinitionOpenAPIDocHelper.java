@@ -250,4 +250,10 @@ class IssueRouteDefinitionOpenAPIDocHelper {
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(IssueErrorResponse.class)));
   }
+
+  record AssignRequest(String user) {}
+
+  record CreateCommentRequest(String user, String content) {}
+
+  record UpdateCommentRequest(String user, String content) {}
 }

@@ -17,7 +17,7 @@ public interface IssueRepository extends ReactiveMongoRepository<IssueEntity, St
   @Update("{ '$unset' : { 'assignee' : '' } }")
   Mono<Long> findAndUnSetAssigneeById(String id);
 
-  @Update(" {'_id' : '?0' } ,{ '$addToSet' : { 'watchers' : '?1' } }")
+  @Update("{ '$addToSet' : { 'watchers' : '?1' } }")
   Mono<Long> findAndAddWatcherById(String id, String userId);
 
   @Update("{ '$pull' : { 'watchers' : '?1' } }")
