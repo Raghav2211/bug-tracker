@@ -18,7 +18,7 @@ public record CommentRouteHandler(
     CommentCommandService commentCommandService, CommentQueryService commentQueryService) {
 
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
-    var issueId = serverRequest.pathVariable("id");
+    var issueId = serverRequest.pathVariable("issueId");
     return commentQueryService
         .getComments(issueId)
         .collectList()

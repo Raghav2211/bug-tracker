@@ -17,7 +17,15 @@ import org.springframework.stereotype.Component;
 class CommentOpenAPIDocHelper {
 
   void getAllCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
-    ops.operationId("getAll").summary("Get all comment").response(getAll200ResponseDoc()).build();
+    ops.operationId("getAll")
+        .summary("Get all comment")
+        .parameter(
+            parameterBuilder()
+                .in(ParameterIn.PATH)
+                .name("issueId")
+                .schema(schemaBuilder().type("string")))
+        .response(getAll200ResponseDoc())
+        .build();
   }
 
   void addCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
