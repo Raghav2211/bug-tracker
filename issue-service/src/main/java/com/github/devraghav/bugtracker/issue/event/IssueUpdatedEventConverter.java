@@ -8,11 +8,9 @@ import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUpdated;
 import com.github.devraghav.data_model.schema.issue.IssueUpdatedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class IssueUpdatedEventConverter
@@ -91,8 +89,8 @@ public class IssueUpdatedEventConverter
     return IssueUpdatedSchema.newBuilder()
         .setEvent(
             IssueUpdated.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
                 .setName(event.getName())
                 .setPayload(getIssue(event.getUpdatedIssue()))
                 .setPublisher(event.getPublisher())

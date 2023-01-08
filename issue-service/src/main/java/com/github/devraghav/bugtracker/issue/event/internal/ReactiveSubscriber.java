@@ -1,6 +1,5 @@
-package com.github.devraghav.bugtracker.issue.event;
+package com.github.devraghav.bugtracker.issue.event.internal;
 
-import com.github.devraghav.bugtracker.issue.event.internal.ReactiveMessageBroker;
 import reactor.core.publisher.Flux;
 
 public abstract class ReactiveSubscriber<T> {

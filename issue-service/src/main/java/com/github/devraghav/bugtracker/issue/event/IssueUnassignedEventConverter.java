@@ -5,9 +5,7 @@ import com.github.devraghav.data_model.domain.issue.Unassign;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUnassigned;
 import com.github.devraghav.data_model.schema.issue.IssueUnassignedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 public class IssueUnassignedEventConverter
     implements EventConverter<IssueUnassignedEvent, IssueUnassignedSchema> {
@@ -28,8 +26,8 @@ public class IssueUnassignedEventConverter
     return IssueUnassignedSchema.newBuilder()
         .setEvent(
             IssueUnassigned.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
                 .setName(event.getName())
                 .setPayload(Unassign.newBuilder().setIssueId(event.getIssueId()).build())
                 .setPublisher(event.getPublisher())

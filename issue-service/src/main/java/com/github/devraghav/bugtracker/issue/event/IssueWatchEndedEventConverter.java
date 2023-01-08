@@ -5,9 +5,7 @@ import com.github.devraghav.data_model.domain.issue.Unwatch;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUnwatched;
 import com.github.devraghav.data_model.schema.issue.IssueUnwatchedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 public class IssueWatchEndedEventConverter
     implements EventConverter<IssueWatchEndedEvent, IssueUnwatchedSchema> {
@@ -27,15 +25,15 @@ public class IssueWatchEndedEventConverter
     return IssueUnwatchedSchema.newBuilder()
         .setEvent(
             IssueUnwatched.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
-                .setName("Issue.Watcher.Removed")
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
+                .setName(event.getName())
                 .setPayload(
                     Unwatch.newBuilder()
                         .setIssueId(event.getIssueId())
                         .setRemoveWatcher(getUnWatcher(event.getWatchEndedBy()))
                         .build())
-                .setPublisher("Service.Issue")
+                .setPublisher(event.getPublisher())
                 .build())
         .build();
   }

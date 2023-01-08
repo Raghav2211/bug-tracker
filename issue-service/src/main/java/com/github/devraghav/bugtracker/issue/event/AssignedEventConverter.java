@@ -5,9 +5,7 @@ import com.github.devraghav.data_model.domain.issue.Assign;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueAssigned;
 import com.github.devraghav.data_model.schema.issue.IssueAssignedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 public class AssignedEventConverter implements EventConverter<AssignedEvent, IssueAssignedSchema> {
 
@@ -27,8 +25,8 @@ public class AssignedEventConverter implements EventConverter<AssignedEvent, Iss
     return IssueAssignedSchema.newBuilder()
         .setEvent(
             IssueAssigned.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
                 .setName(event.getName())
                 .setPayload(
                     Assign.newBuilder()

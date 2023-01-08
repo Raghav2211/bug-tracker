@@ -4,9 +4,7 @@ import com.github.devraghav.bugtracker.issue.event.internal.IssueResolvedEvent;
 import com.github.devraghav.data_model.domain.issue.Resolve;
 import com.github.devraghav.data_model.event.issue.IssueResolved;
 import com.github.devraghav.data_model.schema.issue.IssueResolvedSchema;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.UUID;
 
 public class IssueResolvedEventConverter
     implements EventConverter<IssueResolvedEvent, IssueResolvedSchema> {
@@ -16,8 +14,8 @@ public class IssueResolvedEventConverter
     return IssueResolvedSchema.newBuilder()
         .setEvent(
             IssueResolved.newBuilder()
-                .setId(UUID.randomUUID().toString())
-                .setCreateAt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setId(event.getId().toString())
+                .setCreateAt(event.getLogTime().toEpochSecond(ZoneOffset.UTC))
                 .setName(event.getName())
                 .setPayload(
                     Resolve.newBuilder()
