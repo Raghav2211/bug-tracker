@@ -1,6 +1,8 @@
 package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.event.internal.*;
+import com.github.devraghav.bugtracker.issue.pubsub.ReactiveMessageBroker;
+import com.github.devraghav.bugtracker.issue.pubsub.ReactiveSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;

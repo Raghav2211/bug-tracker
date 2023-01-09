@@ -2,23 +2,40 @@ package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
-import com.github.devraghav.bugtracker.issue.event.internal.CommentAddedEvent;
-import com.github.devraghav.bugtracker.issue.event.internal.CommentUpdatedEvent;
-import com.github.devraghav.bugtracker.issue.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.issue.event.internal.ReactivePublisher;
+import com.github.devraghav.bugtracker.issue.event.internal.*;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
+import com.github.devraghav.bugtracker.issue.pubsub.ReactiveMessageBroker;
+import com.github.devraghav.bugtracker.issue.pubsub.ReactivePublisher;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 @Service
-public record CommentCommandService(
-    RequestValidator requestValidator,
-    CommentMapper commentMapper,
-    CommentRepository commentRepository,
-    UserReactiveClient userReactiveClient,
-    ReactivePublisher<DomainEvent> eventReactivePublisher) {
+public class CommentCommandService {
+
+  private final RequestValidator requestValidator;
+  private final CommentMapper commentMapper;
+  private final CommentRepository commentRepository;
+  private final UserReactiveClient userReactiveClient;
+  private final ReactivePublisher<DomainEvent> eventReactivePublisher;
+  private final ReactivePublisher<Comment> commentStreamPublisher;
+
+  public CommentCommandService(
+      RequestValidator requestValidator,
+      CommentMapper commentMapper,
+      CommentRepository commentRepository,
+      UserReactiveClient userReactiveClient,
+      ReactivePublisher<DomainEvent> eventReactivePublisher,
+      ReactiveMessageBroker<Comment> reactiveMessageBroker) {
+    this.requestValidator = requestValidator;
+    this.commentMapper = commentMapper;
+    this.commentRepository = commentRepository;
+    this.userReactiveClient = userReactiveClient;
+    this.eventReactivePublisher = eventReactivePublisher;
+    this.commentStreamPublisher = new CommentStreamPublisher(reactiveMessageBroker);
+  }
 
   public Mono<Comment> save(CreateCommentRequest createCommentRequest) {
     return requestValidator
@@ -27,27 +44,18 @@ public record CommentCommandService(
         .map(commentMapper::requestToEntity)
         .flatMap(commentRepository::save)
         .flatMap(this::getComment)
-        .flatMap(
-            issueComment ->
-                eventReactivePublisher
-                    .publish(new CommentAddedEvent(createCommentRequest.issueId(), issueComment))
-                    .thenReturn(issueComment));
+        .flatMap(this::processSaveComment);
   }
 
   public Mono<Comment> update(UpdateCommentRequest updateCommentRequest) {
     return requestValidator
         .validate(updateCommentRequest)
         .flatMap(
-            validCommentUpdateRequest ->
-                findAndUpdateCommentContentById(
-                    validCommentUpdateRequest.commentId(), validCommentUpdateRequest.content()))
+            validRequest ->
+                findAndUpdateCommentContentById(validRequest.commentId(), validRequest.content()))
         .flatMap(commentRepository::save)
         .flatMap(this::getComment)
-        .flatMap(
-            issueComment ->
-                eventReactivePublisher
-                    .publish(new CommentUpdatedEvent(updateCommentRequest.issueId(), issueComment))
-                    .thenReturn(issueComment));
+        .flatMap(this::processUpdateComment);
   }
 
   private Mono<CommentEntity> findCommentById(String commentId) {
@@ -74,5 +82,32 @@ public record CommentCommandService(
             exception -> Mono.error(CommentException.userServiceException(exception)))
         .map(
             commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
+  }
+
+  private Mono<Comment> processSaveComment(Comment comment) {
+    return eventReactivePublisher
+        .publish(new CommentAddedEvent(comment.getIssueId(), comment))
+        .then(commentStreamPublisher.publish(comment))
+        .thenReturn(comment);
+  }
+
+  private Mono<Comment> processUpdateComment(Comment comment) {
+    return eventReactivePublisher
+        .publish(new CommentUpdatedEvent(comment.getIssueId(), comment))
+        .then(commentStreamPublisher.publish(comment))
+        .thenReturn(comment);
+  }
+
+  private class CommentStreamPublisher implements ReactivePublisher<Comment> {
+    private final Sinks.Many<Comment> channel;
+
+    private CommentStreamPublisher(ReactiveMessageBroker<Comment> commentReactiveMessageBroker) {
+      this.channel = commentReactiveMessageBroker.getWriteChannel();
+    }
+
+    @Override
+    public Mono<Void> publish(Comment message) {
+      return Mono.fromRunnable(() -> channel.tryEmitNext(message));
+    }
   }
 }

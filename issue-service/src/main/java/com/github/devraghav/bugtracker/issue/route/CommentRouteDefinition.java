@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.route;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
 
@@ -25,6 +25,10 @@ public class CommentRouteDefinition {
         () ->
             SpringdocRouteBuilder.route()
                 .GET("/comment", commentRouteHandler::getAll, docHelper::getAllCommentOperationDoc)
+                .GET(
+                    path("/comments").and(contentType(TEXT_EVENT_STREAM)),
+                    commentRouteHandler::subscribeCommentStream,
+                    builder -> builder.operationId("stream").hidden(true).ignoreJsonView(true))
                 .POST("/comment", commentRouteHandler::save, docHelper::addCommentOperationDoc)
                 .PUT(
                     "/comment/{commentId}",

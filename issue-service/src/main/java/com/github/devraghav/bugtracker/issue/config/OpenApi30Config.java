@@ -64,10 +64,12 @@ public class OpenApi30Config {
 
   @Bean
   public GroupedOpenApi commentOpenApi() {
-    String paths[] = {"/api/rest/v1/issue/{id}/comment/**", "/api/rest/v1/comment/**"};
+    String includePaths[] = {"/api/rest/v1/issue/{id}/comment/**", "/api/rest/v1/comment/**"};
+    String excludePaths[] = {"/api/rest/v1/issue/{id}/comment/stream**"};
     return GroupedOpenApi.builder()
         .group("comment-service")
-        .pathsToMatch(paths)
+        .pathsToMatch(includePaths)
+        .pathsToExclude(excludePaths)
         .addOpenApiCustomizer(uploadOperationsCustomizer)
         .build();
   }

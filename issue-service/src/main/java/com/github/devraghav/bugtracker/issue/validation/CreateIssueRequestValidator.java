@@ -29,7 +29,7 @@ public record CreateIssueRequestValidator(
 
   private Mono<Void> validateHeader(String header) {
     return Mono.justOrEmpty(header)
-        .filter(issueHeader -> StringUtils.hasText(issueHeader) && issueHeader.length() <= 50)
+        .filter(issueHeader -> StringUtils.hasText(issueHeader) && issueHeader.length() <= 200)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidSummary(header)))
         .then();
   }
@@ -38,7 +38,7 @@ public record CreateIssueRequestValidator(
     return Mono.justOrEmpty(description)
         .filter(
             issueDescription ->
-                StringUtils.hasText(issueDescription) && issueDescription.length() <= 200)
+                StringUtils.hasText(issueDescription) && issueDescription.length() <= 3000)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidDescription(description)))
         .then();
   }
