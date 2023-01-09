@@ -1,6 +1,8 @@
-package com.github.devraghav.bugtracker.project.event;
+package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.project.event.internal.*;
+import com.github.devraghav.bugtracker.user.event.internal.*;
+import com.github.devraghav.bugtracker.user.pubsub.ReactiveMessageBroker;
+import com.github.devraghav.bugtracker.user.pubsub.ReactiveSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
@@ -13,13 +15,13 @@ import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEvent> {
+public class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
   private final String eventStoreTopic;
   private final EventConverterFactory eventConverterFactory;
   private final ReactiveKafkaProducerTemplate<String, SpecificRecordBase>
       reactiveKafkaProducerTemplate;
 
-  public KafkaEventPublisherSubscriber(
+  public IntegrationEventPublisher(
       ReactiveMessageBroker<DomainEvent> reactiveMessageBroker,
       @Value("${app.kafka.outbound.event_store.topic}") String eventStoreTopic,
       EventConverterFactory eventConverterFactory,
@@ -55,12 +57,12 @@ class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEvent> {
 
   private SpecificRecordBase getAvroRecord(DomainEvent domainEvent) {
     return switch (domainEvent) {
-      case ProjectCreatedEvent event -> eventConverterFactory
-          .getConverter(ProjectCreatedEvent.class)
-          .convert(event);
-      case VersionCreatedEvent event -> eventConverterFactory
-          .getConverter(VersionCreatedEvent.class)
-          .convert(event);
+      case UserCreatedEvent userCreatedEvent -> eventConverterFactory
+          .getConverter(UserCreatedEvent.class)
+          .convert(userCreatedEvent);
+      case UserDuplicatedEvent userDuplicatedEvent -> eventConverterFactory
+          .getConverter(UserDuplicatedEvent.class)
+          .convert(userDuplicatedEvent);
       default -> throw new IllegalArgumentException(
           String.format("No handler found for %s", domainEvent.getName()));
     };

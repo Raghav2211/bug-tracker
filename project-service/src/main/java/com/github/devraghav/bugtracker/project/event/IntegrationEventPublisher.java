@@ -1,8 +1,8 @@
-package com.github.devraghav.bugtracker.issue.event;
+package com.github.devraghav.bugtracker.project.event;
 
-import com.github.devraghav.bugtracker.issue.event.internal.*;
-import com.github.devraghav.bugtracker.issue.pubsub.ReactiveMessageBroker;
-import com.github.devraghav.bugtracker.issue.pubsub.ReactiveSubscriber;
+import com.github.devraghav.bugtracker.project.event.internal.*;
+import com.github.devraghav.bugtracker.project.pubsub.ReactiveMessageBroker;
+import com.github.devraghav.bugtracker.project.pubsub.ReactiveSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,13 +15,13 @@ import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-public class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEvent> {
+class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
   private final String eventStoreTopic;
   private final EventConverterFactory eventConverterFactory;
   private final ReactiveKafkaProducerTemplate<String, SpecificRecordBase>
       reactiveKafkaProducerTemplate;
 
-  public KafkaEventPublisherSubscriber(
+  public IntegrationEventPublisher(
       ReactiveMessageBroker<DomainEvent> reactiveMessageBroker,
       @Value("${app.kafka.outbound.event_store.topic}") String eventStoreTopic,
       EventConverterFactory eventConverterFactory,
@@ -57,32 +57,11 @@ public class KafkaEventPublisherSubscriber extends ReactiveSubscriber<DomainEven
 
   private SpecificRecordBase getAvroRecord(DomainEvent domainEvent) {
     return switch (domainEvent) {
-      case IssueCreatedEvent event -> eventConverterFactory
-          .getConverter(IssueCreatedEvent.class)
+      case ProjectCreatedEvent event -> eventConverterFactory
+          .getConverter(ProjectCreatedEvent.class)
           .convert(event);
-      case IssueUpdatedEvent event -> eventConverterFactory
-          .getConverter(IssueUpdatedEvent.class)
-          .convert(event);
-      case AssignedEvent event -> eventConverterFactory
-          .getConverter(AssignedEvent.class)
-          .convert(event);
-      case IssueResolvedEvent event -> eventConverterFactory
-          .getConverter(IssueResolvedEvent.class)
-          .convert(event);
-      case IssueUnassignedEvent event -> eventConverterFactory
-          .getConverter(IssueUnassignedEvent.class)
-          .convert(event);
-      case IssueWatchStartedEvent event -> eventConverterFactory
-          .getConverter(IssueWatchStartedEvent.class)
-          .convert(event);
-      case IssueWatchEndedEvent event -> eventConverterFactory
-          .getConverter(IssueWatchEndedEvent.class)
-          .convert(event);
-      case CommentAddedEvent event -> eventConverterFactory
-          .getConverter(CommentAddedEvent.class)
-          .convert(event);
-      case CommentUpdatedEvent event -> eventConverterFactory
-          .getConverter(CommentUpdatedEvent.class)
+      case VersionCreatedEvent event -> eventConverterFactory
+          .getConverter(VersionCreatedEvent.class)
           .convert(event);
       default -> throw new IllegalArgumentException(
           String.format("No handler found for %s", domainEvent.getName()));

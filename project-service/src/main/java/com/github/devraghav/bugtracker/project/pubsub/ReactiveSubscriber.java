@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.event.internal;
+package com.github.devraghav.bugtracker.project.pubsub;
 
 import reactor.core.publisher.Flux;
 
