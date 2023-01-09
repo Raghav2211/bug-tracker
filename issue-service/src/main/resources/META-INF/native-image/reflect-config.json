@@ -1,11 +1,6 @@
 [
   {
-    "name": "com.github.devraghav.bugtracker.issue.dto.IssueAssignRequest",
-    "allDeclaredConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
-    "name": "com.github.devraghav.bugtracker.issue.dto.IssueCommentRequest",
+    "name": "com.github.devraghav.bugtracker.issue.dto.CreateCommentRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -15,12 +10,22 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.issue.dto.IssueRequest",
+    "name": "com.github.devraghav.bugtracker.issue.dto.CommentErrorResponse",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.issue.dto.IssueUpdateRequest",
+    "name": "com.github.devraghav.bugtracker.issue.dto.CreateIssueRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.bugtracker.issue.dto.UpdateIssueRequest",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.github.devraghav.bugtracker.issue.dto.UpdateCommentRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -35,7 +40,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.issue.dto.IssueComment",
+    "name": "com.github.devraghav.bugtracker.issue.dto.Comment",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },

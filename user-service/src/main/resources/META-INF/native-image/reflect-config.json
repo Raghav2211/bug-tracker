@@ -10,7 +10,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.user.dto.UserRequest",
+    "name": "com.github.devraghav.bugtracker.user.dto.CreateUserRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },

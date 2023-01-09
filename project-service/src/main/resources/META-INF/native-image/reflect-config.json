@@ -5,7 +5,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.project.dto.ProjectRequest",
+    "name": "com.github.devraghav.bugtracker.project.dto.CreateProjectRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -15,7 +15,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.project.dto.ProjectVersion",
+    "name": "com.github.devraghav.bugtracker.project.dto.Version",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
@@ -25,7 +25,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.github.devraghav.bugtracker.project.dto.ProjectVersionRequest",
+    "name": "com.github.devraghav.bugtracker.project.dto.CreateVersionRequest",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
