@@ -25,8 +25,8 @@ public final class EventConverterFactory {
       new IssueWatchEndedEventConverter();
   private static final CommentAddedEventConverter ISSUE_COMMENT_ADDED_EVENT_CONVERTER =
       new CommentAddedEventConverter();
-  private static final IssueCommentUpdatedEventConverter ISSUE_COMMENT_UPDATED_EVENT_CONVERTER =
-      new IssueCommentUpdatedEventConverter();
+  private static final CommentUpdatedEventConverter ISSUE_COMMENT_UPDATED_EVENT_CONVERTER =
+      new CommentUpdatedEventConverter();
 
   private static final Map<Class<?>, EventConverter<?, ?>> EVENT_SOURCE_MAP = new HashMap<>();
 

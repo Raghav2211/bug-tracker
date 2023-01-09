@@ -7,7 +7,7 @@ import com.github.devraghav.data_model.event.issue.comment.CommentUpdated;
 import com.github.devraghav.data_model.schema.issue.CommentUpdatedSchema;
 import java.time.ZoneOffset;
 
-public class IssueCommentUpdatedEventConverter
+public class CommentUpdatedEventConverter
     implements EventConverter<CommentUpdatedEvent, CommentUpdatedSchema> {
 
   private User getUser(com.github.devraghav.bugtracker.issue.dto.User author) {
