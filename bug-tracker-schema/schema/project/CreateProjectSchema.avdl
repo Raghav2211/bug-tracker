@@ -1,7 +1,0 @@
-@namespace("com.github.devraghav.data_model.schema.project")
-protocol CreateProjectSchema {
-	import idl "../../command/project/CreateProject.avdl";
-	record CreateProjectSchema {
-		com.github.devraghav.data_model.command.project.CreateProject command;
-	}
-}

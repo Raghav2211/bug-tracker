@@ -1,7 +1,0 @@
-@namespace("com.github.devraghav.data_model.schema.project.version")
-protocol CreateVersionSchema {
-	import idl "../../../command/project/version/CreateVersion.avdl";
-	record CreateVersionSchema {
-		com.github.devraghav.data_model.command.project.version.CreateVersion command;
-	}
-}

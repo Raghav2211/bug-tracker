@@ -3,7 +3,6 @@ protocol IssueAssigned {
 	import idl "../../domain/issue/Assign.avdl";
 	record IssueAssigned {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

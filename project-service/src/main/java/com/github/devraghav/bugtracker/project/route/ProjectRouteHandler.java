@@ -2,8 +2,6 @@ package com.github.devraghav.bugtracker.project.route;
 
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
-import java.util.UUID;
-import java.util.function.Supplier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -13,8 +11,6 @@ import reactor.core.publisher.Mono;
 
 @Component
 public record ProjectRouteHandler(ProjectService projectService) {
-
-  private static final Supplier<UUID> REQUEST_ID = UUID::randomUUID;
 
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
     return projectService
@@ -28,7 +24,7 @@ public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(CreateProjectRequest.class)
-        .flatMap(projectRequest -> projectService.save(REQUEST_ID.get().toString(), projectRequest))
+        .flatMap(projectService::save)
         .flatMap(project -> ProjectResponse.create(request, project))
         .switchIfEmpty(ProjectResponse.noBody(request))
         .onErrorResume(
@@ -47,11 +43,10 @@ public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> addVersion(ServerRequest request) {
     var projectId = request.pathVariable("id");
     return request
-        .bodyToMono(CreateProjectVersionRequest.class)
+        .bodyToMono(CreateVersionRequest.class)
         .flatMap(
             projectVersionRequest ->
-                projectService.addVersionToProjectId(
-                    REQUEST_ID.get().toString(), projectId, projectVersionRequest))
+                projectService.addVersionToProjectId(projectId, projectVersionRequest))
         .flatMap(ProjectResponse::ok)
         .onErrorResume(
             ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
@@ -61,7 +56,7 @@ public record ProjectRouteHandler(ProjectService projectService) {
     var projectId = request.pathVariable("id");
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findAllVersionByProjectId(projectId), ProjectVersion.class);
+        .body(projectService.findAllVersionByProjectId(projectId), Version.class);
   }
 
   public Mono<ServerResponse> getProjectVersionById(ServerRequest request) {
@@ -70,7 +65,6 @@ public record ProjectRouteHandler(ProjectService projectService) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(
-            projectService.findVersionByProjectIdAndVersionId(projectId, versionId),
-            ProjectVersion.class);
+            projectService.findVersionByProjectIdAndVersionId(projectId, versionId), Version.class);
   }
 }

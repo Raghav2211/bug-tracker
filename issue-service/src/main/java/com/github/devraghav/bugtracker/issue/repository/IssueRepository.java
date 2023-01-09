@@ -1,6 +1,7 @@
 package com.github.devraghav.bugtracker.issue.repository;
 
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
+import java.time.LocalDateTime;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.Update;
@@ -17,7 +18,7 @@ public interface IssueRepository extends ReactiveMongoRepository<IssueEntity, St
   @Update("{ '$unset' : { 'assignee' : '' } }")
   Mono<Long> findAndUnSetAssigneeById(String id);
 
-  @Update(" {'_id' : '?0' } ,{ '$addToSet' : { 'watchers' : '?1' } }")
+  @Update("{ '$addToSet' : { 'watchers' : '?1' } }")
   Mono<Long> findAndAddWatcherById(String id, String userId);
 
   @Update("{ '$pull' : { 'watchers' : '?1' } }")
@@ -29,5 +30,5 @@ public interface IssueRepository extends ReactiveMongoRepository<IssueEntity, St
   Flux<IssueEntity> findAllByReporter(String reporter);
 
   @Update("{ '$set' : { 'endedAt' : '?1' } }")
-  Mono<Long> findAndSetEndedAtById(String id, Long endedAt);
+  Mono<Long> findAndSetEndedAtById(String id, LocalDateTime endedAt);
 }

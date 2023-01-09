@@ -3,7 +3,6 @@ protocol IssueCreated {
 	import idl "../../domain/issue/Issue.avdl";
 	record IssueCreated {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

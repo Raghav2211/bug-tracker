@@ -59,8 +59,7 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "reporter", ignore = true),
     @Mapping(target = "watchers", ignore = true),
-    @Mapping(target = "projects", ignore = true),
-    @Mapping(target = "comments", ignore = true),
+    @Mapping(target = "projects", ignore = true)
   })
   Issue.IssueBuilder issueEntityToIssue(IssueEntity issueEntity);
 

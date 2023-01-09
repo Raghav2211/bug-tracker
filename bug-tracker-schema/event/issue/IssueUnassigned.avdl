@@ -3,7 +3,6 @@ protocol IssueUnassigned {
 	import idl "../../domain/issue/Unassign.avdl";
 	record IssueUnassigned {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

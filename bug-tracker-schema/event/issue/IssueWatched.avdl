@@ -3,7 +3,6 @@ protocol IssueWatched {
 	import idl "../../domain/issue/Watcher.avdl";
 	record IssueWatched {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

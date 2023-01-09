@@ -3,7 +3,6 @@ protocol ProjectCreated {
 	import idl "../../domain/project/Project.avdl";
 	record ProjectCreated {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;

@@ -3,6 +3,7 @@ protocol Comment {
 	import idl "../../user/User.avdl";
 	record Comment {
 		string id;
+		string issueId;
 		string content;
 		com.github.devraghav.data_model.domain.user.User commenter;
 		long createdAt;

@@ -3,10 +3,14 @@ package com.github.devraghav.bugtracker.project.service;
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
-import com.github.devraghav.bugtracker.project.kafka.producer.KafkaProducer;
+import com.github.devraghav.bugtracker.project.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.project.event.internal.ProjectCreatedEvent;
+import com.github.devraghav.bugtracker.project.event.internal.VersionCreatedEvent;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
+import com.github.devraghav.bugtracker.project.pubsub.ReactivePublisher;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
+import com.github.devraghav.bugtracker.project.validation.RequestValidator;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -16,19 +20,20 @@ import reactor.core.publisher.Mono;
 public record ProjectService(
     ProjectMapper projectMapper,
     ProjectVersionMapper projectVersionMapper,
+    RequestValidator requestValidator,
     UserReactiveClient userReactiveClient,
     ProjectRepository projectRepository,
-    KafkaProducer kafkaProducer) {
+    ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<Project> save(String requestId, CreateProjectRequest createProjectRequest) {
+  public Mono<Project> save(CreateProjectRequest createProjectRequest) {
     return Mono.just(createProjectRequest)
-        .flatMap(this::validate)
-        .flatMap(request -> kafkaProducer.sendProjectCreateCommand(requestId, request))
+        .flatMap(requestValidator::validate)
         .map(projectMapper::requestToEntity)
-        .flatMap(entity -> save(requestId, entity))
+        .flatMap(this::save)
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> duplicateProject(requestId, createProjectRequest, exception));
+            exception ->
+                Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
   }
 
   public Flux<Project> findAll() {
@@ -49,26 +54,21 @@ public record ProjectService(
         .switchIfEmpty(Mono.error(() -> ProjectException.notFound(projectId)));
   }
 
-  public Mono<ProjectVersion> addVersionToProjectId(
-      String requestId, String projectId, CreateProjectVersionRequest createProjectVersionRequest) {
-    return Mono.just(createProjectVersionRequest)
-        .flatMap(versionRequest -> this.exists(projectId).thenReturn(versionRequest))
-        .flatMap(
-            validVersionRequest ->
-                kafkaProducer.sendProjectVersionCreateCommand(
-                    requestId, projectId, validVersionRequest))
+  public Mono<Version> addVersionToProjectId(
+      String projectId, CreateVersionRequest createVersionRequest) {
+    return exists(projectId)
+        .thenReturn(createVersionRequest)
         .map(projectVersionMapper::requestToEntity)
-        .flatMap(projectVersionEntity -> save(requestId, projectId, projectVersionEntity));
+        .flatMap(projectVersionEntity -> save(projectId, projectVersionEntity));
   }
 
-  public Flux<ProjectVersion> findAllVersionByProjectId(String projectId) {
+  public Flux<Version> findAllVersionByProjectId(String projectId) {
     return projectRepository
         .findAllVersionByProjectId(projectId)
         .map(projectVersionMapper::entityToResponse);
   }
 
-  public Mono<ProjectVersion> findVersionByProjectIdAndVersionId(
-      String projectId, String versionId) {
+  public Mono<Version> findVersionByProjectIdAndVersionId(String projectId, String versionId) {
     return projectRepository
         .findVersionByProjectIdAndVersionId(projectId, versionId)
         .map(projectVersionMapper::entityToResponse);
@@ -79,47 +79,28 @@ public record ProjectService(
         .map(author -> projectMapper.entityToResponse(projectEntity).author(author).build());
   }
 
-  public Mono<CreateProjectRequest> validate(CreateProjectRequest createProjectRequest) {
-    return createProjectRequest
-        .validate()
-        .and(fetchAndValidateAuthorAccess(createProjectRequest.author()))
-        .thenReturn(createProjectRequest);
-  }
-
-  private Mono<Project> save(String requestId, ProjectEntity projectEntity) {
+  private Mono<Project> save(ProjectEntity projectEntity) {
     return projectRepository
         .save(projectEntity)
         .flatMap(this::getProject)
-        .flatMap(project -> kafkaProducer.sendProjectCreatedEvent(requestId, project));
+        .flatMap(this::publishProjectCreatedEvent);
   }
 
-  private Mono<ProjectVersion> save(
-      String requestId, String projectId, ProjectVersionEntity projectVersionEntity) {
+  private Mono<Version> save(String projectId, ProjectVersionEntity projectVersionEntity) {
     return projectRepository
         .saveVersion(projectId, projectVersionEntity)
         .map(projectVersionMapper::entityToResponse)
-        .flatMap(
-            projectVersion ->
-                kafkaProducer.sendProjectVersionCreatedEvent(requestId, projectId, projectVersion));
+        .flatMap(version -> publishVersionCreatedEvent(projectId, version));
   }
 
-  private Mono<Project> duplicateProject(
-      String requestId,
-      CreateProjectRequest createProjectRequest,
-      DuplicateKeyException exception) {
-    return kafkaProducer
-        .sendProjectDuplicatedEvent(requestId, createProjectRequest)
-        .flatMap(
-            unused ->
-                Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
+  private Mono<Project> publishProjectCreatedEvent(Project project) {
+    return eventReactivePublisher.publish(new ProjectCreatedEvent(project)).thenReturn(project);
   }
 
-  private Mono<Boolean> fetchAndValidateAuthorAccess(String author) {
-    return fetchAuthor(author)
-        .map(User::hasWriteAccess)
-        .map(Boolean::booleanValue)
-        .filter(Boolean::booleanValue)
-        .switchIfEmpty(Mono.error(() -> ProjectException.authorNotHaveWriteAccess(author)));
+  private Mono<Version> publishVersionCreatedEvent(String projectId, Version version) {
+    return eventReactivePublisher
+        .publish(new VersionCreatedEvent(projectId, version))
+        .thenReturn(version);
   }
 
   private Mono<User> fetchAuthor(String authorId) {

@@ -19,7 +19,7 @@ public class IssueRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> issueRoutes(
-      IssueRouteDefinitionOpenAPIDocHelper docHelper, IssueRouteHandler issueRouteHandler) {
+      IssueOpenAPIDocHelper docHelper, IssueRouteHandler issueRouteHandler) {
     Consumer<Builder> emptyOperationsConsumer = builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
@@ -29,13 +29,8 @@ public class IssueRouteDefinition {
                 .PATCH("", issueRouteHandler::update, docHelper::updateIssueOperationDoc)
                 .POST(
                     path("/files").and(accept(asMediaType(MULTIPART_FORM_DATA))),
-                    issueRouteHandler::uploadFile,
+                    issueRouteHandler::addAttachment,
                     docHelper::uploadFileOperationDoc)
-                .POST("/comment", issueRouteHandler::addComment, docHelper::addCommentOperationDoc)
-                .PUT(
-                    "/comment/{commentId}",
-                    issueRouteHandler::updateComment,
-                    docHelper::updateCommentOperationDoc)
                 .PATCH("/assignee", issueRouteHandler::assignee, docHelper::assigneeOperationDoc)
                 .PATCH("/watch", issueRouteHandler::watch, docHelper::watcherOperationDoc)
                 .DELETE("/watch", issueRouteHandler::unwatch, docHelper::removeWatcherOperationDoc)

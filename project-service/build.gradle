@@ -49,6 +49,34 @@ dependencies {
 	testImplementation 'io.projectreactor:reactor-test'
 }
 
+compileJava {
+	options.compilerArgs += ["--enable-preview"]
+}
+
+compileTestJava {
+	options.compilerArgs += ["--enable-preview"]
+}
+
+compileAotJava {
+	options.compilerArgs += ["--enable-preview"]
+}
+
+compileAotTestJava {
+	options.compilerArgs += ["--enable-preview"]
+}
+
+processAot {
+	jvmArgs("--enable-preview")
+}
+
+processTestAot {
+	jvmArgs("--enable-preview")
+}
+
+tasks.withType(Test).all {
+	jvmArgs += '--enable-preview'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }

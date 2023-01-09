@@ -52,10 +52,24 @@ public class OpenApi30Config {
 
   @Bean
   public GroupedOpenApi issueOpenApi() {
-    String paths[] = {"/api/rest/v1/issue/**"};
+    String includePaths[] = {"/api/rest/v1/issue/**"};
+    String excludePaths[] = {"/api/rest/v1/issue/{id}/comment/**"};
     return GroupedOpenApi.builder()
         .group("issue-service")
-        .pathsToMatch(paths)
+        .pathsToMatch(includePaths)
+        .pathsToExclude(excludePaths)
+        .addOpenApiCustomizer(uploadOperationsCustomizer)
+        .build();
+  }
+
+  @Bean
+  public GroupedOpenApi commentOpenApi() {
+    String includePaths[] = {"/api/rest/v1/issue/{id}/comment/**", "/api/rest/v1/comment/**"};
+    String excludePaths[] = {"/api/rest/v1/issue/{id}/comment/stream**"};
+    return GroupedOpenApi.builder()
+        .group("comment-service")
+        .pathsToMatch(includePaths)
+        .pathsToExclude(excludePaths)
         .addOpenApiCustomizer(uploadOperationsCustomizer)
         .build();
   }

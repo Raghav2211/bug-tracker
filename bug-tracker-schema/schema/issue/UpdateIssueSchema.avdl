@@ -1,7 +1,0 @@
-@namespace("com.github.devraghav.data_model.schema.issue")
-protocol UpdateIssueSchema {
-	import idl "../../command/issue/UpdateIssue.avdl";
-	record UpdateIssueSchema {
-		com.github.devraghav.data_model.command.issue.UpdateIssue command;
-	}
-}

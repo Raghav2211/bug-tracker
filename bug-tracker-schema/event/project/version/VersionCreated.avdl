@@ -3,7 +3,6 @@ protocol VersionCreated {
 	import idl "../../../domain/project/version/Version.avdl";
 	record VersionCreated {
 		string id;
-		string requestId;
 		string name;
 		string publisher;
 		long createAt;
