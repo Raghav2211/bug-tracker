@@ -4,26 +4,39 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
-public class EventBus {
+public interface EventBus {
 
-  public interface ReactivePublisher {
-    Mono<Void> publish(DomainEvent message);
+  interface ReactivePublisher<T extends DomainEvent> {
+    Mono<Void> publish(T message);
   }
 
-  public interface ReactiveSubscriber<T extends DomainEvent> {
+  interface ReactiveSubscriber<T extends DomainEvent> {
     void subscribe(Flux<T> stream);
   }
 
-  public interface ReactiveMessageBroker {
+  interface ReactiveMessageBroker {
 
-    <T extends DomainEvent> ReactiveChannel<T> register(
-        ReactivePublisher publisher, Class<T> domainEventsClass);
+    <T extends DomainEvent> WriteChannel<T> register(
+        ReactivePublisher<T> publisher, Class<T> domainEventsClass);
 
     <T extends DomainEvent> void subscribe(
         ReactiveSubscriber<T> subscriber, Class<T> domainEventClass);
 
-    // Anyone can tap the current stream for any event(s) at any point of time
     <T extends DomainEvent> Flux<T> tap(Supplier<UUID> anonymousSubscriber, Class<T> event);
+  }
+
+  class WriteChannel<T extends DomainEvent> {
+
+    private final Sinks.Many<DomainEvent> reactiveChannel;
+
+    public WriteChannel(Sinks.Many<DomainEvent> reactiveChannel) {
+      this.reactiveChannel = reactiveChannel;
+    }
+
+    public void publish(T domainEvent) {
+      reactiveChannel.tryEmitNext(domainEvent);
+    }
   }
 }

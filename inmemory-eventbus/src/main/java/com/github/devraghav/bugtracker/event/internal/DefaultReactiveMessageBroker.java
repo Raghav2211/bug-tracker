@@ -1,8 +1,6 @@
 package com.github.devraghav.bugtracker.event.internal;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -18,14 +16,14 @@ public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBro
       new ConcurrentHashMap<>();
 
   @Override
-  public <T extends DomainEvent> ReactiveChannel<T> register(
-      EventBus.ReactivePublisher publisher, Class<T> domainEventsClass) {
+  public <T extends DomainEvent> EventBus.WriteChannel<T> register(
+      EventBus.ReactivePublisher<T> publisher, Class<T> domainEventsClass) {
     var channel = register(domainEventsClass);
     log.atInfo().log(
         "reactive publisher {} has been registered for {}",
         publisher.getClass().getName(),
         domainEventsClass.getName());
-    return new ReactiveChannel<T>(channel);
+    return new EventBus.WriteChannel<T>(channel);
   }
 
   @Override
@@ -39,15 +37,13 @@ public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBro
   @Override
   public <T extends DomainEvent> Flux<T> tap(
       Supplier<UUID> anonymousSubscriber, Class<T> domainEventClass) {
-    var firstRegisterChannel =
-        getFirstRegisterChannel(domainEventClass).orElseGet(() -> DomainEvent.class);
-
-    var channel = streamChannelMap.get(firstRegisterChannel);
-    if (channel == null) {
-      throw new EventBusException(
-          String.format("No channel found for event[%s]", domainEventClass));
-    }
-    return getStream(anonymousSubscriber.get().toString(), domainEventClass, channel);
+    var reactiveChannel =
+        getAllRegisteredParentEvents(domainEventClass).stream()
+            .map(streamChannelMap::get)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElseThrow(() -> EventBusException.channelNotFound(domainEventClass));
+    return getStream(anonymousSubscriber.get().toString(), domainEventClass, reactiveChannel);
   }
 
   private <T extends DomainEvent> Flux<T> getStream(
@@ -66,23 +62,37 @@ public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBro
   }
 
   private <T extends DomainEvent> Sinks.Many<DomainEvent> register(Class<T> domainEventClass) {
-    return streamChannelMap.compute(
-        domainEventClass,
-        (clazz, reactiveChannel) ->
-            reactiveChannel == null
-                ? Sinks.many().multicast().onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, false)
-                : reactiveChannel);
+    Supplier<Sinks.Many<DomainEvent>> registerNewEventSupplier =
+        () ->
+            streamChannelMap.compute(
+                domainEventClass,
+                (clazz, reactiveChannel) ->
+                    Sinks.many().multicast().onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, false));
+    var parentEvents = getAllRegisteredParentEvents(domainEventClass);
+    return parentEvents.stream()
+        .map(streamChannelMap::get)
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElseGet(registerNewEventSupplier::get);
   }
 
-  private <T extends DomainEvent> Optional<Class<? super T>> getFirstRegisterChannel(
+  private <T extends DomainEvent> Collection<Class<? super T>> getAllRegisteredParentEvents(
       Class<T> clazz) {
-    Class<? super T> superclass = clazz.getSuperclass();
-    while (superclass != null) {
-      Class<? super T> superclazz = superclass;
-      superclass = superclazz.getSuperclass();
-      if (superclass == Object.class) break;
-      return Optional.of(superclass);
+    var channels = new ArrayList<Class<? super T>>();
+    channels.add(clazz); // self
+    if (clazz == DomainEvent.class) {
+      return channels;
     }
-    return Optional.empty();
+    var superclass = clazz.getSuperclass();
+    channels.add(superclass);
+    while (superclass != null) {
+      var superclazz = superclass;
+      superclass = superclazz.getSuperclass();
+      channels.add(superclass);
+      if (superclass == DomainEvent.class) {
+        break;
+      }
+    }
+    return channels;
   }
 }
