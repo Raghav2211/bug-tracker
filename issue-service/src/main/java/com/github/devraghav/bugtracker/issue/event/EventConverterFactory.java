@@ -1,5 +1,6 @@
 package com.github.devraghav.bugtracker.issue.event;
 
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,7 +8,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class EventConverterFactory {
+final class EventConverterFactory {
 
   private static final IssueResolvedEventConverter ISSUE_RESOLVED_EVENT_CONVERTER =
       new IssueResolvedEventConverter();
@@ -31,15 +32,15 @@ public final class EventConverterFactory {
   private static final Map<Class<?>, EventConverter<?, ?>> EVENT_SOURCE_MAP = new HashMap<>();
 
   static {
-    EVENT_SOURCE_MAP.put(IssueCreatedEvent.class, ISSUE_CREATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueUpdatedEvent.class, ISSUE_UPDATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(AssignedEvent.class, ISSUE_ASSIGNED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueUnassignedEvent.class, ISSUE_UNASSIGNED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueWatchStartedEvent.class, ISSUE_WATCH_STARTED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueWatchEndedEvent.class, ISSUE_WATCH_ENDED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(CommentAddedEvent.class, ISSUE_COMMENT_ADDED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(CommentUpdatedEvent.class, ISSUE_COMMENT_UPDATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueResolvedEvent.class, ISSUE_RESOLVED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.Created.class, ISSUE_CREATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.Updated.class, ISSUE_UPDATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.Assigned.class, ISSUE_ASSIGNED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.Unassigned.class, ISSUE_UNASSIGNED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.WatchStarted.class, ISSUE_WATCH_STARTED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.WatchEnded.class, ISSUE_WATCH_ENDED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.CommentAdded.class, ISSUE_COMMENT_ADDED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.CommentUpdated.class, ISSUE_COMMENT_UPDATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvents.Resolved.class, ISSUE_RESOLVED_EVENT_CONVERTER);
   }
 
   @SuppressWarnings("unchecked")

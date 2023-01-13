@@ -1,10 +1,10 @@
 package com.github.devraghav.bugtracker.issue.service;
 
+import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
-import com.github.devraghav.bugtracker.issue.pubsub.ReactivePublisher;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
 import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
@@ -24,16 +24,16 @@ public record IssueCommandService(
     IssueQueryService issueQueryService,
     IssueRepository issueRepository,
     IssueAttachmentRepository issueAttachmentRepository,
-    ReactivePublisher<DomainEvent> eventReactivePublisher) {
+    EventBus.ReactivePublisher domainEventPublisher) {
 
-  public Mono<Issue> create(CreateIssueRequest createIssueRequest) {
+  public Mono<Issue> create(IssueRequests.Create createIssueRequest) {
     return requestValidator
         .validate(createIssueRequest)
         .map(issueMapper::issueRequestToIssueEntity)
         .flatMap(this::save);
   }
 
-  public Mono<Issue> update(String issueId, UpdateIssueRequest request) {
+  public Mono<Issue> update(String issueId, IssueRequests.Update request) {
     return issueQueryService
         .findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
@@ -42,7 +42,7 @@ public record IssueCommandService(
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  public Mono<Void> monitor(String issueId, AssignRequest assignRequest) {
+  public Mono<Void> monitor(String issueId, IssueRequests.Assign assignRequest) {
     log.info("monitor {} with assignRequest {}", assignRequest.monitorType(), assignRequest);
     var issueMono = issueQueryService.exists(issueId).map(unused -> issueId);
     if (MonitorType.UNASSIGN == assignRequest.monitorType()) {
@@ -67,7 +67,7 @@ public record IssueCommandService(
   private Mono<Void> assignee(String issueId, User user) {
     return issueRepository
         .findAndSetAssigneeById(issueId, user.id())
-        .flatMap(unused -> eventReactivePublisher.publish(new AssignedEvent(issueId, user)));
+        .flatMap(unused -> domainEventPublisher.publish(new IssueEvents.Assigned(issueId, user)));
   }
 
   private Mono<Void> unassigned(Mono<String> issueMono) {
@@ -77,7 +77,7 @@ public record IssueCommandService(
   private Mono<Void> unassigned(String issueId) {
     return issueRepository
         .findAndUnSetAssigneeById(issueId)
-        .flatMap(unused -> eventReactivePublisher.publish(new IssueUnassignedEvent(issueId)));
+        .flatMap(unused -> domainEventPublisher.publish(new IssueEvents.Unassigned(issueId)));
   }
 
   private Mono<Void> watch(Mono<Tuple2<String, User>> issueUserMono) {
@@ -89,7 +89,7 @@ public record IssueCommandService(
     return issueRepository
         .findAndAddWatcherById(issueId, user.id())
         .flatMap(
-            unused -> eventReactivePublisher.publish(new IssueWatchStartedEvent(issueId, user)));
+            unused -> domainEventPublisher.publish(new IssueEvents.WatchStarted(issueId, user)));
   }
 
   private Mono<Void> unwatch(Mono<Tuple2<String, User>> issueUserMono) {
@@ -99,7 +99,7 @@ public record IssueCommandService(
   private Mono<Void> unwatch(String issueId, User user) {
     return issueRepository
         .findAndPullWatcherById(issueId, user.id())
-        .flatMap(unused -> eventReactivePublisher.publish(new IssueWatchEndedEvent(issueId, user)));
+        .flatMap(unused -> domainEventPublisher.publish(new IssueEvents.WatchEnded(issueId, user)));
   }
 
   public Mono<Void> resolve(String issueId) {
@@ -107,7 +107,7 @@ public record IssueCommandService(
     return issueRepository
         .findAndSetEndedAtById(issueId, resolveTime)
         .flatMap(
-            unused -> eventReactivePublisher.publish(new IssueResolvedEvent(issueId, resolveTime)))
+            unused -> domainEventPublisher.publish(new IssueEvents.Resolved(issueId, resolveTime)))
         .then();
   }
 
@@ -121,7 +121,7 @@ public record IssueCommandService(
         .flatMap(issueQueryService::generateIssue)
         .flatMap(
             issue ->
-                eventReactivePublisher.publish(new IssueCreatedEvent(issue)).thenReturn(issue));
+                domainEventPublisher.publish(new IssueEvents.Created(issue)).thenReturn(issue));
   }
 
   private Mono<Issue> update(IssueEntity issueEntity) {
@@ -130,6 +130,6 @@ public record IssueCommandService(
         .flatMap(issueQueryService::generateIssue)
         .flatMap(
             issue ->
-                eventReactivePublisher.publish(new IssueUpdatedEvent(issue)).thenReturn(issue));
+                domainEventPublisher.publish(new IssueEvents.Updated(issue)).thenReturn(issue));
   }
 }

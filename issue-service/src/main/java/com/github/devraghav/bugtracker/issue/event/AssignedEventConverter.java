@@ -1,13 +1,13 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.event.internal.AssignedEvent;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueEvents;
 import com.github.devraghav.data_model.domain.issue.Assign;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueAssigned;
 import com.github.devraghav.data_model.schema.issue.IssueAssignedSchema;
 import java.time.ZoneOffset;
 
-public class AssignedEventConverter implements EventConverter<AssignedEvent, IssueAssignedSchema> {
+class AssignedEventConverter implements EventConverter<IssueEvents.Assigned, IssueAssignedSchema> {
 
   private User getAssignee(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
@@ -21,7 +21,7 @@ public class AssignedEventConverter implements EventConverter<AssignedEvent, Iss
   }
 
   @Override
-  public IssueAssignedSchema convert(AssignedEvent event) {
+  public IssueAssignedSchema convert(IssueEvents.Assigned event) {
     return IssueAssignedSchema.newBuilder()
         .setEvent(
             IssueAssigned.newBuilder()

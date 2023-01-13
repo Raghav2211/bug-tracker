@@ -2,15 +2,19 @@ package com.github.devraghav.bugtracker.issue.repository;
 
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import java.time.LocalDateTime;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.Update;
+import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface IssueRepository extends ReactiveMongoRepository<IssueEntity, String> {
+public interface IssueRepository
+    extends ReactiveMongoRepository<IssueEntity, String>,
+        ReactiveSortingRepository<IssueEntity, String> {
 
   @Update("{ '$set' : { 'assignee' : '?1' } }")
   Mono<Long> findAndSetAssigneeById(String id, String userId);
@@ -31,4 +35,6 @@ public interface IssueRepository extends ReactiveMongoRepository<IssueEntity, St
 
   @Update("{ '$set' : { 'endedAt' : '?1' } }")
   Mono<Long> findAndSetEndedAtById(String id, LocalDateTime endedAt);
+
+  Flux<IssueEntity> findAllBy(Pageable pageable);
 }

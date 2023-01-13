@@ -21,7 +21,7 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "endedAt", ignore = true)
   })
-  IssueEntity issueRequestToIssueEntity(CreateIssueRequest createIssueRequest);
+  IssueEntity issueRequestToIssueEntity(IssueRequests.Create createIssueRequest);
 
   @Mappings({
     @Mapping(
@@ -51,7 +51,7 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true)
   })
   IssueEntity issueRequestToIssueEntity(
-      IssueEntity issueEntity, UpdateIssueRequest updateIssueRequest);
+      IssueEntity issueEntity, IssueRequests.Update updateIssueRequest);
 
   @Mappings({
     @Mapping(target = "priority", source = "priority", qualifiedByName = "valueToPriority"),

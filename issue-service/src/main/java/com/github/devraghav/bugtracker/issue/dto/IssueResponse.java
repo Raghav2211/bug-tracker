@@ -2,7 +2,7 @@ package com.github.devraghav.bugtracker.issue.dto;
 
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
 import java.net.URI;
-import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -12,10 +12,10 @@ import reactor.core.publisher.Mono;
 
 public class IssueResponse {
 
-  public static Mono<ServerResponse> retrieve(List<Issue> issues) {
+  public static <E, T extends Page<E>> Mono<ServerResponse> retrieve(T pageable) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(BodyInserters.fromValue(issues));
+        .body(BodyInserters.fromValue(pageable));
   }
 
   public static Mono<ServerResponse> create(ServerRequest request, Issue issue) {

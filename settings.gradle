@@ -7,6 +7,7 @@ pluginManagement {
 rootProject.name = 'bug-tracker'
 
 include('bug-tracker-schema')
+include('inmemory-eventbus')
 include('user-service')
 include('project-service')
 include('issue-service')
