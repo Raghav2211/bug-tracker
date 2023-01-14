@@ -1,14 +1,13 @@
 package com.github.devraghav.bugtracker.user.service;
 
-import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
+import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
-import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
-import com.github.devraghav.bugtracker.user.pubsub.ReactivePublisher;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import com.github.devraghav.bugtracker.user.validation.RequestValidator;
 import org.springframework.dao.DuplicateKeyException;
@@ -21,14 +20,17 @@ public record UserService(
     RequestValidator requestValidator,
     UserMapper userMapper,
     UserRepository userRepository,
-    ReactivePublisher<DomainEvent> domainEventReactivePublisher) {
+    EventBus.ReactivePublisher<DomainEvent> domainEventReactivePublisher) {
 
-  public Mono<User> save(CreateUserRequest createUserRequest) {
+  public Mono<User> save(UserRequest.Create createUserRequest) {
     return requestValidator
         .validate(createUserRequest)
         .map(userMapper::requestToEntity)
         .flatMap(this::save)
-        .onErrorResume(DuplicateKeyException.class, exception -> duplicateUser(createUserRequest));
+        .onErrorResume(
+            DuplicateKeyException.class,
+            exception ->
+                Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
   }
 
   public Flux<User> findAll() {
@@ -46,17 +48,6 @@ public record UserService(
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)
-        .flatMap(
-            user ->
-                domainEventReactivePublisher.publish(new UserCreatedEvent(user)).thenReturn(user));
-  }
-
-  private Mono<User> duplicateUser(CreateUserRequest createUserRequest) {
-    return domainEventReactivePublisher
-        .publish(new UserDuplicatedEvent(createUserRequest))
-        .thenReturn(createUserRequest)
-        .flatMap(
-            duplicateRequest ->
-                Mono.error(UserException.alreadyExistsWithEmail(duplicateRequest.email())));
+        .doOnSuccess(user -> domainEventReactivePublisher.publish(new UserCreatedEvent(user)));
   }
 }

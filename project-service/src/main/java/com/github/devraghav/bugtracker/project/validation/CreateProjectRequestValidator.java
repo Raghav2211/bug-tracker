@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.project.validation;
 
-import com.github.devraghav.bugtracker.project.dto.CreateProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.ProjectException;
+import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.User;
 import com.github.devraghav.bugtracker.project.dto.UserClientException;
 import com.github.devraghav.bugtracker.project.service.UserReactiveClient;
@@ -11,9 +11,9 @@ import reactor.core.publisher.Mono;
 
 @Component
 public record CreateProjectRequestValidator(UserReactiveClient userReactiveClient)
-    implements Validator<CreateProjectRequest> {
+    implements Validator<ProjectRequest.Create> {
   @Override
-  public Mono<CreateProjectRequest> validate(CreateProjectRequest createProjectRequest) {
+  public Mono<ProjectRequest.Create> validate(ProjectRequest.Create createProjectRequest) {
     return validateName(createProjectRequest.name())
         .and(validateDescription(createProjectRequest.description()))
         .and(validateAuthor(createProjectRequest.author()))

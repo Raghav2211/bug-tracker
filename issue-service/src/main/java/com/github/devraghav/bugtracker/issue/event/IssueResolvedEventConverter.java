@@ -1,16 +1,16 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.event.internal.IssueEvents;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.data_model.domain.issue.Resolve;
 import com.github.devraghav.data_model.event.issue.IssueResolved;
 import com.github.devraghav.data_model.schema.issue.IssueResolvedSchema;
 import java.time.ZoneOffset;
 
 class IssueResolvedEventConverter
-    implements EventConverter<IssueEvents.Resolved, IssueResolvedSchema> {
+    implements EventConverter<IssueEvent.Resolved, IssueResolvedSchema> {
 
   @Override
-  public IssueResolvedSchema convert(IssueEvents.Resolved event) {
+  public IssueResolvedSchema convert(IssueEvent.Resolved event) {
     return IssueResolvedSchema.newBuilder()
         .setEvent(
             IssueResolved.newBuilder()

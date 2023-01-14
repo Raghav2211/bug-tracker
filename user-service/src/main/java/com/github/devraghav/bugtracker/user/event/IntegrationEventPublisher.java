@@ -1,32 +1,33 @@
 package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.user.event.internal.*;
-import com.github.devraghav.bugtracker.user.pubsub.ReactiveMessageBroker;
-import com.github.devraghav.bugtracker.user.pubsub.ReactiveSubscriber;
+import com.github.devraghav.bugtracker.event.internal.AbstractReactiveSubscriber;
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.event.internal.EventBus;
+import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
+import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-public class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
+public class IntegrationEventPublisher extends AbstractReactiveSubscriber<DomainEvent> {
   private final String eventStoreTopic;
   private final EventConverterFactory eventConverterFactory;
   private final ReactiveKafkaProducerTemplate<String, SpecificRecordBase>
       reactiveKafkaProducerTemplate;
 
   public IntegrationEventPublisher(
-      ReactiveMessageBroker<DomainEvent> reactiveMessageBroker,
+      EventBus.ReactiveMessageBroker reactiveMessageBroker,
       @Value("${app.kafka.outbound.event_store.topic}") String eventStoreTopic,
       EventConverterFactory eventConverterFactory,
       ReactiveKafkaProducerTemplate<String, SpecificRecordBase> reactiveKafkaProducerTemplate) {
-    super(reactiveMessageBroker);
+    super(reactiveMessageBroker, DomainEvent.class);
     this.eventStoreTopic = eventStoreTopic;
     this.eventConverterFactory = eventConverterFactory;
     this.reactiveKafkaProducerTemplate = reactiveKafkaProducerTemplate;
@@ -34,8 +35,8 @@ public class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
   }
 
   @Override
-  protected void subscribe(Flux<DomainEvent> stream) {
-    stream
+  public void subscribe(EventBus.Subscription<DomainEvent> subscription) {
+    subscription.stream()
         .map(this::getKeyValue)
         .flatMap(keyValue -> send(keyValue.getKey(), keyValue.getValue()))
         .subscribe(

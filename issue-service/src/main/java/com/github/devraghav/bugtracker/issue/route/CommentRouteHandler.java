@@ -31,8 +31,7 @@ public record CommentRouteHandler(
     var issueId = request.pathVariable("issueId");
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(
-            body -> new IssueRequests.CreateComment(body.get("user"), issueId, body.get("content")))
+        .map(body -> new IssueRequest.CreateComment(body.get("user"), issueId, body.get("content")))
         .flatMap(commentCommandService::save)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(CommentResponse.noBody(request))
@@ -49,7 +48,7 @@ public record CommentRouteHandler(
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
         .map(
             body ->
-                new IssueRequests.UpdateComment(
+                new IssueRequest.UpdateComment(
                     body.get("user"), issueId, commentId, body.get("content")))
         .flatMap(commentCommandService::update)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))

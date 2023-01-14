@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.event.internal.IssueEvents;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.data_model.domain.issue.Unassign;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUnassigned;
@@ -8,7 +8,7 @@ import com.github.devraghav.data_model.schema.issue.IssueUnassignedSchema;
 import java.time.ZoneOffset;
 
 class IssueUnassignedEventConverter
-    implements EventConverter<IssueEvents.Unassigned, IssueUnassignedSchema> {
+    implements EventConverter<IssueEvent.Unassigned, IssueUnassignedSchema> {
 
   private User getAssignee(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
@@ -22,7 +22,7 @@ class IssueUnassignedEventConverter
   }
 
   @Override
-  public IssueUnassignedSchema convert(IssueEvents.Unassigned event) {
+  public IssueUnassignedSchema convert(IssueEvent.Unassigned event) {
     return IssueUnassignedSchema.newBuilder()
         .setEvent(
             IssueUnassigned.newBuilder()

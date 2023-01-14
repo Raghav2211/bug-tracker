@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 
-public interface IssueEvents {
+public interface IssueEvent {
 
   @Getter
   class Created extends DomainEvent {

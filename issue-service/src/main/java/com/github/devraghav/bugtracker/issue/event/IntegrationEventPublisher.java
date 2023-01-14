@@ -57,32 +57,32 @@ public class IntegrationEventPublisher extends AbstractReactiveSubscriber<Domain
 
   private SpecificRecordBase getAvroRecord(DomainEvent domainEvent) {
     return switch (domainEvent) {
-      case IssueEvents.Created event -> eventConverterFactory
-          .getConverter(IssueEvents.Created.class)
+      case IssueEvent.Created event -> eventConverterFactory
+          .getConverter(IssueEvent.Created.class)
           .convert(event);
-      case IssueEvents.Updated event -> eventConverterFactory
-          .getConverter(IssueEvents.Updated.class)
+      case IssueEvent.Updated event -> eventConverterFactory
+          .getConverter(IssueEvent.Updated.class)
           .convert(event);
-      case IssueEvents.Assigned event -> eventConverterFactory
-          .getConverter(IssueEvents.Assigned.class)
+      case IssueEvent.Assigned event -> eventConverterFactory
+          .getConverter(IssueEvent.Assigned.class)
           .convert(event);
-      case IssueEvents.Resolved event -> eventConverterFactory
-          .getConverter(IssueEvents.Resolved.class)
+      case IssueEvent.Resolved event -> eventConverterFactory
+          .getConverter(IssueEvent.Resolved.class)
           .convert(event);
-      case IssueEvents.Unassigned event -> eventConverterFactory
-          .getConverter(IssueEvents.Unassigned.class)
+      case IssueEvent.Unassigned event -> eventConverterFactory
+          .getConverter(IssueEvent.Unassigned.class)
           .convert(event);
-      case IssueEvents.WatchStarted event -> eventConverterFactory
-          .getConverter(IssueEvents.WatchStarted.class)
+      case IssueEvent.WatchStarted event -> eventConverterFactory
+          .getConverter(IssueEvent.WatchStarted.class)
           .convert(event);
-      case IssueEvents.WatchEnded event -> eventConverterFactory
-          .getConverter(IssueEvents.WatchEnded.class)
+      case IssueEvent.WatchEnded event -> eventConverterFactory
+          .getConverter(IssueEvent.WatchEnded.class)
           .convert(event);
-      case IssueEvents.CommentAdded event -> eventConverterFactory
-          .getConverter(IssueEvents.CommentAdded.class)
+      case IssueEvent.CommentAdded event -> eventConverterFactory
+          .getConverter(IssueEvent.CommentAdded.class)
           .convert(event);
-      case IssueEvents.CommentUpdated event -> eventConverterFactory
-          .getConverter(IssueEvents.CommentUpdated.class)
+      case IssueEvent.CommentUpdated event -> eventConverterFactory
+          .getConverter(IssueEvent.CommentUpdated.class)
           .convert(event);
       default -> throw new IllegalArgumentException(
           String.format("No handler found for %s", domainEvent.getName()));

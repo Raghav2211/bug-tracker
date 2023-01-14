@@ -1,21 +1,19 @@
 package com.github.devraghav.bugtracker.project.event.internal;
 
-import com.github.devraghav.bugtracker.project.pubsub.ReactiveMessageBroker;
-import com.github.devraghav.bugtracker.project.pubsub.ReactivePublisher;
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.event.internal.EventBus;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 @Component
-class DomainEventPublisher implements ReactivePublisher<DomainEvent> {
-  private final Sinks.Many<DomainEvent> channel;
+class DomainEventPublisher implements EventBus.ReactivePublisher<DomainEvent> {
+  private final EventBus.WriteChannel<DomainEvent> channel;
 
-  public DomainEventPublisher(ReactiveMessageBroker<DomainEvent> reactiveMessageBroker) {
-    this.channel = reactiveMessageBroker.getWriteChannel();
+  public DomainEventPublisher(EventBus.ReactiveMessageBroker reactiveMessageBroker) {
+    this.channel = reactiveMessageBroker.register(this, DomainEvent.class);
   }
 
   @Override
-  public Mono<Void> publish(DomainEvent message) {
-    return Mono.fromRunnable(() -> channel.tryEmitNext(message));
+  public void publish(DomainEvent message) {
+    channel.publish(message);
   }
 }

@@ -3,9 +3,9 @@ package com.github.devraghav.bugtracker.issue.dto;
 import java.util.Map;
 import java.util.Set;
 
-public final class IssueRequests {
+public interface IssueRequest {
 
-  public record Create(
+  record Create(
       Priority priority,
       Severity severity,
       String businessUnit,
@@ -20,7 +20,7 @@ public final class IssueRequests {
     }
   }
 
-  public record Update(
+  record Update(
       Priority priority,
       Severity severity,
       String businessUnit,
@@ -34,9 +34,9 @@ public final class IssueRequests {
     }
   }
 
-  public record Assign(String issueId, String user, MonitorType monitorType) {}
+  record Assign(String issueId, String user, MonitorType monitorType) {}
 
-  public record CreateComment(String userId, String issueId, String content) {}
+  record CreateComment(String userId, String issueId, String content) {}
 
-  public record UpdateComment(String userId, String issueId, String commentId, String content) {}
+  record UpdateComment(String userId, String issueId, String commentId, String content) {}
 }

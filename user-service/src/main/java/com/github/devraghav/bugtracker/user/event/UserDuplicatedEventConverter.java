@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
+import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.event.internal.UserDuplicatedEvent;
 import com.github.devraghav.data_model.domain.user.NewUser;
 import com.github.devraghav.data_model.event.user.UserDuplicated;
@@ -10,7 +10,7 @@ import java.time.ZoneOffset;
 public class UserDuplicatedEventConverter
     implements EventConverter<UserDuplicatedEvent, UserDuplicatedSchema> {
 
-  private NewUser getUser(CreateUserRequest createUserRequest) {
+  private NewUser getUser(UserRequest.Create createUserRequest) {
     return NewUser.newBuilder()
         .setAccessLevel(createUserRequest.access().name())
         .setEmail(createUserRequest.email())

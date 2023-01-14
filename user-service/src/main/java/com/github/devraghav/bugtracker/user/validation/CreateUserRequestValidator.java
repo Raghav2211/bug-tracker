@@ -1,19 +1,19 @@
 package com.github.devraghav.bugtracker.user.validation;
 
-import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.UserException;
+import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public class CreateUserRequestValidator implements Validator<CreateUserRequest> {
+public class CreateUserRequestValidator implements Validator<UserRequest.Create> {
 
   private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 
   @Override
-  public Mono<CreateUserRequest> validate(CreateUserRequest createUserRequest) {
+  public Mono<UserRequest.Create> validate(UserRequest.Create createUserRequest) {
     return validateFirstName(createUserRequest.firstName())
         .and(validateLastName(createUserRequest.lastName()))
         .and(validateEmail(createUserRequest.email()))

@@ -5,7 +5,7 @@ import com.github.devraghav.bugtracker.issue.dto.Comment;
 import com.github.devraghav.bugtracker.issue.dto.CommentException;
 import com.github.devraghav.bugtracker.issue.dto.UserClientException;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
-import com.github.devraghav.bugtracker.issue.event.internal.IssueEvents;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import java.util.UUID;
@@ -34,11 +34,11 @@ public record CommentQueryService(
 
   public Flux<ServerSentEvent<Comment>> subscribe(String issueId) {
     var commentAddedStream =
-        reactiveMessageBroker.tap(UUID::randomUUID, IssueEvents.CommentAdded.class).stream()
+        reactiveMessageBroker.tap(UUID::randomUUID, IssueEvent.CommentAdded.class).stream()
             .filter(commentAdded -> commentAdded.getComment().getIssueId().equals(issueId))
             .map(this::convert);
     var commentUpdatedStream =
-        reactiveMessageBroker.tap(UUID::randomUUID, IssueEvents.CommentUpdated.class).stream()
+        reactiveMessageBroker.tap(UUID::randomUUID, IssueEvent.CommentUpdated.class).stream()
             .filter(commentUpdated -> commentUpdated.getComment().getIssueId().equals(issueId))
             .map(this::convert);
     return Flux.merge(commentAddedStream, commentUpdatedStream);
@@ -54,7 +54,7 @@ public record CommentQueryService(
             commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
   }
 
-  private ServerSentEvent<Comment> convert(IssueEvents.CommentAdded commentAdded) {
+  private ServerSentEvent<Comment> convert(IssueEvent.CommentAdded commentAdded) {
     return ServerSentEvent.<Comment>builder()
         .id(commentAdded.getId().toString())
         .event(commentAdded.getName())
@@ -62,7 +62,7 @@ public record CommentQueryService(
         .build();
   }
 
-  private ServerSentEvent<Comment> convert(IssueEvents.CommentUpdated commentUpdated) {
+  private ServerSentEvent<Comment> convert(IssueEvent.CommentUpdated commentUpdated) {
     return ServerSentEvent.<Comment>builder()
         .id(commentUpdated.getId().toString())
         .event(commentUpdated.getName())

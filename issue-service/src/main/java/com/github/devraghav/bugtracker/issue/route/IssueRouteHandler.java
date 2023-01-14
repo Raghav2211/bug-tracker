@@ -44,7 +44,7 @@ public record IssueRouteHandler(
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
-        .bodyToMono(IssueRequests.Create.class)
+        .bodyToMono(IssueRequest.Create.class)
         .flatMap(issueCommandService::create)
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
@@ -55,7 +55,7 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> update(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return request
-        .bodyToMono(IssueRequests.Update.class)
+        .bodyToMono(IssueRequest.Update.class)
         .flatMap(updateRequest -> issueCommandService.update(issueId, updateRequest))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
@@ -79,8 +79,8 @@ public record IssueRouteHandler(
     return serverRequest
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
         .mapNotNull(body -> body.get("user"))
-        .map(user -> new IssueRequests.Assign(issueId, user, MonitorType.ASSIGN))
-        .switchIfEmpty(Mono.just(new IssueRequests.Assign(issueId, null, MonitorType.UNASSIGN)))
+        .map(user -> new IssueRequest.Assign(issueId, user, MonitorType.ASSIGN))
+        .switchIfEmpty(Mono.just(new IssueRequest.Assign(issueId, null, MonitorType.UNASSIGN)))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(
@@ -92,7 +92,7 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new IssueRequests.Assign(issueId, body.get("user"), MonitorType.WATCH))
+        .map(body -> new IssueRequest.Assign(issueId, body.get("user"), MonitorType.WATCH))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
@@ -104,7 +104,7 @@ public record IssueRouteHandler(
 
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new IssueRequests.Assign(issueId, body.get("user"), MonitorType.UNWATCH))
+        .map(body -> new IssueRequest.Assign(issueId, body.get("user"), MonitorType.UNWATCH))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))

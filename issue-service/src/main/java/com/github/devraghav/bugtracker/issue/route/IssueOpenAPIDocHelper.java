@@ -28,7 +28,7 @@ class IssueOpenAPIDocHelper {
   void saveIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("create")
         .summary("Create issue")
-        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequests.Create.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequest.Create.class))))
         .response(saveIssue201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -37,7 +37,7 @@ class IssueOpenAPIDocHelper {
   void updateIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("update")
         .summary("Update issue")
-        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequests.Update.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequest.Update.class))))
         .response(updateIssue200ResponseDoc())
         .response(badResponseDoc())
         .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")))

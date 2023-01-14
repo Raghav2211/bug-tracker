@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.event.internal.IssueEvents;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.data_model.domain.issue.Unwatch;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUnwatched;
@@ -8,7 +8,7 @@ import com.github.devraghav.data_model.schema.issue.IssueUnwatchedSchema;
 import java.time.ZoneOffset;
 
 class IssueWatchEndedEventConverter
-    implements EventConverter<IssueEvents.WatchEnded, IssueUnwatchedSchema> {
+    implements EventConverter<IssueEvent.WatchEnded, IssueUnwatchedSchema> {
   private User getUnWatcher(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
         .setId(author.id())
@@ -21,7 +21,7 @@ class IssueWatchEndedEventConverter
   }
 
   @Override
-  public IssueUnwatchedSchema convert(IssueEvents.WatchEnded event) {
+  public IssueUnwatchedSchema convert(IssueEvent.WatchEnded event) {
     return IssueUnwatchedSchema.newBuilder()
         .setEvent(
             IssueUnwatched.newBuilder()

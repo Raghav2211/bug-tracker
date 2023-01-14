@@ -33,7 +33,7 @@ public class CommentCommandService {
     this.eventReactivePublisher = eventReactivePublisher;
   }
 
-  public Mono<Comment> save(IssueRequests.CreateComment createCommentRequest) {
+  public Mono<Comment> save(IssueRequest.CreateComment createCommentRequest) {
     return requestValidator
         .validate(createCommentRequest)
         .thenReturn(createCommentRequest)
@@ -43,10 +43,10 @@ public class CommentCommandService {
         .doOnSuccess(
             comment ->
                 eventReactivePublisher.publish(
-                    new IssueEvents.CommentAdded(comment.getIssueId(), comment)));
+                    new IssueEvent.CommentAdded(comment.getIssueId(), comment)));
   }
 
-  public Mono<Comment> update(IssueRequests.UpdateComment updateCommentRequest) {
+  public Mono<Comment> update(IssueRequest.UpdateComment updateCommentRequest) {
     return requestValidator
         .validate(updateCommentRequest)
         .flatMap(
@@ -57,7 +57,7 @@ public class CommentCommandService {
         .doOnSuccess(
             comment ->
                 eventReactivePublisher.publish(
-                    new IssueEvents.CommentUpdated(comment.getIssueId(), comment)));
+                    new IssueEvent.CommentUpdated(comment.getIssueId(), comment)));
   }
 
   private Mono<CommentEntity> findCommentById(String commentId) {

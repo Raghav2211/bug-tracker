@@ -32,15 +32,15 @@ final class EventConverterFactory {
   private static final Map<Class<?>, EventConverter<?, ?>> EVENT_SOURCE_MAP = new HashMap<>();
 
   static {
-    EVENT_SOURCE_MAP.put(IssueEvents.Created.class, ISSUE_CREATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.Updated.class, ISSUE_UPDATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.Assigned.class, ISSUE_ASSIGNED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.Unassigned.class, ISSUE_UNASSIGNED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.WatchStarted.class, ISSUE_WATCH_STARTED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.WatchEnded.class, ISSUE_WATCH_ENDED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.CommentAdded.class, ISSUE_COMMENT_ADDED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.CommentUpdated.class, ISSUE_COMMENT_UPDATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(IssueEvents.Resolved.class, ISSUE_RESOLVED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.Created.class, ISSUE_CREATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.Updated.class, ISSUE_UPDATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.Assigned.class, ISSUE_ASSIGNED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.Unassigned.class, ISSUE_UNASSIGNED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.WatchStarted.class, ISSUE_WATCH_STARTED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.WatchEnded.class, ISSUE_WATCH_ENDED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.CommentAdded.class, ISSUE_COMMENT_ADDED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.CommentUpdated.class, ISSUE_COMMENT_UPDATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(IssueEvent.Resolved.class, ISSUE_RESOLVED_EVENT_CONVERTER);
   }
 
   @SuppressWarnings("unchecked")

@@ -1,8 +1,8 @@
 package com.github.devraghav.bugtracker.user.route;
 
-import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
+import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.dto.UserResponse;
 import com.github.devraghav.bugtracker.user.service.UserService;
 import org.springframework.http.MediaType;
@@ -21,7 +21,7 @@ public record UserRouteHandler(UserService userService) {
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
-        .bodyToMono(CreateUserRequest.class)
+        .bodyToMono(UserRequest.Create.class)
         .flatMap(userService::save)
         .flatMap(user -> UserResponse.create(request, user))
         .switchIfEmpty(UserResponse.noBody(request))

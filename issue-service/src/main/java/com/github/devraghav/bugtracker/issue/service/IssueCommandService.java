@@ -27,14 +27,14 @@ public record IssueCommandService(
     IssueAttachmentRepository issueAttachmentRepository,
     EventBus.ReactivePublisher<DomainEvent> domainEventPublisher) {
 
-  public Mono<Issue> create(IssueRequests.Create createIssueRequest) {
+  public Mono<Issue> create(IssueRequest.Create createIssueRequest) {
     return requestValidator
         .validate(createIssueRequest)
         .map(issueMapper::issueRequestToIssueEntity)
         .flatMap(this::save);
   }
 
-  public Mono<Issue> update(String issueId, IssueRequests.Update request) {
+  public Mono<Issue> update(String issueId, IssueRequest.Update request) {
     return issueQueryService
         .findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
@@ -43,7 +43,7 @@ public record IssueCommandService(
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  public Mono<Void> monitor(String issueId, IssueRequests.Assign assignRequest) {
+  public Mono<Void> monitor(String issueId, IssueRequest.Assign assignRequest) {
     log.info("monitor {} with assignRequest {}", assignRequest.monitorType(), assignRequest);
     var issueMono = issueQueryService.exists(issueId).map(unused -> issueId);
     if (MonitorType.UNASSIGN == assignRequest.monitorType()) {
@@ -68,8 +68,7 @@ public record IssueCommandService(
   private Mono<Void> assignee(String issueId, User user) {
     return issueRepository
         .findAndSetAssigneeById(issueId, user.id())
-        .doOnSuccess(
-            unused -> domainEventPublisher.publish(new IssueEvents.Assigned(issueId, user)))
+        .doOnSuccess(unused -> domainEventPublisher.publish(new IssueEvent.Assigned(issueId, user)))
         .then();
   }
 
@@ -80,7 +79,7 @@ public record IssueCommandService(
   private Mono<Void> unassigned(String issueId) {
     return issueRepository
         .findAndUnSetAssigneeById(issueId)
-        .doOnSuccess(unused -> domainEventPublisher.publish(new IssueEvents.Unassigned(issueId)))
+        .doOnSuccess(unused -> domainEventPublisher.publish(new IssueEvent.Unassigned(issueId)))
         .then();
   }
 
@@ -93,7 +92,7 @@ public record IssueCommandService(
     return issueRepository
         .findAndAddWatcherById(issueId, user.id())
         .doOnSuccess(
-            unused -> domainEventPublisher.publish(new IssueEvents.WatchStarted(issueId, user)))
+            unused -> domainEventPublisher.publish(new IssueEvent.WatchStarted(issueId, user)))
         .then();
   }
 
@@ -105,7 +104,7 @@ public record IssueCommandService(
     return issueRepository
         .findAndPullWatcherById(issueId, user.id())
         .doOnSuccess(
-            unused -> domainEventPublisher.publish(new IssueEvents.WatchEnded(issueId, user)))
+            unused -> domainEventPublisher.publish(new IssueEvent.WatchEnded(issueId, user)))
         .then();
   }
 
@@ -114,7 +113,7 @@ public record IssueCommandService(
     return issueRepository
         .findAndSetEndedAtById(issueId, resolveTime)
         .doOnSuccess(
-            unused -> domainEventPublisher.publish(new IssueEvents.Resolved(issueId, resolveTime)))
+            unused -> domainEventPublisher.publish(new IssueEvent.Resolved(issueId, resolveTime)))
         .then();
   }
 
@@ -126,13 +125,13 @@ public record IssueCommandService(
     return issueRepository
         .save(issueEntity)
         .flatMap(issueQueryService::generateIssue)
-        .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvents.Created(issue)));
+        .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Created(issue)));
   }
 
   private Mono<Issue> update(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .flatMap(issueQueryService::generateIssue)
-        .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvents.Updated(issue)));
+        .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Updated(issue)));
   }
 }
