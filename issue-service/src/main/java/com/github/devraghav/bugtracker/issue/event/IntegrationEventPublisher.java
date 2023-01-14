@@ -34,7 +34,7 @@ public class IntegrationEventPublisher extends AbstractReactiveSubscriber<Domain
   }
 
   @Override
-  public void subscribe(EventBus.Subscription<DomainEvent> subscription) {
+  public void subscribe(EventBus.OutputChannel<DomainEvent> subscription) {
     subscription.stream()
         .map(this::getKeyValue)
         .flatMap(keyValue -> send(keyValue.getKey(), keyValue.getValue()))

@@ -11,10 +11,10 @@ public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBro
       new ConcurrentHashMap<>();
 
   @Override
-  public <T extends DomainEvent> EventBus.WriteChannel<T> register(
+  public <T extends DomainEvent> EventBus.InputChannel<T> register(
       EventBus.ReactivePublisher<T> publisher, Class<T> registerOnEvent) {
     var channel = register(registerOnEvent);
-    return new EventBus.WriteChannel<T>(publisher.getClass().getName(), registerOnEvent, channel);
+    return new EventBus.InputChannel<T>(publisher.getClass().getName(), registerOnEvent, channel);
   }
 
   @Override
@@ -22,13 +22,13 @@ public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBro
       EventBus.ReactiveSubscriber<T> subscriber, Class<T> subscribeOnEvent) {
     var reactiveChannel = register(subscribeOnEvent);
     var subscription =
-        new EventBus.Subscription<>(
+        new EventBus.OutputChannel<>(
             subscriber.getClass().getName(), subscribeOnEvent, reactiveChannel);
     subscriber.subscribe(subscription);
   }
 
   @Override
-  public <T extends DomainEvent> EventBus.Subscription<T> tap(
+  public <T extends DomainEvent> EventBus.OutputChannel<T> tap(
       Supplier<UUID> anonymousSubscriber, Class<T> subscribeOnEvent) {
     var reactiveChannel =
         getAllRegisteredParentEvents(subscribeOnEvent).stream()
@@ -36,7 +36,7 @@ public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBro
             .filter(Objects::nonNull)
             .findFirst()
             .orElseThrow(() -> EventBusException.channelNotFound(subscribeOnEvent));
-    return new EventBus.Subscription<>(
+    return new EventBus.OutputChannel<>(
         anonymousSubscriber.get().toString(), subscribeOnEvent, reactiveChannel);
   }
 

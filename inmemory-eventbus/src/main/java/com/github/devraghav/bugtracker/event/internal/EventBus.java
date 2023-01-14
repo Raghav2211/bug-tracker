@@ -16,27 +16,27 @@ public interface EventBus {
   }
 
   interface ReactiveSubscriber<T extends DomainEvent> {
-    void subscribe(EventBus.Subscription<T> subscription);
+    void subscribe(OutputChannel<T> outputChannel);
   }
 
   interface ReactiveMessageBroker {
 
-    <T extends DomainEvent> WriteChannel<T> register(
+    <T extends DomainEvent> InputChannel<T> register(
         ReactivePublisher<T> publisher, Class<T> domainEventsClass);
 
     <T extends DomainEvent> void subscribe(
         ReactiveSubscriber<T> subscriber, Class<T> domainEventClass);
 
-    <T extends DomainEvent> EventBus.Subscription<T> tap(
+    <T extends DomainEvent> OutputChannel<T> tap(
         Supplier<UUID> anonymousSubscriber, Class<T> event);
   }
 
   @Slf4j
-  class WriteChannel<T extends DomainEvent> {
+  class InputChannel<T extends DomainEvent> {
 
     private final Sinks.Many<DomainEvent> reactiveChannel;
 
-    public WriteChannel(
+    public InputChannel(
         String publisher, Class<T> registerOnEvent, Sinks.Many<DomainEvent> reactiveChannel) {
       this.reactiveChannel = reactiveChannel;
       log.atInfo().log(
@@ -49,12 +49,12 @@ public interface EventBus {
   }
 
   @Slf4j
-  class Subscription<T extends DomainEvent> {
+  class OutputChannel<T extends DomainEvent> {
     private final Sinks.Many<DomainEvent> reactiveChannel;
     private final Class<T> subscribeOnEvent;
     private final String subscriber;
 
-    public <S extends ReactiveSubscriber<T>> Subscription(
+    public <S extends ReactiveSubscriber<T>> OutputChannel(
         @NonNull String subscriber,
         @NonNull Class<T> subscribeOnEvent,
         @NonNull Sinks.Many<DomainEvent> reactiveChannel) {

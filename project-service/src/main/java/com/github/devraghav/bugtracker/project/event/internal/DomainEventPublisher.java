@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 class DomainEventPublisher implements EventBus.ReactivePublisher<DomainEvent> {
-  private final EventBus.WriteChannel<DomainEvent> channel;
+  private final EventBus.InputChannel<DomainEvent> channel;
 
   public DomainEventPublisher(EventBus.ReactiveMessageBroker reactiveMessageBroker) {
     this.channel = reactiveMessageBroker.register(this, DomainEvent.class);
