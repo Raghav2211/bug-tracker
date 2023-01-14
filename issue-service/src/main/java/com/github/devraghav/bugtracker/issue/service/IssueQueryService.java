@@ -23,6 +23,10 @@ public record IssueQueryService(
     IssueRepository issueRepository,
     IssueAttachmentRepository issueAttachmentRepository) {
 
+  public Mono<Long> count() {
+    return issueRepository.count();
+  }
+
   public Flux<Issue> findAllByFilter(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
       return Mono.just(issueFilter.getProjectId())
@@ -34,7 +38,7 @@ public record IssueQueryService(
           .map(Optional::get)
           .flatMapMany(this::getAllByReporter);
     }
-    return issueRepository.findAll().flatMap(this::generateIssue);
+    return issueRepository.findAllBy(issueFilter.getPageRequest()).flatMap(this::generateIssue);
   }
 
   public Mono<Issue> get(String issueId) {

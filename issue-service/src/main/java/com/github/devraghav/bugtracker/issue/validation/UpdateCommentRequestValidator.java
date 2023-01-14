@@ -10,10 +10,11 @@ import reactor.core.publisher.Mono;
 @Component
 public record UpdateCommentRequestValidator(
     IssueRepository issueRepository, UserReactiveClient userReactiveClient)
-    implements Validator<UpdateCommentRequest, UpdateCommentRequest> {
+    implements Validator<IssueRequest.UpdateComment, IssueRequest.UpdateComment> {
 
   @Override
-  public Mono<UpdateCommentRequest> validate(UpdateCommentRequest updateCommentRequest) {
+  public Mono<IssueRequest.UpdateComment> validate(
+      IssueRequest.UpdateComment updateCommentRequest) {
     return validateCommentContent(updateCommentRequest.content())
         .and(
             Mono.zip(

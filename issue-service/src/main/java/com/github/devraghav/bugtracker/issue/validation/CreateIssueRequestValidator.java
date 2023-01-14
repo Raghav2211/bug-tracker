@@ -14,10 +14,10 @@ import reactor.core.publisher.Mono;
 @Component
 public record CreateIssueRequestValidator(
     ProjectReactiveClient projectReactiveClient, UserReactiveClient userReactiveClient)
-    implements Validator<CreateIssueRequest, CreateIssueRequest> {
+    implements Validator<IssueRequest.Create, IssueRequest.Create> {
 
   @Override
-  public Mono<CreateIssueRequest> validate(CreateIssueRequest createIssueRequest) {
+  public Mono<IssueRequest.Create> validate(IssueRequest.Create createIssueRequest) {
     return validateHeader(createIssueRequest.header())
         .and(validateDescription(createIssueRequest.description()))
         .and(validatePriority(createIssueRequest.priority()))

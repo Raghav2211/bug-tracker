@@ -1,14 +1,13 @@
 package com.github.devraghav.bugtracker.project.service;
 
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
-import com.github.devraghav.bugtracker.project.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.project.event.internal.ProjectCreatedEvent;
-import com.github.devraghav.bugtracker.project.event.internal.VersionCreatedEvent;
+import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
-import com.github.devraghav.bugtracker.project.pubsub.ReactivePublisher;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
 import com.github.devraghav.bugtracker.project.validation.RequestValidator;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,9 +22,9 @@ public record ProjectService(
     RequestValidator requestValidator,
     UserReactiveClient userReactiveClient,
     ProjectRepository projectRepository,
-    ReactivePublisher<DomainEvent> eventReactivePublisher) {
+    EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<Project> save(CreateProjectRequest createProjectRequest) {
+  public Mono<Project> save(ProjectRequest.Create createProjectRequest) {
     return Mono.just(createProjectRequest)
         .flatMap(requestValidator::validate)
         .map(projectMapper::requestToEntity)
@@ -55,7 +54,7 @@ public record ProjectService(
   }
 
   public Mono<Version> addVersionToProjectId(
-      String projectId, CreateVersionRequest createVersionRequest) {
+      String projectId, ProjectRequest.CreateVersion createVersionRequest) {
     return exists(projectId)
         .thenReturn(createVersionRequest)
         .map(projectVersionMapper::requestToEntity)
@@ -83,24 +82,17 @@ public record ProjectService(
     return projectRepository
         .save(projectEntity)
         .flatMap(this::getProject)
-        .flatMap(this::publishProjectCreatedEvent);
+        .doOnSuccess(project -> eventReactivePublisher.publish(new ProjectEvent.Created(project)));
   }
 
   private Mono<Version> save(String projectId, ProjectVersionEntity projectVersionEntity) {
     return projectRepository
         .saveVersion(projectId, projectVersionEntity)
         .map(projectVersionMapper::entityToResponse)
-        .flatMap(version -> publishVersionCreatedEvent(projectId, version));
-  }
-
-  private Mono<Project> publishProjectCreatedEvent(Project project) {
-    return eventReactivePublisher.publish(new ProjectCreatedEvent(project)).thenReturn(project);
-  }
-
-  private Mono<Version> publishVersionCreatedEvent(String projectId, Version version) {
-    return eventReactivePublisher
-        .publish(new VersionCreatedEvent(projectId, version))
-        .thenReturn(version);
+        .doOnSuccess(
+            version ->
+                eventReactivePublisher.publish(
+                    new ProjectEvent.VersionCreated(projectId, version)));
   }
 
   private Mono<User> fetchAuthor(String authorId) {

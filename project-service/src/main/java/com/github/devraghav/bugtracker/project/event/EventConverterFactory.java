@@ -1,8 +1,7 @@
 package com.github.devraghav.bugtracker.project.event;
 
-import com.github.devraghav.bugtracker.project.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.project.event.internal.ProjectCreatedEvent;
-import com.github.devraghav.bugtracker.project.event.internal.VersionCreatedEvent;
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -19,8 +18,8 @@ public final class EventConverterFactory {
   private static final Map<Class<?>, EventConverter<?, ?>> EVENT_SOURCE_MAP = new HashMap<>();
 
   static {
-    EVENT_SOURCE_MAP.put(ProjectCreatedEvent.class, PROJECT_CREATED_EVENT_CONVERTER);
-    EVENT_SOURCE_MAP.put(VersionCreatedEvent.class, VERSION_CREATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(ProjectEvent.Created.class, PROJECT_CREATED_EVENT_CONVERTER);
+    EVENT_SOURCE_MAP.put(ProjectEvent.VersionCreated.class, VERSION_CREATED_EVENT_CONVERTER);
   }
 
   @SuppressWarnings("unchecked")

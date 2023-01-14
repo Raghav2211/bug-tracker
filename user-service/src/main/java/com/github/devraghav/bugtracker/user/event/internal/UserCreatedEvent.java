@@ -1,5 +1,6 @@
 package com.github.devraghav.bugtracker.user.event.internal;
 
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.user.dto.User;
 import lombok.AccessLevel;
 import lombok.Getter;

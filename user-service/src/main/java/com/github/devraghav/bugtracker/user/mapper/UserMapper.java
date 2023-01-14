@@ -1,9 +1,9 @@
 package com.github.devraghav.bugtracker.user.mapper;
 
 import com.github.devraghav.bugtracker.user.dto.AccessLevel;
-import com.github.devraghav.bugtracker.user.dto.CreateUserRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
+import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
 import java.util.UUID;
 import org.mapstruct.Mapper;
@@ -21,7 +21,7 @@ public interface UserMapper {
     @Mapping(target = "enabled", constant = "true"),
     @Mapping(target = "access", source = "access", qualifiedByName = "accessLevelToValue")
   })
-  UserEntity requestToEntity(CreateUserRequest createUserRequest);
+  UserEntity requestToEntity(UserRequest.Create createUserRequest);
 
   @Mappings({
     @Mapping(target = "access", source = "access", qualifiedByName = "valueToAccessLevel")

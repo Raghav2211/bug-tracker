@@ -34,8 +34,7 @@ class CommentOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(CreateCommentRequest.class))))
+                    contentBuilder().schema(schemaBuilder().implementation(CreateComment.class))))
         .response(addOrUpdateComment200ResponseDoc())
         .response(badResponseDoc())
         .parameter(
@@ -52,8 +51,7 @@ class CommentOpenAPIDocHelper {
         .requestBody(
             requestBodyBuilder()
                 .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(UpdateCommentRequest.class))))
+                    contentBuilder().schema(schemaBuilder().implementation(UpdateComment.class))))
         .response(addOrUpdateComment200ResponseDoc())
         .response(badResponseDoc())
         .parameter(
@@ -131,7 +129,7 @@ class CommentOpenAPIDocHelper {
     return errorResponseDoc(HttpStatus.NOT_FOUND, "Comment not found");
   }
 
-  record CreateCommentRequest(String user, String content) {}
+  record CreateComment(String user, String content) {}
 
-  record UpdateCommentRequest(String user, String content) {}
+  record UpdateComment(String user, String content) {}
 }

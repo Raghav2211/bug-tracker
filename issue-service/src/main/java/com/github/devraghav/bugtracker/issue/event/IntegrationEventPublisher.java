@@ -1,32 +1,32 @@
 package com.github.devraghav.bugtracker.issue.event;
 
+import com.github.devraghav.bugtracker.event.internal.AbstractReactiveSubscriber;
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
+import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
-import com.github.devraghav.bugtracker.issue.pubsub.ReactiveMessageBroker;
-import com.github.devraghav.bugtracker.issue.pubsub.ReactiveSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-public class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
+public class IntegrationEventPublisher extends AbstractReactiveSubscriber<DomainEvent> {
   private final String eventStoreTopic;
   private final EventConverterFactory eventConverterFactory;
   private final ReactiveKafkaProducerTemplate<String, SpecificRecordBase>
       reactiveKafkaProducerTemplate;
 
   public IntegrationEventPublisher(
-      ReactiveMessageBroker<DomainEvent> reactiveMessageBroker,
+      EventBus.ReactiveMessageBroker reactiveMessageBroker,
       @Value("${app.kafka.outbound.event_store.topic}") String eventStoreTopic,
       EventConverterFactory eventConverterFactory,
       ReactiveKafkaProducerTemplate<String, SpecificRecordBase> reactiveKafkaProducerTemplate) {
-    super(reactiveMessageBroker);
+    super(reactiveMessageBroker, DomainEvent.class);
     this.eventStoreTopic = eventStoreTopic;
     this.eventConverterFactory = eventConverterFactory;
     this.reactiveKafkaProducerTemplate = reactiveKafkaProducerTemplate;
@@ -34,8 +34,8 @@ public class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
   }
 
   @Override
-  protected void subscribe(Flux<DomainEvent> stream) {
-    stream
+  public void subscribe(EventBus.Subscription<DomainEvent> subscription) {
+    subscription.stream()
         .map(this::getKeyValue)
         .flatMap(keyValue -> send(keyValue.getKey(), keyValue.getValue()))
         .subscribe(
@@ -57,32 +57,32 @@ public class IntegrationEventPublisher extends ReactiveSubscriber<DomainEvent> {
 
   private SpecificRecordBase getAvroRecord(DomainEvent domainEvent) {
     return switch (domainEvent) {
-      case IssueCreatedEvent event -> eventConverterFactory
-          .getConverter(IssueCreatedEvent.class)
+      case IssueEvent.Created event -> eventConverterFactory
+          .getConverter(IssueEvent.Created.class)
           .convert(event);
-      case IssueUpdatedEvent event -> eventConverterFactory
-          .getConverter(IssueUpdatedEvent.class)
+      case IssueEvent.Updated event -> eventConverterFactory
+          .getConverter(IssueEvent.Updated.class)
           .convert(event);
-      case AssignedEvent event -> eventConverterFactory
-          .getConverter(AssignedEvent.class)
+      case IssueEvent.Assigned event -> eventConverterFactory
+          .getConverter(IssueEvent.Assigned.class)
           .convert(event);
-      case IssueResolvedEvent event -> eventConverterFactory
-          .getConverter(IssueResolvedEvent.class)
+      case IssueEvent.Resolved event -> eventConverterFactory
+          .getConverter(IssueEvent.Resolved.class)
           .convert(event);
-      case IssueUnassignedEvent event -> eventConverterFactory
-          .getConverter(IssueUnassignedEvent.class)
+      case IssueEvent.Unassigned event -> eventConverterFactory
+          .getConverter(IssueEvent.Unassigned.class)
           .convert(event);
-      case IssueWatchStartedEvent event -> eventConverterFactory
-          .getConverter(IssueWatchStartedEvent.class)
+      case IssueEvent.WatchStarted event -> eventConverterFactory
+          .getConverter(IssueEvent.WatchStarted.class)
           .convert(event);
-      case IssueWatchEndedEvent event -> eventConverterFactory
-          .getConverter(IssueWatchEndedEvent.class)
+      case IssueEvent.WatchEnded event -> eventConverterFactory
+          .getConverter(IssueEvent.WatchEnded.class)
           .convert(event);
-      case CommentAddedEvent event -> eventConverterFactory
-          .getConverter(CommentAddedEvent.class)
+      case IssueEvent.CommentAdded event -> eventConverterFactory
+          .getConverter(IssueEvent.CommentAdded.class)
           .convert(event);
-      case CommentUpdatedEvent event -> eventConverterFactory
-          .getConverter(CommentUpdatedEvent.class)
+      case IssueEvent.CommentUpdated event -> eventConverterFactory
+          .getConverter(IssueEvent.CommentUpdated.class)
           .convert(event);
       default -> throw new IllegalArgumentException(
           String.format("No handler found for %s", domainEvent.getName()));

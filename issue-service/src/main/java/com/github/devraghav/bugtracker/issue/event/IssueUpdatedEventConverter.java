@@ -3,7 +3,7 @@ package com.github.devraghav.bugtracker.issue.event;
 import com.github.devraghav.bugtracker.issue.dto.Issue;
 import com.github.devraghav.bugtracker.issue.dto.Project;
 import com.github.devraghav.bugtracker.issue.dto.ProjectVersion;
-import com.github.devraghav.bugtracker.issue.event.internal.IssueUpdatedEvent;
+import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.data_model.domain.project.version.Version;
 import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueUpdated;
@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class IssueUpdatedEventConverter
-    implements EventConverter<IssueUpdatedEvent, IssueUpdatedSchema> {
+class IssueUpdatedEventConverter implements EventConverter<IssueEvent.Updated, IssueUpdatedSchema> {
 
   private User getUser(com.github.devraghav.bugtracker.issue.dto.User author) {
     return User.newBuilder()
@@ -85,7 +84,7 @@ public class IssueUpdatedEventConverter
   }
 
   @Override
-  public IssueUpdatedSchema convert(IssueUpdatedEvent event) {
+  public IssueUpdatedSchema convert(IssueEvent.Updated event) {
     return IssueUpdatedSchema.newBuilder()
         .setEvent(
             IssueUpdated.newBuilder()

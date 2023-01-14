@@ -52,8 +52,10 @@ public class OpenApi30Config {
 
   @Bean
   public GroupedOpenApi issueOpenApi() {
-    String includePaths[] = {"/api/rest/v1/issue/**"};
-    String excludePaths[] = {"/api/rest/v1/issue/{id}/comment/**"};
+    String includePaths[] = {"/api/rest/**/issue/**"};
+    String excludePaths[] = {
+      "/api/rest/**/comment**", "/api/rest/**/comment/**",
+    };
     return GroupedOpenApi.builder()
         .group("issue-service")
         .pathsToMatch(includePaths)
@@ -64,8 +66,8 @@ public class OpenApi30Config {
 
   @Bean
   public GroupedOpenApi commentOpenApi() {
-    String includePaths[] = {"/api/rest/v1/issue/{id}/comment/**", "/api/rest/v1/comment/**"};
-    String excludePaths[] = {"/api/rest/v1/issue/{id}/comment/stream**"};
+    String includePaths[] = {"/api/rest/**/issue/{id}/comment/**", "/api/rest/**/comment/**"};
+    String excludePaths[] = {"/api/rest/**/issue/{id}/comment/stream**"};
     return GroupedOpenApi.builder()
         .group("comment-service")
         .pathsToMatch(includePaths)

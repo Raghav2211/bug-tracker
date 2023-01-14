@@ -8,6 +8,7 @@ import com.github.devraghav.bugtracker.issue.service.IssueQueryService;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -24,12 +25,18 @@ public record IssueRouteHandler(
     CommentCommandService commentCommandService) {
 
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
-    IssueFilter issueFilter = new IssueFilter();
-    issueFilter.setProjectId(serverRequest.queryParam("projectId"));
-    issueFilter.setReportedBy(serverRequest.queryParam("reportedBy"));
+    IssueFilter issueFilter =
+        IssueFilter.builder()
+            .projectId(serverRequest.queryParam("projectId"))
+            .reportedBy(serverRequest.queryParam("reportedBy"))
+            .pageRequest(PageRequest.of(serverRequest))
+            .build();
     return issueQueryService
         .findAllByFilter(issueFilter)
         .collectList()
+        .log()
+        .zipWith(issueQueryService.count())
+        .map(tuple -> new PageImpl<>(tuple.getT1(), issueFilter.getPageRequest(), tuple.getT2()))
         .flatMap(IssueResponse::retrieve)
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception));
@@ -37,7 +44,7 @@ public record IssueRouteHandler(
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
-        .bodyToMono(CreateIssueRequest.class)
+        .bodyToMono(IssueRequest.Create.class)
         .flatMap(issueCommandService::create)
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
@@ -48,7 +55,7 @@ public record IssueRouteHandler(
   public Mono<ServerResponse> update(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return request
-        .bodyToMono(UpdateIssueRequest.class)
+        .bodyToMono(IssueRequest.Update.class)
         .flatMap(updateRequest -> issueCommandService.update(issueId, updateRequest))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
@@ -72,8 +79,8 @@ public record IssueRouteHandler(
     return serverRequest
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
         .mapNotNull(body -> body.get("user"))
-        .map(user -> new AssignRequest(issueId, user, MonitorType.ASSIGN))
-        .switchIfEmpty(Mono.just(new AssignRequest(issueId, null, MonitorType.UNASSIGN)))
+        .map(user -> new IssueRequest.Assign(issueId, user, MonitorType.ASSIGN))
+        .switchIfEmpty(Mono.just(new IssueRequest.Assign(issueId, null, MonitorType.UNASSIGN)))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(
@@ -85,7 +92,7 @@ public record IssueRouteHandler(
     var issueId = request.pathVariable("id");
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new AssignRequest(issueId, body.get("user"), MonitorType.WATCH))
+        .map(body -> new IssueRequest.Assign(issueId, body.get("user"), MonitorType.WATCH))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
@@ -97,7 +104,7 @@ public record IssueRouteHandler(
 
     return request
         .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new AssignRequest(issueId, body.get("user"), MonitorType.UNWATCH))
+        .map(body -> new IssueRequest.Assign(issueId, body.get("user"), MonitorType.UNWATCH))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))

@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.event.internal;
+package com.github.devraghav.bugtracker.event.internal;
 
 import java.time.LocalDateTime;
 import java.util.StringJoiner;
@@ -11,8 +11,10 @@ public abstract class DomainEvent {
   private final LocalDateTime logTime = LocalDateTime.now();
   private final String name;
   private final String publisher;
+  // TODO : add gateway and pass requestedBy to the event layer
+  private String requestedBy;
 
-  record PublisherInfo(String name, Class<?> domain) {}
+  public record PublisherInfo(String name, Class<?> domain) {}
 
   public DomainEvent(String action, PublisherInfo publisherInfo) {
     name =

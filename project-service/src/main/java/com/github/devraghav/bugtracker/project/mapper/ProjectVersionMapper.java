@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.project.mapper;
 
-import com.github.devraghav.bugtracker.project.dto.CreateVersionRequest;
+import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
 import com.github.devraghav.bugtracker.project.dto.Version;
 import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
 import java.util.UUID;
@@ -16,7 +16,7 @@ public interface ProjectVersionMapper {
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
   })
-  ProjectVersionEntity requestToEntity(CreateVersionRequest projectRequest);
+  ProjectVersionEntity requestToEntity(ProjectRequest.CreateVersion projectRequest);
 
   Version entityToResponse(ProjectVersionEntity projectEntity);
 }

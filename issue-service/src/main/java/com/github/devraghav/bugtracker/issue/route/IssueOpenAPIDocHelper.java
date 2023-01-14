@@ -16,18 +16,19 @@ import org.springframework.stereotype.Component;
 @Component
 class IssueOpenAPIDocHelper {
 
+  // spotless:off
   void getAllIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
-    ops.operationId("getAll").summary("Get all issues").response(getAll200ResponseDoc()).build();
+    ops.operationId("getAll")
+       .summary("Get all issues")
+       .parameter(parameterBuilder().in(ParameterIn.QUERY).name("page").schema(schemaBuilder().type("number")))
+       .parameter(parameterBuilder().in(ParameterIn.QUERY).name("size").schema(schemaBuilder().type("number")))
+       .response(getAll200ResponseDoc()).build();
   }
 
   void saveIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("create")
         .summary("Create issue")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(CreateIssueRequest.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequest.Create.class))))
         .response(saveIssue201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -36,18 +37,10 @@ class IssueOpenAPIDocHelper {
   void updateIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("update")
         .summary("Update issue")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(UpdateIssueRequest.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequest.Update.class))))
         .response(updateIssue200ResponseDoc())
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")))
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")))
         .build();
   }
 
@@ -56,11 +49,7 @@ class IssueOpenAPIDocHelper {
         .summary("Get a issue by its id")
         .response(getIssueById200ResponseDoc())
         .response(issue404ResponseDoc())
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")))
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")))
         .build();
   }
 
@@ -70,75 +59,42 @@ class IssueOpenAPIDocHelper {
         .requestBody(requestBodyBuilder().required(true).description("Upload issue attachments"))
         .response(responseBuilder().responseCode("200"))
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")))
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")))
         .build();
   }
 
   void assigneeOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("assign")
         .summary("Assign issue")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder().schema(schemaBuilder().implementation(AssignRequest.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(Assign.class))))
         .response(responseBuilder().description("Assigned issue successfully").responseCode("204"))
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")));
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")));
   }
 
   void watcherOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("addWatcher")
         .summary("Add watcher to issue")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder().schema(schemaBuilder().implementation(AssignRequest.class))))
-        .response(
-            responseBuilder().description("Add watcher to issue successfully").responseCode("204"))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(Assign.class))))
+        .response(responseBuilder().description("Add watcher to issue successfully").responseCode("204"))
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")));
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")));
   }
 
   void removeWatcherOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("removeWatcher")
         .summary("Remove watcher to issue")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder().schema(schemaBuilder().implementation(AssignRequest.class))))
-        .response(
-            responseBuilder()
-                .description("Remove watcher from issue successfully")
-                .responseCode("204"))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(Assign.class))))
+        .response(responseBuilder().description("Remove watcher from issue successfully").responseCode("204"))
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")));
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")));
   }
 
   void resolveIssueOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("resolveIssue")
         .summary("Resolve issue")
         .response(responseBuilder().description("Resolve issue successfully").responseCode("204"))
-        .parameter(
-            parameterBuilder()
-                .in(ParameterIn.PATH)
-                .name("id")
-                .schema(schemaBuilder().type("string")));
+        .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder issue404ResponseDoc() {
@@ -149,30 +105,21 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve issue successfully")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Issue.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder saveIssue201ResponseDoc() {
     return responseBuilder()
         .responseCode("201")
         .description("Issue successfully created")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Issue.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder updateIssue200ResponseDoc() {
     return responseBuilder()
         .responseCode("200")
         .description("Issue successfully updated")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Issue.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder badResponseDoc() {
@@ -183,9 +130,7 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve all issues")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .array(arraySchemaBuilder().schema(schemaBuilder().implementation(Issue.class))));
   }
 
@@ -194,11 +139,8 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(IssueErrorResponse.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueErrorResponse.class)));
   }
-
-  record AssignRequest(String user) {}
+  // spotless:on
+  record Assign(String user) {}
 }

@@ -3,7 +3,7 @@ package com.github.devraghav.bugtracker.project.event;
 import com.github.devraghav.bugtracker.project.dto.Project;
 import com.github.devraghav.bugtracker.project.dto.User;
 import com.github.devraghav.bugtracker.project.dto.Version;
-import com.github.devraghav.bugtracker.project.event.internal.ProjectCreatedEvent;
+import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
 import com.github.devraghav.data_model.event.project.ProjectCreated;
 import com.github.devraghav.data_model.schema.project.ProjectCreatedSchema;
 import java.time.ZoneOffset;
@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ProjectCreatedEventConverter
-    implements EventConverter<ProjectCreatedEvent, ProjectCreatedSchema> {
+    implements EventConverter<ProjectEvent.Created, ProjectCreatedSchema> {
 
   private com.github.devraghav.data_model.domain.user.User getUser(User user) {
     return com.github.devraghav.data_model.domain.user.User.newBuilder()
@@ -57,7 +57,7 @@ public class ProjectCreatedEventConverter
   }
 
   @Override
-  public ProjectCreatedSchema convert(ProjectCreatedEvent event) {
+  public ProjectCreatedSchema convert(ProjectEvent.Created event) {
     return ProjectCreatedSchema.newBuilder()
         .setEvent(
             ProjectCreated.newBuilder()

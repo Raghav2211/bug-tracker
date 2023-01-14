@@ -23,7 +23,7 @@ public record ProjectRouteHandler(ProjectService projectService) {
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return request
-        .bodyToMono(CreateProjectRequest.class)
+        .bodyToMono(ProjectRequest.Create.class)
         .flatMap(projectService::save)
         .flatMap(project -> ProjectResponse.create(request, project))
         .switchIfEmpty(ProjectResponse.noBody(request))
@@ -43,7 +43,7 @@ public record ProjectRouteHandler(ProjectService projectService) {
   public Mono<ServerResponse> addVersion(ServerRequest request) {
     var projectId = request.pathVariable("id");
     return request
-        .bodyToMono(CreateVersionRequest.class)
+        .bodyToMono(ProjectRequest.CreateVersion.class)
         .flatMap(
             projectVersionRequest ->
                 projectService.addVersionToProjectId(projectId, projectVersionRequest))
