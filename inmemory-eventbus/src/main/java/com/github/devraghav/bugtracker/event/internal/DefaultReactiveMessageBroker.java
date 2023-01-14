@@ -2,73 +2,52 @@ package com.github.devraghav.bugtracker.event.internal;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-import lombok.extern.slf4j.Slf4j;
-import org.reactivestreams.Subscription;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.util.concurrent.Queues;
 
-@Slf4j
 public class DefaultReactiveMessageBroker implements EventBus.ReactiveMessageBroker {
   private final Map<Class<? extends DomainEvent>, Sinks.Many<DomainEvent>> streamChannelMap =
       new ConcurrentHashMap<>();
 
   @Override
   public <T extends DomainEvent> EventBus.WriteChannel<T> register(
-      EventBus.ReactivePublisher<T> publisher, Class<T> domainEventsClass) {
-    var channel = register(domainEventsClass);
-    log.atInfo().log(
-        "reactive publisher {} has been registered for {}",
-        publisher.getClass().getName(),
-        domainEventsClass.getName());
-    return new EventBus.WriteChannel<T>(channel);
+      EventBus.ReactivePublisher<T> publisher, Class<T> registerOnEvent) {
+    var channel = register(registerOnEvent);
+    return new EventBus.WriteChannel<T>(publisher.getClass().getName(), registerOnEvent, channel);
   }
 
   @Override
   public <T extends DomainEvent> void subscribe(
-      EventBus.ReactiveSubscriber<T> subscriber, Class<T> domainEventClass) {
-    var stream =
-        getStream(subscriber.getClass().getName(), domainEventClass, register(domainEventClass));
-    subscriber.subscribe(stream);
+      EventBus.ReactiveSubscriber<T> subscriber, Class<T> subscribeOnEvent) {
+    var reactiveChannel = register(subscribeOnEvent);
+    var subscription =
+        new EventBus.Subscription<>(
+            subscriber.getClass().getName(), subscribeOnEvent, reactiveChannel);
+    subscriber.subscribe(subscription);
   }
 
   @Override
-  public <T extends DomainEvent> Flux<T> tap(
-      Supplier<UUID> anonymousSubscriber, Class<T> domainEventClass) {
+  public <T extends DomainEvent> EventBus.Subscription<T> tap(
+      Supplier<UUID> anonymousSubscriber, Class<T> subscribeOnEvent) {
     var reactiveChannel =
-        getAllRegisteredParentEvents(domainEventClass).stream()
+        getAllRegisteredParentEvents(subscribeOnEvent).stream()
             .map(streamChannelMap::get)
             .filter(Objects::nonNull)
             .findFirst()
-            .orElseThrow(() -> EventBusException.channelNotFound(domainEventClass));
-    return getStream(anonymousSubscriber.get().toString(), domainEventClass, reactiveChannel);
+            .orElseThrow(() -> EventBusException.channelNotFound(subscribeOnEvent));
+    return new EventBus.Subscription<>(
+        anonymousSubscriber.get().toString(), subscribeOnEvent, reactiveChannel);
   }
 
-  private <T extends DomainEvent> Flux<T> getStream(
-      String subscriber, Class<T> domainEventClass, Sinks.Many<DomainEvent> channel) {
-    Consumer<Subscription> onSubscription =
-        subscription -> {
-          log.atInfo().log(
-              "subscriber {} subscribe for {}", subscriber, domainEventClass.getName());
-        };
-    Runnable onComplete = () -> log.atInfo().log("subscriber {} cancel subscription", subscriber);
-    return channel
-        .asFlux()
-        .doOnSubscribe(onSubscription)
-        .doOnComplete(onComplete)
-        .cast(domainEventClass);
-  }
-
-  private <T extends DomainEvent> Sinks.Many<DomainEvent> register(Class<T> domainEventClass) {
+  private <T extends DomainEvent> Sinks.Many<DomainEvent> register(Class<T> registerOnEvent) {
     Supplier<Sinks.Many<DomainEvent>> registerNewEventSupplier =
         () ->
             streamChannelMap.compute(
-                domainEventClass,
+                registerOnEvent,
                 (clazz, reactiveChannel) ->
                     Sinks.many().multicast().onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, false));
-    var parentEvents = getAllRegisteredParentEvents(domainEventClass);
+    var parentEvents = getAllRegisteredParentEvents(registerOnEvent);
     return parentEvents.stream()
         .map(streamChannelMap::get)
         .filter(Objects::nonNull)

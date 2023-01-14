@@ -1,5 +1,6 @@
 package com.github.devraghav.bugtracker.issue.service;
 
+import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
@@ -17,7 +18,7 @@ public class CommentCommandService {
   private final CommentMapper commentMapper;
   private final CommentRepository commentRepository;
   private final UserReactiveClient userReactiveClient;
-  private final EventBus.ReactivePublisher eventReactivePublisher;
+  private final EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher;
 
   public CommentCommandService(
       RequestValidator requestValidator,
@@ -39,7 +40,10 @@ public class CommentCommandService {
         .map(commentMapper::requestToEntity)
         .flatMap(commentRepository::save)
         .flatMap(this::getComment)
-        .flatMap(this::processSaveComment);
+        .doOnSuccess(
+            comment ->
+                eventReactivePublisher.publish(
+                    new IssueEvents.CommentAdded(comment.getIssueId(), comment)));
   }
 
   public Mono<Comment> update(IssueRequests.UpdateComment updateCommentRequest) {
@@ -50,7 +54,10 @@ public class CommentCommandService {
                 findAndUpdateCommentContentById(validRequest.commentId(), validRequest.content()))
         .flatMap(commentRepository::save)
         .flatMap(this::getComment)
-        .flatMap(this::processUpdateComment);
+        .doOnSuccess(
+            comment ->
+                eventReactivePublisher.publish(
+                    new IssueEvents.CommentUpdated(comment.getIssueId(), comment)));
   }
 
   private Mono<CommentEntity> findCommentById(String commentId) {
@@ -77,17 +84,5 @@ public class CommentCommandService {
             exception -> Mono.error(CommentException.userServiceException(exception)))
         .map(
             commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
-  }
-
-  private Mono<Comment> processSaveComment(Comment comment) {
-    return eventReactivePublisher
-        .publish(new IssueEvents.CommentAdded(comment.getIssueId(), comment))
-        .thenReturn(comment);
-  }
-
-  private Mono<Comment> processUpdateComment(Comment comment) {
-    return eventReactivePublisher
-        .publish(new IssueEvents.CommentUpdated(comment.getIssueId(), comment))
-        .thenReturn(comment);
   }
 }

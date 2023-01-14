@@ -10,7 +10,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.kafka.sender.SenderResult;
 
@@ -35,8 +34,8 @@ public class IntegrationEventPublisher extends AbstractReactiveSubscriber<Domain
   }
 
   @Override
-  public void subscribe(Flux<DomainEvent> stream) {
-    stream
+  public void subscribe(EventBus.Subscription<DomainEvent> subscription) {
+    subscription.stream()
         .map(this::getKeyValue)
         .flatMap(keyValue -> send(keyValue.getKey(), keyValue.getValue()))
         .subscribe(

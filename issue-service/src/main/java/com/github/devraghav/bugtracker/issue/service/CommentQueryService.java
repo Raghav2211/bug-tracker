@@ -9,6 +9,7 @@ import com.github.devraghav.bugtracker.issue.event.internal.IssueEvents;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import java.util.UUID;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,17 +32,16 @@ public record CommentQueryService(
         .switchIfEmpty(Mono.error(() -> CommentException.notFound(id)));
   }
 
-  public Flux<Comment> subscribe(String issueId) {
+  public Flux<ServerSentEvent<Comment>> subscribe(String issueId) {
     var commentAddedStream =
-        reactiveMessageBroker
-            .tap(UUID::randomUUID, IssueEvents.CommentAdded.class)
-            .map(IssueEvents.CommentAdded::getComment);
+        reactiveMessageBroker.tap(UUID::randomUUID, IssueEvents.CommentAdded.class).stream()
+            .filter(commentAdded -> commentAdded.getComment().getIssueId().equals(issueId))
+            .map(this::convert);
     var commentUpdatedStream =
-        reactiveMessageBroker
-            .tap(UUID::randomUUID, IssueEvents.CommentUpdated.class)
-            .map(IssueEvents.CommentUpdated::getComment);
-    var commentStream = Flux.merge(commentAddedStream, commentUpdatedStream);
-    return commentStream.filter(comment -> comment.getIssueId().equals(issueId));
+        reactiveMessageBroker.tap(UUID::randomUUID, IssueEvents.CommentUpdated.class).stream()
+            .filter(commentUpdated -> commentUpdated.getComment().getIssueId().equals(issueId))
+            .map(this::convert);
+    return Flux.merge(commentAddedStream, commentUpdatedStream);
   }
 
   private Mono<Comment> getComment(CommentEntity commentEntity) {
@@ -52,5 +52,21 @@ public record CommentQueryService(
             exception -> Mono.error(CommentException.userServiceException(exception)))
         .map(
             commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
+  }
+
+  private ServerSentEvent<Comment> convert(IssueEvents.CommentAdded commentAdded) {
+    return ServerSentEvent.<Comment>builder()
+        .id(commentAdded.getId().toString())
+        .event(commentAdded.getName())
+        .data(commentAdded.getComment())
+        .build();
+  }
+
+  private ServerSentEvent<Comment> convert(IssueEvents.CommentUpdated commentUpdated) {
+    return ServerSentEvent.<Comment>builder()
+        .id(commentUpdated.getId().toString())
+        .event(commentUpdated.getName())
+        .data(commentUpdated.getComment())
+        .build();
   }
 }
