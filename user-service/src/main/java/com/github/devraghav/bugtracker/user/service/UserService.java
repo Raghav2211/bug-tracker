@@ -6,7 +6,7 @@ import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserException;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
-import com.github.devraghav.bugtracker.user.event.internal.UserCreatedEvent;
+import com.github.devraghav.bugtracker.user.event.internal.UserEvent;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
 import com.github.devraghav.bugtracker.user.validation.RequestValidator;
@@ -48,6 +48,6 @@ public record UserService(
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)
-        .doOnSuccess(user -> domainEventReactivePublisher.publish(new UserCreatedEvent(user)));
+        .doOnSuccess(user -> domainEventReactivePublisher.publish(new UserEvent.Created(user)));
   }
 }

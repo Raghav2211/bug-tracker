@@ -8,6 +8,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
 public interface EventBus {
 
@@ -88,6 +89,7 @@ public interface EventBus {
                   subscribeOnEvent.getName());
       return reactiveChannel
           .asFlux()
+          .publishOn(Schedulers.newParallel("event-bus"))
           .doOnSubscribe(onSubscription)
           .doOnCancel(onCancel)
           .doOnError(onError)

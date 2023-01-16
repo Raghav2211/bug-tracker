@@ -1,9 +1,9 @@
 package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.event.internal.AbstractReactiveSubscriber;
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.user.event.internal.UserEvent;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,27 +15,41 @@ import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-public class IntegrationEventPublisher extends AbstractReactiveSubscriber<DomainEvent> {
+public class DomainEventProcessor
+    implements EventBus.ReactivePublisher<DomainEvent>, EventBus.ReactiveSubscriber<DomainEvent> {
+  private final EventBus.InputChannel<DomainEvent> channel;
   private final String eventStoreTopic;
   private final EventConverterFactory eventConverterFactory;
   private final ReactiveKafkaProducerTemplate<String, SpecificRecordBase>
       reactiveKafkaProducerTemplate;
 
-  public IntegrationEventPublisher(
+  public DomainEventProcessor(
       EventBus.ReactiveMessageBroker reactiveMessageBroker,
+      Class<DomainEvent> eventClazz,
       @Value("${app.kafka.outbound.event_store.topic}") String eventStoreTopic,
       EventConverterFactory eventConverterFactory,
       ReactiveKafkaProducerTemplate<String, SpecificRecordBase> reactiveKafkaProducerTemplate) {
-    super(reactiveMessageBroker, DomainEvent.class);
+    channel = reactiveMessageBroker.register(this, eventClazz);
+    reactiveMessageBroker.subscribe(this, eventClazz);
     this.eventStoreTopic = eventStoreTopic;
     this.eventConverterFactory = eventConverterFactory;
     this.reactiveKafkaProducerTemplate = reactiveKafkaProducerTemplate;
-    reactiveKafkaProducerTemplate.partitionsFromProducerFor(eventStoreTopic);
+    log.atInfo().log(
+        "topic {} metadata {}",
+        eventStoreTopic,
+        reactiveKafkaProducerTemplate
+            .partitionsFromProducerFor(eventStoreTopic)
+            .blockFirst(Duration.ofMillis(2000)));
   }
 
   @Override
-  public void subscribe(EventBus.OutputChannel<DomainEvent> subscription) {
-    subscription.stream()
+  public void publish(DomainEvent domainEvent) {
+    channel.publish(domainEvent);
+  }
+
+  @Override
+  public void subscribe(EventBus.OutputChannel<DomainEvent> outputChannel) {
+    outputChannel.stream()
         .map(this::getKeyValue)
         .flatMap(keyValue -> send(keyValue.getKey(), keyValue.getValue()))
         .subscribe(
