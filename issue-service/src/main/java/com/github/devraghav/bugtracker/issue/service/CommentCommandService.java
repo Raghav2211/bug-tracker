@@ -12,26 +12,12 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
-public class CommentCommandService {
-
-  private final RequestValidator requestValidator;
-  private final CommentMapper commentMapper;
-  private final CommentRepository commentRepository;
-  private final UserReactiveClient userReactiveClient;
-  private final EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher;
-
-  public CommentCommandService(
-      RequestValidator requestValidator,
-      CommentMapper commentMapper,
-      CommentRepository commentRepository,
-      UserReactiveClient userReactiveClient,
-      DomainEventPublisher eventReactivePublisher) {
-    this.requestValidator = requestValidator;
-    this.commentMapper = commentMapper;
-    this.commentRepository = commentRepository;
-    this.userReactiveClient = userReactiveClient;
-    this.eventReactivePublisher = eventReactivePublisher;
-  }
+public record CommentCommandService(
+    RequestValidator requestValidator,
+    CommentMapper commentMapper,
+    CommentRepository commentRepository,
+    UserReactiveClient userReactiveClient,
+    EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
   public Mono<Comment> save(IssueRequest.CreateComment createCommentRequest) {
     return requestValidator

@@ -15,10 +15,11 @@ public interface IssueEvent {
     private final Issue createdIssue;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public Created(Issue createdIssue) {
-      super("Created", publisherInfo);
+      super(createdIssue.getId(), "Created", publisherInfo);
       this.createdIssue = createdIssue;
     }
   }
@@ -28,10 +29,11 @@ public interface IssueEvent {
     private final Issue updatedIssue;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public Updated(Issue updatedIssue) {
-      super("Updated", publisherInfo);
+      super(updatedIssue.getId(), "Updated", publisherInfo);
       this.updatedIssue = updatedIssue;
     }
   }
@@ -42,10 +44,11 @@ public interface IssueEvent {
     private final User assignee;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public Assigned(String issueId, User assignee) {
-      super("Assigned", publisherInfo);
+      super(issueId, "Assigned", publisherInfo);
       this.issueId = issueId;
       this.assignee = assignee;
     }
@@ -56,10 +59,11 @@ public interface IssueEvent {
     private final String issueId;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public Unassigned(String issueId) {
-      super("Unassigned", publisherInfo);
+      super(issueId, "Unassigned", publisherInfo);
       this.issueId = issueId;
     }
   }
@@ -70,10 +74,11 @@ public interface IssueEvent {
     private final User watcher;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public WatchStarted(String issueId, User watcher) {
-      super("WatchStarted", publisherInfo);
+      super(issueId, "WatchStarted", publisherInfo);
       this.issueId = issueId;
       this.watcher = watcher;
     }
@@ -85,10 +90,11 @@ public interface IssueEvent {
     private final User watchEndedBy;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public WatchEnded(String issueId, User watchEndedBy) {
-      super("WatchStarted", publisherInfo);
+      super(issueId, "WatchStarted", publisherInfo);
       this.issueId = issueId;
       this.watchEndedBy = watchEndedBy;
     }
@@ -100,10 +106,11 @@ public interface IssueEvent {
     private final LocalDateTime resolvedAt;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Issue.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Issue.class, "SYSTEM");
 
     public Resolved(String issueId, LocalDateTime resolvedAt) {
-      super("Resolved", publisherInfo);
+      super(issueId, "Resolved", publisherInfo);
       this.issueId = issueId;
       this.resolvedAt = resolvedAt;
     }
@@ -115,10 +122,11 @@ public interface IssueEvent {
     private final Comment comment;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Comment.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Comment.class, "SYSTEM");
 
     public CommentAdded(String issueId, Comment comment) {
-      super("Created", publisherInfo);
+      super(issueId, "Created", publisherInfo);
       this.issueId = issueId;
       this.comment = comment;
     }
@@ -130,10 +138,11 @@ public interface IssueEvent {
     private final Comment comment;
 
     @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo = new PublisherInfo("Issue", Comment.class);
+    private static final PublisherInfo publisherInfo =
+        new PublisherInfo("Issue", Comment.class, "SYSTEM");
 
     public CommentUpdated(String issueId, Comment comment) {
-      super("Updated", publisherInfo);
+      super(issueId, "Updated", publisherInfo);
       this.issueId = issueId;
       this.comment = comment;
     }

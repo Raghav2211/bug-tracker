@@ -8,21 +8,24 @@ import lombok.Getter;
 @Getter
 public abstract class DomainEvent {
   private final UUID id = UUID.randomUUID();
+  private final String aggregateId;
   private final LocalDateTime logTime = LocalDateTime.now();
   private final String name;
   private final String publisher;
-  // TODO : add gateway and pass requestedBy to the event layer
-  private String requestedBy;
+  private final String requestedBy;
 
-  public record PublisherInfo(String name, Class<?> domain) {}
+  public record PublisherInfo(String serviceName, Class<?> domainClazz, String requestedBy) {}
 
-  public DomainEvent(String action, PublisherInfo publisherInfo) {
+  public DomainEvent(String aggregateId, String action, PublisherInfo publisherInfo) {
+    this.aggregateId = aggregateId;
     name =
         new StringJoiner("#")
-            .add(publisherInfo.name())
-            .add(publisherInfo.domain().getSimpleName())
+            .add(publisherInfo.serviceName())
+            .add(this.getClass().getSimpleName())
             .add(action)
             .toString();
-    this.publisher = new StringJoiner("#").add("Service").add(publisherInfo.name()).toString();
+    this.publisher =
+        new StringJoiner("#").add("Service").add(publisherInfo.serviceName()).toString();
+    this.requestedBy = publisherInfo.requestedBy();
   }
 }
