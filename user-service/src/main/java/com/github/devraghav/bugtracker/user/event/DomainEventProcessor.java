@@ -3,7 +3,6 @@ package com.github.devraghav.bugtracker.user.event;
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.user.event.internal.UserEvent;
-import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,21 +24,21 @@ public class DomainEventProcessor
 
   public DomainEventProcessor(
       EventBus.ReactiveMessageBroker reactiveMessageBroker,
-      Class<DomainEvent> eventClazz,
       @Value("${app.kafka.outbound.event_store.topic}") String eventStoreTopic,
       EventConverterFactory eventConverterFactory,
       ReactiveKafkaProducerTemplate<String, SpecificRecordBase> reactiveKafkaProducerTemplate) {
-    channel = reactiveMessageBroker.register(this, eventClazz);
-    reactiveMessageBroker.subscribe(this, eventClazz);
+    channel = reactiveMessageBroker.register(this, DomainEvent.class);
+    reactiveMessageBroker.subscribe(this, DomainEvent.class);
     this.eventStoreTopic = eventStoreTopic;
     this.eventConverterFactory = eventConverterFactory;
     this.reactiveKafkaProducerTemplate = reactiveKafkaProducerTemplate;
-    log.atInfo().log(
-        "topic {} metadata {}",
-        eventStoreTopic,
-        reactiveKafkaProducerTemplate
-            .partitionsFromProducerFor(eventStoreTopic)
-            .blockFirst(Duration.ofMillis(2000)));
+    //    log.atInfo().log(
+    //        "topic {} metadata {}",
+    //        eventStoreTopic,
+    //        reactiveKafkaProducerTemplate
+    //            .partitionsFromProducerFor(eventStoreTopic)
+    //            .onErrorResume(KafkaException.class, exception -> Mono.empty())
+    //            .blockFirst(Duration.ofMillis(2000)));
   }
 
   @Override
