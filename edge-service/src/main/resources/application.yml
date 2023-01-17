@@ -1,0 +1,24 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: user
+          uri: http://user-service:8080
+          predicates:
+            - Path=/service/v1/user/**
+          filters:
+            - RewritePath=/service/v1/(?<segment>.*),/api/rest/v1/$\{segment}
+
+        - id: project
+          uri: http://project-service:8080
+          predicates:
+            - Path=/service/v1/project/**
+          filters:
+            - RewritePath=/service/v1/(?<segment>.*),/api/rest/v1/$\{segment}
+
+        - id: issue
+          uri: http://issue-service:8080
+          predicates:
+            - Path=/service/v1/issue/**
+          filters:
+            - RewritePath=/service/v1/(?<segment>.*),/api/rest/v1/$\{segment}

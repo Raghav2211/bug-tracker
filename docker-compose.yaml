@@ -1,6 +1,21 @@
 version: "3.9"
 services:
 
+  edge-service:
+    build:
+      context: edge-service
+      dockerfile: Dockerfile
+    container_name: edge-service
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "500M"
+    volumes:
+      - ./logs:/logs
+    ports:
+      - "8888:8080"
+
   user-service:
     build:
       context: user-service
