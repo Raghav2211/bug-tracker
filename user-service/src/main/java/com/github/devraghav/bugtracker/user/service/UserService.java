@@ -22,16 +22,16 @@ public record UserService(
     UserRepository userRepository,
     EventBus.ReactivePublisher<DomainEvent> domainEventReactivePublisher) {
 
+  // @spotless:off
   public Mono<User> save(UserRequest.Create createUserRequest) {
     return requestValidator
         .validate(createUserRequest)
         .map(userMapper::requestToEntity)
         .flatMap(this::save)
-        .onErrorResume(
-            DuplicateKeyException.class,
-            exception ->
-                Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
+        .onErrorResume(DuplicateKeyException.class,
+                exception -> Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
   }
+  // @spotless:on
 
   public Flux<User> findAll() {
     return userRepository.findAll().map(userMapper::entityToResponse);

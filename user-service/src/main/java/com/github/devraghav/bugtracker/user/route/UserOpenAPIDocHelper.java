@@ -19,32 +19,27 @@ import org.springframework.stereotype.Component;
 
 @Component
 class UserOpenAPIDocHelper {
-
+  // spotless:off
   void loginUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("login")
-        .summary("Login user")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(LoginRequest.Request.class))))
-        .response(
-            responseBuilder()
-                .responseCode("200")
-                .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(LoginRequest.Response.class))))
-        .response(responseBuilder().responseCode("401").description("Unauthorized user"))
-        .build();
+       .summary("Login user")
+       .requestBody(requestBodyBuilder()
+               .content(contentBuilder()
+                       .schema(schemaBuilder().implementation(LoginRequest.Request.class))))
+       .response(responseBuilder().responseCode("200")
+               .content(contentBuilder()
+                       .schema(schemaBuilder().implementation(LoginRequest.Response.class))))
+       .response(responseBuilder()
+               .responseCode("401")
+               .description("Unauthorized user"))
+       .build();
   }
 
   void signUpUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
-    ops.operationId("create")
-        .summary("Create user")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder()
+    ops.operationId("signup")
+        .summary("User Signup ")
+        .requestBody(requestBodyBuilder()
+                .content(contentBuilder()
                         .schema(schemaBuilder().implementation(UserRequest.Create.class))))
         .response(saveUser201ResponseDoc())
         .response(savUser400ResponseDoc())
@@ -56,6 +51,8 @@ class UserOpenAPIDocHelper {
         .summary("Get all users")
         .security(securityRequirementBuilder().name("bearerAuth"))
         .response(getAll200ResponseDoc())
+        .response(responseBuilder().responseCode("401").description("Unauthorized user"))
+        .response(responseBuilder().responseCode("403").description("Forbidden"))
         .build();
   }
 
@@ -65,8 +62,8 @@ class UserOpenAPIDocHelper {
         .security(securityRequirementBuilder().name("bearerAuth"))
         .response(getUserById200ResponseDoc())
         .response(getUserById404ResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .response(responseBuilder().responseCode("401").description("Unauthorized user"))
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("id")
                 .schema(schemaBuilder().type("string")))
@@ -77,8 +74,7 @@ class UserOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("201")
         .description("User successfully created")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(User.class)));
   }
@@ -87,8 +83,7 @@ class UserOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("400")
         .description("Bad Request")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(UserErrorResponse.class)));
   }
@@ -97,8 +92,7 @@ class UserOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve all users")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .array(arraySchemaBuilder().schema(schemaBuilder().implementation(User.class))));
   }
@@ -107,8 +101,7 @@ class UserOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("404")
         .description("User not found")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(UserErrorResponse.class)));
   }
@@ -117,9 +110,8 @@ class UserOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve user successfully")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(User.class)));
   }
+  // spotless:on
 }
