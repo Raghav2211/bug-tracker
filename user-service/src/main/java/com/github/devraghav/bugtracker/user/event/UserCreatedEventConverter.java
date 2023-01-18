@@ -12,7 +12,7 @@ public class UserCreatedEventConverter
   private com.github.devraghav.data_model.domain.user.User getUser(User user) {
     return com.github.devraghav.data_model.domain.user.User.newBuilder()
         .setId(user.id())
-        .setAccessLevel(user.access().name())
+        .setAccessLevel(user.role().name())
         .setEmail(user.email())
         .setEnabled(user.enabled())
         .setFirstName(user.firstName())

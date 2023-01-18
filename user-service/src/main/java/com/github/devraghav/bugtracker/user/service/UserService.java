@@ -37,11 +37,18 @@ public record UserService(
     return userRepository.findAll().map(userMapper::entityToResponse);
   }
 
+  public Mono<User> findByEmail(String email) {
+    return userRepository
+        .findByEmail(email)
+        .map(userMapper::entityToResponse)
+        .switchIfEmpty(Mono.error(UserException.notFoundByEmail(email)));
+  }
+
   public Mono<User> findById(String userId) {
     return userRepository
         .findById(userId)
         .map(userMapper::entityToResponse)
-        .switchIfEmpty(Mono.error(() -> UserException.notFound(userId)));
+        .switchIfEmpty(Mono.error(() -> UserException.notFoundById(userId)));
   }
 
   private Mono<User> save(UserEntity userEntity) {

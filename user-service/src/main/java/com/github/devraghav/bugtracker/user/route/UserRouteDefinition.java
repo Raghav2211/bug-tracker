@@ -16,7 +16,7 @@ public class UserRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> userRoutes(
-      UserRouteDefinitionOpenAPIDocHelper docHelper, UserRouteHandler userRouteHandler) {
+      UserOpenAPIDocHelper docHelper, UserRouteHandler userRouteHandler) {
     Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
         builder -> {};
 
@@ -24,7 +24,8 @@ public class UserRouteDefinition {
         () ->
             SpringdocRouteBuilder.route()
                 .GET("", userRouteHandler::getAll, docHelper::getAllUserOperationDoc)
-                .POST(userRouteHandler::create, docHelper::saveUserOperationDoc)
+                .POST("/login", userRouteHandler::login, docHelper::loginUserOperationDoc)
+                .POST("/signup", userRouteHandler::create, docHelper::signUpUserOperationDoc)
                 .GET("/{id}", userRouteHandler::get, docHelper::getUserByIdOperationDoc)
                 .build();
     return SpringdocRouteBuilder.route()

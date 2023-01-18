@@ -6,8 +6,10 @@ import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
 import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
+import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import com.github.devraghav.bugtracker.user.dto.LoginRequest;
 import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.dto.UserErrorResponse;
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
@@ -16,9 +18,27 @@ import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springframework.stereotype.Component;
 
 @Component
-class UserRouteDefinitionOpenAPIDocHelper {
+class UserOpenAPIDocHelper {
 
-  void saveUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+  void loginUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("login")
+        .summary("Login user")
+        .requestBody(
+            requestBodyBuilder()
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(LoginRequest.Request.class))))
+        .response(
+            responseBuilder()
+                .responseCode("200")
+                .content(
+                    contentBuilder()
+                        .schema(schemaBuilder().implementation(LoginRequest.Response.class))))
+        .response(responseBuilder().responseCode("401").description("Unauthorized user"))
+        .build();
+  }
+
+  void signUpUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("create")
         .summary("Create user")
         .requestBody(
@@ -32,12 +52,17 @@ class UserRouteDefinitionOpenAPIDocHelper {
   }
 
   void getAllUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
-    ops.operationId("getAll").summary("Get all users").response(getAll200ResponseDoc()).build();
+    ops.operationId("getAll")
+        .summary("Get all users")
+        .security(securityRequirementBuilder().name("bearerAuth"))
+        .response(getAll200ResponseDoc())
+        .build();
   }
 
   void getUserByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("get")
         .summary("Get a user by its id")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .response(getUserById200ResponseDoc())
         .response(getUserById404ResponseDoc())
         .parameter(

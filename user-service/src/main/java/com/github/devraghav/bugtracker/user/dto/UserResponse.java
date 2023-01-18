@@ -25,6 +25,11 @@ public class UserResponse {
     return ServerResponse.ok().body(BodyInserters.fromValue(user));
   }
 
+  public static Mono<ServerResponse> unauthorizedAccess(
+      ServerRequest request, UserException exception) {
+    return userException(request, exception, HttpStatus.UNAUTHORIZED);
+  }
+
   public static Mono<ServerResponse> notFound(ServerRequest request, UserException exception) {
     return userException(request, exception, HttpStatus.NOT_FOUND);
   }

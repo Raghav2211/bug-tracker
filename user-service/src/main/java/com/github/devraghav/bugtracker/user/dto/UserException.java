@@ -17,6 +17,13 @@ public class UserException extends RuntimeException {
     this.meta = meta;
   }
 
+  public static class UnauthorizedException extends UserException {
+
+    private UnauthorizedException(Map<String, Object> meta) {
+      super("Unauthorized access", meta);
+    }
+  }
+
   public static UserException nullFirstName() {
     return new UserException("Firstname should not be null");
   }
@@ -33,11 +40,19 @@ public class UserException extends RuntimeException {
     return new UserException("User already exists", Map.of("email", email));
   }
 
-  public static UserException notFound(String userId) {
+  public static UserException notFoundById(String userId) {
     return new UserException("User not found", Map.of("userId", userId));
   }
 
-  public static UserException unrecognizedAccessLevel() {
-    return new UserException("Unrecognized access");
+  public static UserException notFoundByEmail(String email) {
+    return new UserException("User not found", Map.of("email", email));
+  }
+
+  public static UserException unauthorizedAccess(String email) {
+    return new UnauthorizedException(Map.of("email", email));
+  }
+
+  public static UserException unknownRole() {
+    return new UserException("Unrecognized role");
   }
 }

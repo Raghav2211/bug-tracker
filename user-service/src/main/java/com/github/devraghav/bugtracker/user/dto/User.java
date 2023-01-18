@@ -4,14 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public record User(
     String id,
-    AccessLevel access,
+    Role role,
     String firstName,
     String lastName,
     String email,
+    @JsonIgnore String password,
     Boolean enabled) {
 
   @JsonIgnore
-  public boolean isWriteAccess() {
-    return this.access == AccessLevel.ADMIN || this.access == AccessLevel.WRITE;
+  public boolean hasWriteAccess() {
+    return this.role == Role.ROLE_ADMIN || this.role == Role.ROLE_WRITE;
   }
 }
