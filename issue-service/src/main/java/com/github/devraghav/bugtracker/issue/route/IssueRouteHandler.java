@@ -2,14 +2,16 @@ package com.github.devraghav.bugtracker.issue.route;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
-import com.github.devraghav.bugtracker.issue.service.CommentCommandService;
 import com.github.devraghav.bugtracker.issue.service.IssueCommandService;
 import com.github.devraghav.bugtracker.issue.service.IssueQueryService;
 import java.util.Map;
+import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -19,10 +21,11 @@ import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
-public record IssueRouteHandler(
-    IssueCommandService issueCommandService,
-    IssueQueryService issueQueryService,
-    CommentCommandService commentCommandService) {
+@RequiredArgsConstructor
+class IssueRouteHandler {
+
+  private final IssueCommandService issueCommandService;
+  private final IssueQueryService issueQueryService;
 
   public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
     IssueFilter issueFilter =
@@ -43,9 +46,9 @@ public record IssueRouteHandler(
   }
 
   public Mono<ServerResponse> create(ServerRequest request) {
-    return request
-        .bodyToMono(IssueRequest.Create.class)
-        .flatMap(issueCommandService::create)
+    return Mono.zip(
+            getAuthenticatedPrincipal(request), request.bodyToMono(IssueRequest.Create.class))
+        .flatMap(tuple2 -> issueCommandService.create(tuple2.getT1(), tuple2.getT2()))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -54,9 +57,9 @@ public record IssueRouteHandler(
 
   public Mono<ServerResponse> update(ServerRequest request) {
     var issueId = request.pathVariable("id");
-    return request
-        .bodyToMono(IssueRequest.Update.class)
-        .flatMap(updateRequest -> issueCommandService.update(issueId, updateRequest))
+    return Mono.zip(
+            getAuthenticatedPrincipal(request), request.bodyToMono(IssueRequest.Update.class))
+        .flatMap(tuple2 -> issueCommandService.update(tuple2.getT1(), issueId, tuple2.getT2()))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
         .onErrorResume(
@@ -74,63 +77,46 @@ public record IssueRouteHandler(
             IssueException.class, exception -> IssueResponse.invalid(request, exception));
   }
 
-  public Mono<ServerResponse> assignee(ServerRequest serverRequest) {
-    var issueId = serverRequest.pathVariable("id");
-    return serverRequest
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .mapNotNull(body -> body.get("user"))
-        .map(user -> new IssueRequest.Assign(issueId, user, MonitorType.ASSIGN))
-        .switchIfEmpty(Mono.just(new IssueRequest.Assign(issueId, null, MonitorType.UNASSIGN)))
-        .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
-        .then(IssueResponse.noContent())
-        .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception))
-        .switchIfEmpty(IssueResponse.noBody(serverRequest));
-  }
-
-  public Mono<ServerResponse> watch(ServerRequest request) {
+  public Mono<ServerResponse> monitor(ServerRequest request, MonitorType monitorType) {
     var issueId = request.pathVariable("id");
-    return request
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new IssueRequest.Assign(issueId, body.get("user"), MonitorType.WATCH))
+    // @spotless:off
+    return Mono.zip(
+            getAuthenticatedPrincipal(request),
+            request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}))
+        .map(tuple2 -> new IssueRequest.Assign(issueId, tuple2.getT2().get("user"), monitorType, tuple2.getT1()))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
-        .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
-        .switchIfEmpty(IssueResponse.noBody(request));
-  }
-
-  public Mono<ServerResponse> unwatch(ServerRequest request) {
-    var issueId = request.pathVariable("id");
-
-    return request
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new IssueRequest.Assign(issueId, body.get("user"), MonitorType.UNWATCH))
-        .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
-        .then(IssueResponse.noContent())
-        .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception))
-        .switchIfEmpty(IssueResponse.noBody(request));
+        .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception));
+    // @spotless:on
   }
 
   public Mono<ServerResponse> addAttachment(ServerRequest request) {
     var issueId = request.pathVariable("id");
+    // @spotless:off
     return request
         .body(BodyExtractors.toParts())
         .filter(part -> part instanceof FilePart)
         .ofType(FilePart.class)
         .single()
         .flatMap(filePart -> issueCommandService.uploadAttachment(issueId, filePart))
-        .flatMap(
-            uploadFileHex ->
-                ServerResponse.ok()
-                    .body(BodyInserters.fromValue(Map.of("fileUploadId", uploadFileHex))));
+        .flatMap(uploadFileHex ->ServerResponse.ok().body(BodyInserters.fromValue(Map.of("fileUploadId", uploadFileHex))));
+    // @spotless:on
   }
 
   public Mono<ServerResponse> resolve(ServerRequest request) {
-    return Mono.just(request.pathVariable("id"))
-        .flatMap(issueCommandService::resolve)
+    return getAuthenticatedPrincipal(request)
+        .flatMap(principal -> issueCommandService.resolve(request.pathVariable("id"), principal))
         .then(IssueResponse.noContent())
         .onErrorResume(
             IssueException.class,
             issueNotFoundException -> IssueResponse.invalid(request, issueNotFoundException));
+  }
+
+  private Mono<String> getAuthenticatedPrincipal(ServerRequest request) {
+    return request
+        .principal()
+        .cast(UsernamePasswordAuthenticationToken.class)
+        .map(UsernamePasswordAuthenticationToken::getPrincipal)
+        .map(Objects::toString);
   }
 }

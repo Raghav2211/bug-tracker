@@ -3,7 +3,6 @@ package com.github.devraghav.bugtracker.project.route;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
-import com.github.devraghav.bugtracker.project.dto.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ public class ProjectRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> projectRoutes(
-      ProjectRouteDefinitionOpenAPIDocHelper docHelper, ProjectRouteHandler projectRouteHandler) {
+      ProjectOpenAPIDocHelper docHelper, ProjectRouteHandler projectRouteHandler) {
     Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
         builder -> {};
 

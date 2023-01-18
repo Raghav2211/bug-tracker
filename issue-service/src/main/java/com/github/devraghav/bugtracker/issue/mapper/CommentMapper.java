@@ -15,6 +15,7 @@ public interface CommentMapper {
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())"),
+    @Mapping(target = "updatedAt", expression = "java(LocalDateTime.now())"),
   })
   CommentEntity requestToEntity(IssueRequest.CreateComment createCommentRequest);
 

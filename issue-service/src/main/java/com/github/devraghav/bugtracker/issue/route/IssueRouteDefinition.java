@@ -3,6 +3,7 @@ package com.github.devraghav.bugtracker.issue.route;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
+import com.github.devraghav.bugtracker.issue.dto.MonitorType;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +32,22 @@ public class IssueRouteDefinition {
                     path("/files").and(accept(asMediaType(MULTIPART_FORM_DATA))),
                     issueRouteHandler::addAttachment,
                     docHelper::uploadFileOperationDoc)
-                .PATCH("/assignee", issueRouteHandler::assignee, docHelper::assigneeOperationDoc)
-                .PATCH("/watch", issueRouteHandler::watch, docHelper::watcherOperationDoc)
-                .DELETE("/watch", issueRouteHandler::unwatch, docHelper::removeWatcherOperationDoc)
+                .PATCH(
+                    "/assignee",
+                    request -> issueRouteHandler.monitor(request, MonitorType.ASSIGN),
+                    docHelper::assigneeOperationDoc)
+                .DELETE(
+                    "/assignee",
+                    request -> issueRouteHandler.monitor(request, MonitorType.UNASSIGN),
+                    docHelper::unassignedOperationDoc)
+                .PATCH(
+                    "/watch",
+                    request -> issueRouteHandler.monitor(request, MonitorType.WATCH),
+                    docHelper::watcherOperationDoc)
+                .DELETE(
+                    "/watch",
+                    request -> issueRouteHandler.monitor(request, MonitorType.UNWATCH),
+                    docHelper::removeWatcherOperationDoc)
                 .PATCH("/resolve", issueRouteHandler::resolve, docHelper::resolveIssueOperationDoc)
                 .build();
 

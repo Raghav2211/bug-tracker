@@ -7,7 +7,7 @@ import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
-import com.github.devraghav.bugtracker.issue.validation.RequestValidator;
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -20,19 +20,20 @@ public record CommentCommandService(
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
   public Mono<Comment> save(IssueRequest.CreateComment createCommentRequest) {
+    // @spotless:off
     return requestValidator
         .validate(createCommentRequest)
         .thenReturn(createCommentRequest)
         .map(commentMapper::requestToEntity)
         .flatMap(commentRepository::save)
         .flatMap(this::getComment)
-        .doOnSuccess(
-            comment ->
-                eventReactivePublisher.publish(
-                    new IssueEvent.CommentAdded(comment.getIssueId(), comment)));
+        .doOnSuccess(comment -> eventReactivePublisher
+                    .publish(new IssueEvent.CommentAdded(comment.getIssueId(), comment)));
+    // @spotless:on
   }
 
   public Mono<Comment> update(IssueRequest.UpdateComment updateCommentRequest) {
+    // @spotless:off
     return requestValidator
         .validate(updateCommentRequest)
         .flatMap(
@@ -40,10 +41,9 @@ public record CommentCommandService(
                 findAndUpdateCommentContentById(validRequest.commentId(), validRequest.content()))
         .flatMap(commentRepository::save)
         .flatMap(this::getComment)
-        .doOnSuccess(
-            comment ->
-                eventReactivePublisher.publish(
-                    new IssueEvent.CommentUpdated(comment.getIssueId(), comment)));
+        .doOnSuccess(comment -> eventReactivePublisher
+                    .publish(new IssueEvent.CommentUpdated(comment.getIssueId(), comment)));
+    // @spotless:on
   }
 
   private Mono<CommentEntity> findCommentById(String commentId) {
@@ -58,8 +58,7 @@ public record CommentCommandService(
   }
 
   private CommentEntity updateIssueCommentEntity(String content, CommentEntity commentEntity) {
-    commentEntity.setContent(content);
-    return commentEntity;
+    return commentEntity.toBuilder().content(content).lastUpdatedAt(LocalDateTime.now()).build();
   }
 
   private Mono<Comment> getComment(CommentEntity commentEntity) {

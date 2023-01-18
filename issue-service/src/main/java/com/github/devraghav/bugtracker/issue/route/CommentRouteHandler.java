@@ -4,8 +4,10 @@ import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.service.CommentCommandService;
 import com.github.devraghav.bugtracker.issue.service.CommentQueryService;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -29,9 +31,13 @@ public record CommentRouteHandler(
 
   public Mono<ServerResponse> save(ServerRequest request) {
     var issueId = request.pathVariable("issueId");
-    return request
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(body -> new IssueRequest.CreateComment(body.get("user"), issueId, body.get("content")))
+    // @spotless:off
+    var principalWithCreateRequestMono =
+        Mono.zip(getAuthenticatedPrincipal(request),
+            request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}));
+    return principalWithCreateRequestMono
+        .map(tuple2 ->new IssueRequest.CreateComment(
+                    tuple2.getT1(), issueId, tuple2.getT2().get("content")))
         .flatMap(commentCommandService::save)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(CommentResponse.noBody(request))
@@ -39,17 +45,20 @@ public record CommentRouteHandler(
             CommentException.class, exception -> CommentResponse.invalid(request, exception))
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(request, exception));
+    // @spotless:on
   }
 
   public Mono<ServerResponse> update(ServerRequest request) {
     var issueId = request.pathVariable("issueId");
     var commentId = request.pathVariable("commentId");
-    return request
-        .bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {})
-        .map(
-            body ->
-                new IssueRequest.UpdateComment(
-                    body.get("user"), issueId, commentId, body.get("content")))
+    // @spotless:off
+    var principalWithUpdateRequestMono =
+        Mono.zip(
+            getAuthenticatedPrincipal(request),
+            request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}));
+    return principalWithUpdateRequestMono
+        .map(tuple2 ->
+                new IssueRequest.UpdateComment(tuple2.getT1(), issueId, commentId, tuple2.getT2().get("content")))
         .flatMap(commentCommandService::update)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(CommentResponse.noBody(request))
@@ -57,6 +66,7 @@ public record CommentRouteHandler(
             CommentException.class, exception -> CommentResponse.invalid(request, exception))
         .onErrorResume(
             IssueException.class, exception -> IssueResponse.invalid(request, exception));
+    // @spotless:on
   }
 
   public Mono<ServerResponse> get(ServerRequest request) {
@@ -72,5 +82,13 @@ public record CommentRouteHandler(
     var issueId = request.pathVariable("issueId");
     return ServerResponse.ok()
         .body(BodyInserters.fromServerSentEvents(commentQueryService.subscribe(issueId)));
+  }
+
+  private Mono<String> getAuthenticatedPrincipal(ServerRequest request) {
+    return request
+        .principal()
+        .cast(UsernamePasswordAuthenticationToken.class)
+        .map(UsernamePasswordAuthenticationToken::getPrincipal)
+        .map(Objects::toString);
   }
 }

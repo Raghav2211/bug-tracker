@@ -1,16 +1,9 @@
-package com.github.devraghav.bugtracker.user.security;
+package com.github.devraghav.bugtracker.issue.security;
 
-import com.github.devraghav.bugtracker.user.service.JWTService;
 import io.jsonwebtoken.Claims;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -18,62 +11,45 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.WebFilterChainProxy;
 import org.springframework.security.web.server.context.ServerSecurityContextRepository;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Configuration
-@ConditionalOnClass({EnableWebFluxSecurity.class, WebFilterChainProxy.class})
-@ConditionalOnMissingBean({SecurityWebFilterChain.class, WebFilterChainProxy.class})
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
-@AutoConfigureBefore(ReactiveSecurityAutoConfiguration.class)
 @RequiredArgsConstructor
-@Slf4j
 public class SecurityConfig {
 
   private final JWTService jwtService;
-  // TODO: pathMatchers :-> version regex
 
   @Bean
   SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
     // spotless:off
     return http.authorizeExchange()
-        .pathMatchers("/api/rest/v1/user/login", "/api/rest/v1/user/signup", "/actuator/**")
-        .permitAll()
-        .pathMatchers("/api/rest/v1/user")
-        .hasAuthority("ROLE_ADMIN")
-        .anyExchange()
-        .authenticated()
-        .and()
-        .formLogin()
-        .disable()
-        .csrf()
-        .disable()
-        .httpBasic()
-        .disable()
-        .authenticationManager(reactiveAuthenticationManager(jwtService))
-        .securityContextRepository(securityContextRepository(reactiveAuthenticationManager(jwtService)))
-        .exceptionHandling()
-        .authenticationEntryPoint((serverWebExchange, authenticationException) -> Mono.fromRunnable(() ->serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
-        .accessDeniedHandler((serverWebExchange, authenticationException) -> Mono.fromRunnable(() -> serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
-        .and()
-        .build();
+            .pathMatchers("/actuator/**")
+            .permitAll()
+            .anyExchange()
+            .authenticated()
+            .and()
+            .formLogin()
+            .disable()
+            .csrf()
+            .disable()
+            .httpBasic()
+            .disable()
+            .authenticationManager(reactiveAuthenticationManager(jwtService))
+            .securityContextRepository(securityContextRepository(reactiveAuthenticationManager(jwtService)))
+            .exceptionHandling()
+            .authenticationEntryPoint((serverWebExchange, authenticationException) -> Mono.fromRunnable(() ->serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
+            .accessDeniedHandler((serverWebExchange, authenticationException) -> Mono.fromRunnable(() -> serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
+            .and()
+            .build();
     // spotless:on
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
   }
 
   @Bean
@@ -96,17 +72,17 @@ public class SecurityConfig {
       String authToken = authentication.getCredentials().toString();
       // spotless:off
       return Mono.just(jwtService.validateToken(authToken))
-          .filter(Boolean::booleanValue)
-          .thenReturn(authToken)
-          .switchIfEmpty(Mono.defer(() ->Mono.error(new BadCredentialsException("Invalid token or token has expired"))))
-          .map(jwtService::getAllClaimsFromToken)
-          .map(this::getToken);
+              .filter(Boolean::booleanValue)
+              .switchIfEmpty(Mono.defer(() -> Mono.error(new BadCredentialsException("Token has expired"))))
+              .thenReturn(authToken)
+              .map(jwtService::getAllClaimsFromToken)
+              .map(this::getToken);
       // spotless:on
     }
 
     private UsernamePasswordAuthenticationToken getToken(Claims claims) {
       String role = claims.get("role", String.class);
-      return new UsernamePasswordAuthenticationToken(
+      return UsernamePasswordAuthenticationToken.authenticated(
           claims.getSubject(),
           null,
           Stream.of(role).map(SimpleGrantedAuthority::new).collect(Collectors.toList()));

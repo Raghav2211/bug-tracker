@@ -12,7 +12,6 @@ public interface IssueRequest {
       Set<ProjectInfo> projects,
       String header,
       String description,
-      String reporter,
       Map<String, String> tags) {
     public Create {
       projects = Set.copyOf(projects == null ? Set.of() : projects);
@@ -34,7 +33,7 @@ public interface IssueRequest {
     }
   }
 
-  record Assign(String issueId, String user, MonitorType monitorType) {}
+  record Assign(String issueId, String user, MonitorType monitorType, String requestedBy) {}
 
   record CreateComment(String userId, String issueId, String content) {}
 

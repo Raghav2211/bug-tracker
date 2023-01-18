@@ -6,6 +6,7 @@ import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
 import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
+import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import com.github.devraghav.bugtracker.project.dto.*;
@@ -15,18 +16,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
-class ProjectRouteDefinitionOpenAPIDocHelper {
-
+class ProjectOpenAPIDocHelper {
+  // @spotless:off
   void getAllProjectOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
-    ops.operationId("getAll").summary("Get all projects").response(getAll200ResponseDoc()).build();
+    ops.operationId("getAll")
+            .security(securityRequirementBuilder().name("bearerAuth"))
+            .summary("Get all projects").response(getAll200ResponseDoc()).build();
   }
 
   void getAllVersionOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("getAllProjectVersion")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Get all project versions")
         .response(getAllProjectVersion200ResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("id")
                 .schema(schemaBuilder().type("string")));
@@ -34,28 +37,24 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
 
   void saveVersionOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("addVersion")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .response(saveProjectVersion201ResponseDoc())
         .response(project404ResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("id")
                 .schema(schemaBuilder().type("string")))
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder()
-                        .schema(
-                            schemaBuilder().implementation(ProjectRequest.CreateVersion.class))));
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder()
+                    .implementation(ProjectRequest.CreateVersion.class))));
   }
 
   void getProjectByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("get")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Get a project by its id")
         .response(getProjectById200ResponseDoc())
         .response(project404ResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("id")
                 .schema(schemaBuilder().type("string")))
@@ -64,16 +63,15 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
 
   void getProjectVersionByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("getVersion")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Get a project version by its id")
         .response(getProjectVersionById200ResponseDoc())
         .response(getProjectVersionById404ResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("id")
                 .schema(schemaBuilder().type("string")))
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("versionId")
                 .schema(schemaBuilder().type("string")))
@@ -84,9 +82,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("201")
         .description("Project successfully created")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(Project.class)));
   }
 
@@ -98,9 +94,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve all projects")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .array(arraySchemaBuilder().schema(schemaBuilder().implementation(Project.class))));
   }
 
@@ -116,9 +110,7 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve project successfully")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(Project.class)));
   }
 
@@ -126,20 +118,16 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve project version successfully")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(Version.class)));
   }
 
   void saveProjectOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("create")
         .summary("Create project")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder()
-                        .schema(schemaBuilder().implementation(ProjectRequest.Create.class))))
+        .requestBody(requestBodyBuilder()
+        .content(contentBuilder()
+                .schema(schemaBuilder().implementation(ProjectRequest.Create.class))))
         .response(saveProject201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -156,21 +144,16 @@ class ProjectRouteDefinitionOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve all project versions")
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
-                .array(
-                    arraySchemaBuilder()
-                        .arraySchema(schemaBuilder().implementation(Version.class))));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
+                .array(arraySchemaBuilder().arraySchema(schemaBuilder().implementation(Version.class))));
   }
 
   private Builder errorResponseDoc(HttpStatus httpStatus, String message) {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
-        .content(
-            contentBuilder()
-                .mediaType(APPLICATION_JSON_VALUE)
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(ProjectErrorResponse.class)));
   }
+  // @spotless:on
 }

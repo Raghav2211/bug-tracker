@@ -24,8 +24,8 @@ public interface ProjectEvent {
     private final String projectId;
     private final Version version;
 
-    public VersionCreated(String projectId, Version version) {
-      super(projectId, "Created", new PublisherInfo("Project", Version.class, "SYSTEM"));
+    public VersionCreated(String userId, String projectId, Version version) {
+      super(projectId, "Created", new PublisherInfo("Project", Version.class, userId));
       this.projectId = projectId;
       this.version = version;
     }

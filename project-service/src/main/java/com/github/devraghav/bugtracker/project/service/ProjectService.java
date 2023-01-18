@@ -24,15 +24,16 @@ public record ProjectService(
     ProjectRepository projectRepository,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<Project> save(ProjectRequest.Create createProjectRequest) {
-    return Mono.just(createProjectRequest)
-        .flatMap(requestValidator::validate)
+  public Mono<Project> save(String author, ProjectRequest.Create createProjectRequest) {
+    // @spotless:off
+    return requestValidator
+        .validate(author, createProjectRequest)
         .map(projectMapper::requestToEntity)
         .flatMap(this::save)
         .onErrorResume(
             DuplicateKeyException.class,
-            exception ->
-                Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
+            exception -> Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
+    // @spotless:on
   }
 
   public Flux<Project> findAll() {
@@ -54,11 +55,11 @@ public record ProjectService(
   }
 
   public Mono<Version> addVersionToProjectId(
-      String projectId, ProjectRequest.CreateVersion createVersionRequest) {
-    return exists(projectId)
+      String userId, String projectId, ProjectRequest.CreateVersion createVersionRequest) {
+    return Mono.zip(requestValidator.validateAuthor(userId), exists(projectId))
         .thenReturn(createVersionRequest)
-        .map(projectVersionMapper::requestToEntity)
-        .flatMap(projectVersionEntity -> save(projectId, projectVersionEntity));
+        .map(validRequest -> projectVersionMapper.requestToEntity(userId, validRequest))
+        .flatMap(projectVersionEntity -> addVersion(userId, projectId, projectVersionEntity));
   }
 
   public Flux<Version> findAllVersionByProjectId(String projectId) {
@@ -85,21 +86,23 @@ public record ProjectService(
         .doOnSuccess(project -> eventReactivePublisher.publish(new ProjectEvent.Created(project)));
   }
 
-  private Mono<Version> save(String projectId, ProjectVersionEntity projectVersionEntity) {
+  private Mono<Version> addVersion(
+      String userId, String projectId, ProjectVersionEntity projectVersionEntity) {
+    // @spotless:off
     return projectRepository
         .saveVersion(projectId, projectVersionEntity)
         .map(projectVersionMapper::entityToResponse)
-        .doOnSuccess(
-            version ->
-                eventReactivePublisher.publish(
-                    new ProjectEvent.VersionCreated(projectId, version)));
+        .doOnSuccess(version ->
+                eventReactivePublisher.publish(new ProjectEvent.VersionCreated(userId, projectId, version)));
+    // @spotless:on
   }
 
   private Mono<User> fetchAuthor(String authorId) {
+    // @spotless:off
     return userReactiveClient
         .fetchUser(authorId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(ProjectException.userServiceException(exception)));
+        .onErrorResume(UserClientException.class,
+                exception -> Mono.error(ProjectException.userServiceException(exception)));
+    // @spotless:on
   }
 }

@@ -6,6 +6,7 @@ import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
 import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
+import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
@@ -16,11 +17,12 @@ import org.springframework.stereotype.Component;
 @Component
 class CommentOpenAPIDocHelper {
 
+  // @spotless:off
   void getAllCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("getAll")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Get all comment")
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("issueId")
                 .schema(schemaBuilder().type("string")))
@@ -30,15 +32,13 @@ class CommentOpenAPIDocHelper {
 
   void addCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("addComment")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Add comment")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder().schema(schemaBuilder().implementation(CreateComment.class))))
+        .requestBody( requestBodyBuilder()
+                .content(contentBuilder().schema(schemaBuilder().implementation(CreateComment.class))))
         .response(addOrUpdateComment200ResponseDoc())
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("issueId")
                 .schema(schemaBuilder().type("string")))
@@ -47,20 +47,17 @@ class CommentOpenAPIDocHelper {
 
   void updateCommentOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("updateComment")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Update comment")
-        .requestBody(
-            requestBodyBuilder()
-                .content(
-                    contentBuilder().schema(schemaBuilder().implementation(UpdateComment.class))))
+        .requestBody(requestBodyBuilder()
+                .content(contentBuilder().schema(schemaBuilder().implementation(UpdateComment.class))))
         .response(addOrUpdateComment200ResponseDoc())
         .response(badResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("issueId")
                 .schema(schemaBuilder().type("string")))
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("commentId")
                 .schema(schemaBuilder().type("string")))
@@ -69,11 +66,11 @@ class CommentOpenAPIDocHelper {
 
   void getCommentByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("get")
+        .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Get a comment by its id")
         .response(getCommentById200ResponseDoc())
         .response(comment404ResponseDoc())
-        .parameter(
-            parameterBuilder()
+        .parameter(parameterBuilder()
                 .in(ParameterIn.PATH)
                 .name("commentId")
                 .schema(schemaBuilder().type("string")))
@@ -84,8 +81,7 @@ class CommentOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve all comments")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .array(arraySchemaBuilder().schema(schemaBuilder().implementation(Comment.class))));
   }
@@ -94,8 +90,7 @@ class CommentOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Add/Update comment in comment successfully")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(Comment.class)));
   }
@@ -109,8 +104,7 @@ class CommentOpenAPIDocHelper {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(CommentErrorResponse.class)));
   }
@@ -119,8 +113,7 @@ class CommentOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve comment successfully")
-        .content(
-            contentBuilder()
+        .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
                 .schema(schemaBuilder().implementation(Comment.class)));
   }
@@ -129,7 +122,9 @@ class CommentOpenAPIDocHelper {
     return errorResponseDoc(HttpStatus.NOT_FOUND, "Comment not found");
   }
 
-  record CreateComment(String user, String content) {}
+  record CreateComment(String content) {}
 
-  record UpdateComment(String user, String content) {}
+  record UpdateComment(String content) {}
+
+  // @spotless:on
 }

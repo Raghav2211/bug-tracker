@@ -8,4 +8,5 @@ import lombok.NoArgsConstructor;
 public class ProjectVersionEntity {
   private String id;
   private String version;
+  private String addBy;
 }

@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public record UpdateCommentRequestValidator(
+record UpdateCommentRequestValidator(
     IssueRepository issueRepository, UserReactiveClient userReactiveClient)
     implements Validator<IssueRequest.UpdateComment, IssueRequest.UpdateComment> {
 

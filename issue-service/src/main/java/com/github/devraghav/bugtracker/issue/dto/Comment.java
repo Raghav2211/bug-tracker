@@ -12,6 +12,7 @@ public class Comment implements Comparable<Comment> {
   private User user;
   private String content;
   private LocalDateTime createdAt;
+  private LocalDateTime lastUpdatedAt;
 
   public static class CommentBuilder {
     public CommentBuilder() {}

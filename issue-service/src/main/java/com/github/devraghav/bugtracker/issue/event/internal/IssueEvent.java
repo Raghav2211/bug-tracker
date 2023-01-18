@@ -5,7 +5,6 @@ import com.github.devraghav.bugtracker.issue.dto.Comment;
 import com.github.devraghav.bugtracker.issue.dto.Issue;
 import com.github.devraghav.bugtracker.issue.dto.User;
 import java.time.LocalDateTime;
-import lombok.AccessLevel;
 import lombok.Getter;
 
 public interface IssueEvent {
@@ -14,12 +13,11 @@ public interface IssueEvent {
   class Created extends DomainEvent {
     private final Issue createdIssue;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
     public Created(Issue createdIssue) {
-      super(createdIssue.getId(), "Created", publisherInfo);
+      super(
+          createdIssue.getId(),
+          "Created",
+          new PublisherInfo("Issue", Issue.class, createdIssue.getReporter().id()));
       this.createdIssue = createdIssue;
     }
   }
@@ -28,12 +26,8 @@ public interface IssueEvent {
   class Updated extends DomainEvent {
     private final Issue updatedIssue;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
-    public Updated(Issue updatedIssue) {
-      super(updatedIssue.getId(), "Updated", publisherInfo);
+    public Updated(String updateBy, Issue updatedIssue) {
+      super(updatedIssue.getId(), "Updated", new PublisherInfo("Issue", Issue.class, updateBy));
       this.updatedIssue = updatedIssue;
     }
   }
@@ -43,12 +37,8 @@ public interface IssueEvent {
     private final String issueId;
     private final User assignee;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
-    public Assigned(String issueId, User assignee) {
-      super(issueId, "Assigned", publisherInfo);
+    public Assigned(String issueId, User assignee, String requestedBy) {
+      super(issueId, "Assigned", new PublisherInfo("Issue", Issue.class, requestedBy));
       this.issueId = issueId;
       this.assignee = assignee;
     }
@@ -58,12 +48,8 @@ public interface IssueEvent {
   class Unassigned extends DomainEvent {
     private final String issueId;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
-    public Unassigned(String issueId) {
-      super(issueId, "Unassigned", publisherInfo);
+    public Unassigned(String issueId, String requestedBy) {
+      super(issueId, "Unassigned", new PublisherInfo("Issue", Issue.class, requestedBy));
       this.issueId = issueId;
     }
   }
@@ -73,12 +59,8 @@ public interface IssueEvent {
     private final String issueId;
     private final User watcher;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
-    public WatchStarted(String issueId, User watcher) {
-      super(issueId, "WatchStarted", publisherInfo);
+    public WatchStarted(String issueId, User watcher, String requestedBy) {
+      super(issueId, "WatchStarted", new PublisherInfo("Issue", Issue.class, requestedBy));
       this.issueId = issueId;
       this.watcher = watcher;
     }
@@ -89,12 +71,8 @@ public interface IssueEvent {
     private final String issueId;
     private final User watchEndedBy;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
-    public WatchEnded(String issueId, User watchEndedBy) {
-      super(issueId, "WatchStarted", publisherInfo);
+    public WatchEnded(String issueId, User watchEndedBy, String requestedBy) {
+      super(issueId, "WatchStarted", new PublisherInfo("Issue", Issue.class, requestedBy));
       this.issueId = issueId;
       this.watchEndedBy = watchEndedBy;
     }
@@ -105,12 +83,8 @@ public interface IssueEvent {
     private final String issueId;
     private final LocalDateTime resolvedAt;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Issue.class, "SYSTEM");
-
-    public Resolved(String issueId, LocalDateTime resolvedAt) {
-      super(issueId, "Resolved", publisherInfo);
+    public Resolved(String issueId, LocalDateTime resolvedAt, String resolvedBy) {
+      super(issueId, "Resolved", new PublisherInfo("Issue", Issue.class, resolvedBy));
       this.issueId = issueId;
       this.resolvedAt = resolvedAt;
     }
@@ -121,12 +95,8 @@ public interface IssueEvent {
     private final String issueId;
     private final Comment comment;
 
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Comment.class, "SYSTEM");
-
     public CommentAdded(String issueId, Comment comment) {
-      super(issueId, "Created", publisherInfo);
+      super(issueId, "Created", new PublisherInfo("Issue", Comment.class, comment.getUser().id()));
       this.issueId = issueId;
       this.comment = comment;
     }
@@ -136,13 +106,9 @@ public interface IssueEvent {
   class CommentUpdated extends DomainEvent {
     private final String issueId;
     private final Comment comment;
-
-    @Getter(AccessLevel.NONE)
-    private static final PublisherInfo publisherInfo =
-        new PublisherInfo("Issue", Comment.class, "SYSTEM");
-
+    // TODO: updateAt fix
     public CommentUpdated(String issueId, Comment comment) {
-      super(issueId, "Updated", publisherInfo);
+      super(issueId, "Updated", new PublisherInfo("Issue", Comment.class, comment.getUser().id()));
       this.issueId = issueId;
       this.comment = comment;
     }

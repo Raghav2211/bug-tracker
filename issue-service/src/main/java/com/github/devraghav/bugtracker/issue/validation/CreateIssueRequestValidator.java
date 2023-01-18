@@ -5,6 +5,7 @@ import com.github.devraghav.bugtracker.issue.service.ProjectReactiveClient;
 import com.github.devraghav.bugtracker.issue.service.UserReactiveClient;
 import java.util.Collection;
 import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
@@ -12,9 +13,11 @@ import reactor.core.publisher.Mono;
 
 // TODO: check user have write access
 @Component
-public record CreateIssueRequestValidator(
-    ProjectReactiveClient projectReactiveClient, UserReactiveClient userReactiveClient)
-    implements Validator<IssueRequest.Create, IssueRequest.Create> {
+@RequiredArgsConstructor
+class CreateIssueRequestValidator implements Validator<IssueRequest.Create, IssueRequest.Create> {
+
+  private final ProjectReactiveClient projectReactiveClient;
+  private final UserReactiveClient userReactiveClient;
 
   @Override
   public Mono<IssueRequest.Create> validate(IssueRequest.Create createIssueRequest) {
@@ -23,7 +26,6 @@ public record CreateIssueRequestValidator(
         .and(validatePriority(createIssueRequest.priority()))
         .and(validateSeverity(createIssueRequest.severity()))
         .and(validatedProjectInfo(createIssueRequest.projects()))
-        .and(validateReporter(createIssueRequest.reporter()))
         .thenReturn(createIssueRequest);
   }
 
@@ -94,17 +96,5 @@ public record CreateIssueRequestValidator(
         .onErrorResume(
             ProjectClientException.class,
             exception -> Mono.error(IssueException.projectServiceException(exception)));
-  }
-
-  private Mono<Void> validateReporter(String reporter) {
-    return fetchUser(reporter).then();
-  }
-
-  private Mono<User> fetchUser(String userId) {
-    return userReactiveClient
-        .fetchUser(userId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(IssueException.userServiceException(exception)));
   }
 }
