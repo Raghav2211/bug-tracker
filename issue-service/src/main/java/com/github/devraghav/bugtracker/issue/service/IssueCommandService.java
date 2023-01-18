@@ -32,7 +32,7 @@ public class IssueCommandService {
   public Mono<Issue> create(String userId, IssueRequest.Create createIssueRequest) {
     return requestValidator
         .validate(userId, createIssueRequest)
-        .map(issueMapper::issueRequestToIssueEntity)
+        .map(validateRequest -> issueMapper.issueRequestToIssueEntity(userId, validateRequest))
         .flatMap(this::save);
   }
 

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class JWTService {
+class JWTService {
 
   @Value("${app.jwt.secret}")
   private String secret;
@@ -24,26 +24,26 @@ public class JWTService {
   private Key key;
 
   @PostConstruct
-  public void init() {
+  void init() {
     this.key = Keys.hmacShaKeyFor(secret.getBytes());
   }
 
-  public Claims getAllClaimsFromToken(String token) {
+  Claims getAllClaimsFromToken(String token) {
     return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
   }
 
-  public Date getExpirationDateFromToken(String token) {
+  Date getExpirationDateFromToken(String token) {
     return getAllClaimsFromToken(token).getExpiration();
+  }
+
+  Boolean validateToken(String token) {
+    boolean isTokenNotExpired = isTokenExpired(token);
+    log.atDebug().log("is token expired?  {}", isTokenNotExpired);
+    return BooleanUtils.negate(isTokenNotExpired);
   }
 
   private Boolean isTokenExpired(String token) {
     final Date expiration = getExpirationDateFromToken(token);
     return expiration.before(new Date());
-  }
-
-  public Boolean validateToken(String token) {
-    boolean isTokenNotExpired = isTokenExpired(token);
-    log.atDebug().log("is token expired?  {}", isTokenNotExpired);
-    return BooleanUtils.negate(isTokenNotExpired);
   }
 }

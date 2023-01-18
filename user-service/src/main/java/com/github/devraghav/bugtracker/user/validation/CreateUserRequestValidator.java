@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public class CreateUserRequestValidator implements Validator<UserRequest.Create> {
+class CreateUserRequestValidator implements Validator<UserRequest.Create> {
 
   private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 

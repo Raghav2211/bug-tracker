@@ -9,7 +9,6 @@ import com.github.devraghav.bugtracker.user.entity.UserEntity;
 import com.github.devraghav.bugtracker.user.event.internal.UserEvent;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
-import com.github.devraghav.bugtracker.user.validation.RequestValidator;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

@@ -1,6 +1,7 @@
-package com.github.devraghav.bugtracker.user.validation;
+package com.github.devraghav.bugtracker.user.service;
 
 import com.github.devraghav.bugtracker.user.dto.UserRequest;
+import com.github.devraghav.bugtracker.user.validation.Validator;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 

@@ -2,6 +2,7 @@ package com.github.devraghav.bugtracker.user.service;
 
 import com.github.devraghav.bugtracker.user.dto.LoginRequest;
 import com.github.devraghav.bugtracker.user.dto.UserException;
+import com.github.devraghav.bugtracker.user.security.JWTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

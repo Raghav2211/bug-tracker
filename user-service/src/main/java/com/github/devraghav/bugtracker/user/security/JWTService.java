@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.user.service;
+package com.github.devraghav.bugtracker.user.security;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,15 +30,15 @@ public class JWTService {
   private Key key;
 
   @PostConstruct
-  public void init() {
+  void init() {
     this.key = Keys.hmacShaKeyFor(secret.getBytes());
   }
 
-  public Claims getAllClaimsFromToken(String token) {
+  Claims getAllClaimsFromToken(String token) {
     return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
   }
 
-  public Date getExpirationDateFromToken(String token) {
+  Date getExpirationDateFromToken(String token) {
     return getAllClaimsFromToken(token).getExpiration();
   }
 
@@ -66,7 +66,7 @@ public class JWTService {
         .compact();
   }
 
-  public Boolean validateToken(String token) {
+  Boolean validateToken(String token) {
     boolean isTokenNotExpired = isTokenExpired(token);
     log.atDebug().log("is token expired?  {}", isTokenNotExpired);
     return BooleanUtils.negate(isTokenNotExpired);

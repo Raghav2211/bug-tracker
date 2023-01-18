@@ -15,13 +15,20 @@ public interface IssueMapper {
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())"),
-    @Mapping(target = "priority", source = "priority", qualifiedByName = "priorityToValue"),
-    @Mapping(target = "severity", source = "severity", qualifiedByName = "severityToValue"),
+    @Mapping(
+        target = "priority",
+        source = "createIssueRequest.priority",
+        qualifiedByName = "priorityToValue"),
+    @Mapping(
+        target = "severity",
+        source = "createIssueRequest.severity",
+        qualifiedByName = "severityToValue"),
+    @Mapping(target = "reporter", source = "reporter"),
     @Mapping(target = "watchers", expression = "java(Set.of())"),
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "endedAt", ignore = true)
   })
-  IssueEntity issueRequestToIssueEntity(IssueRequest.Create createIssueRequest);
+  IssueEntity issueRequestToIssueEntity(String reporter, IssueRequest.Create createIssueRequest);
 
   @Mappings({
     @Mapping(

@@ -1,6 +1,5 @@
 package com.github.devraghav.bugtracker.user.security;
 
-import com.github.devraghav.bugtracker.user.service.JWTService;
 import io.jsonwebtoken.Claims;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
