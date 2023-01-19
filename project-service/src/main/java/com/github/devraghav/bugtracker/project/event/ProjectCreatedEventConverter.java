@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ProjectCreatedEventConverter
+class ProjectCreatedEventConverter
     implements EventConverter<ProjectEvent.Created, ProjectCreatedSchema> {
 
   private List<com.github.devraghav.data_model.domain.project.version.Version> getVersions(

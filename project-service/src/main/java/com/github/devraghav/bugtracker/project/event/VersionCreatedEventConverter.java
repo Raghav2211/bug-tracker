@@ -6,7 +6,7 @@ import com.github.devraghav.data_model.event.project.version.VersionCreated;
 import com.github.devraghav.data_model.schema.project.version.VersionCreatedSchema;
 import java.time.ZoneOffset;
 
-public class VersionCreatedEventConverter
+class VersionCreatedEventConverter
     implements EventConverter<ProjectEvent.VersionCreated, VersionCreatedSchema> {
 
   private com.github.devraghav.data_model.domain.project.version.Version getVersion(

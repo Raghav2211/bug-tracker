@@ -14,38 +14,37 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 @Configuration
 @Slf4j
-public class ProjectRouteDefinition {
+class ProjectRouteDefinition {
 
   @Bean
-  public RouterFunction<ServerResponse> projectRoutes(
-      ProjectOpenAPIDocHelper docHelper, ProjectRouteV1Handler projectRouteV1Handler) {
+  RouterFunction<ServerResponse> projectRoutes(
+      ProjectOpenAPIDocHelper docHelper, RouteHandler routeHandler) {
     Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
         builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET("", projectRouteV1Handler::getProject, docHelper::getProjectByIdOperationDoc)
+                .GET("", routeHandler::getProject, docHelper::getProjectByIdOperationDoc)
                 .GET(
                     "/version",
-                    projectRouteV1Handler::getAllProjectVersion,
+                    routeHandler::getAllProjectVersion,
                     docHelper::getAllVersionOperationDoc)
                 .POST(
                     "/version",
-                    projectRouteV1Handler::addVersionToProject,
+                    routeHandler::addVersionToProject,
                     docHelper::saveVersionOperationDoc)
                 .GET(
                     "/version/{versionId}",
-                    projectRouteV1Handler::getProjectVersion,
+                    routeHandler::getProjectVersion,
                     docHelper::getProjectVersionByIdOperationDoc)
                 .build();
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET(
-                    "", projectRouteV1Handler::getAllProjects, docHelper::getAllProjectOperationDoc)
-                .POST(projectRouteV1Handler::createProject, docHelper::saveProjectOperationDoc)
+                .GET("", routeHandler::getAllProjects, docHelper::getAllProjectOperationDoc)
+                .POST(routeHandler::createProject, docHelper::saveProjectOperationDoc)
                 .nest(
                     path("/{id}").and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
                     routerByIdSupplier,
