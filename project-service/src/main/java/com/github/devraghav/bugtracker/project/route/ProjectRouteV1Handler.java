@@ -21,8 +21,9 @@ class ProjectRouteV1Handler implements RouteHandler {
     return projectService
         .findAll()
         .collectList()
-        .flatMap(ProjectResponse::retrieve)
-        .onErrorResume(ProjectException.class, exception -> ProjectResponse.invalid(serverRequest, exception));
+        .flatMap(RequestResponse::retrieve)
+        .onErrorResume(ProjectException.class,
+                exception -> RequestResponse.invalid(serverRequest, exception));
     //@spotless:on
   }
 
@@ -30,12 +31,12 @@ class ProjectRouteV1Handler implements RouteHandler {
   public Mono<ServerResponse> createProject(ServerRequest request) {
     // @spotless:off
     var principalWithCreateRequestMono =
-        Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(ProjectRequest.Create.class));
+        Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(RequestResponse.CreateProjectRequest.class));
     return principalWithCreateRequestMono
         .flatMap(tuple2 -> projectService.save(tuple2.getT1(), tuple2.getT2()))
-        .flatMap(project -> ProjectResponse.create(request, project))
-        .switchIfEmpty(ProjectResponse.noBody(request))
-        .onErrorResume(ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
+        .flatMap(project -> RequestResponse.create(request, project))
+        .switchIfEmpty(RequestResponse.noBody(request))
+        .onErrorResume(ProjectException.class, exception -> RequestResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -46,7 +47,8 @@ class ProjectRouteV1Handler implements RouteHandler {
     return projectService
         .findById(projectId)
         .flatMap(project -> ServerResponse.ok().body(BodyInserters.fromValue(project)))
-        .onErrorResume(ProjectException.class, exception -> ProjectResponse.notFound(request, exception));
+        .onErrorResume(ProjectException.class,
+                exception -> RequestResponse.notFound(request, exception));
     // @spotless:on
   }
 
@@ -55,12 +57,12 @@ class ProjectRouteV1Handler implements RouteHandler {
     var projectId = request.pathVariable("id");
     // @spotless:off
     var principalWithCreateRequestMono =
-        Mono.zip(getAuthenticatedPrincipal(request),request.bodyToMono(ProjectRequest.CreateVersion.class));
+        Mono.zip(getAuthenticatedPrincipal(request),request.bodyToMono(RequestResponse.CreateVersionRequest.class));
 
     return principalWithCreateRequestMono
         .flatMap(tuple2 -> projectService.addVersionToProjectId(tuple2.getT1(), projectId, tuple2.getT2()))
-        .flatMap(ProjectResponse::ok)
-        .onErrorResume(ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
+        .flatMap(RequestResponse::ok)
+        .onErrorResume(ProjectException.class, exception -> RequestResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -69,7 +71,9 @@ class ProjectRouteV1Handler implements RouteHandler {
     var projectId = request.pathVariable("id");
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findAllVersionByProjectId(projectId), ProjectResponse.Version.class);
+        .body(
+            projectService.findAllVersionByProjectId(projectId),
+            RequestResponse.VersionResponse.class);
   }
 
   @Override
@@ -79,7 +83,8 @@ class ProjectRouteV1Handler implements RouteHandler {
     // @spotless:off
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findVersionByProjectIdAndVersionId(projectId, versionId), ProjectResponse.Version.class);
+        .body(projectService.findVersionByProjectIdAndVersionId(projectId, versionId),
+                RequestResponse.VersionResponse.class);
     // @spotless:on
   }
 }

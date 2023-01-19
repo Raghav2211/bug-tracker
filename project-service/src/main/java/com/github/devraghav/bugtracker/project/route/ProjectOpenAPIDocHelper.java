@@ -45,7 +45,7 @@ class ProjectOpenAPIDocHelper {
                 .name("id")
                 .schema(schemaBuilder().type("string")))
         .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder()
-                    .implementation(ProjectRequest.CreateVersion.class))));
+                    .implementation(RequestResponse.CreateVersionRequest.class))));
   }
 
   void getProjectByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
@@ -86,7 +86,7 @@ class ProjectOpenAPIDocHelper {
         .summary("Create project")
         .requestBody(requestBodyBuilder()
         .content(contentBuilder()
-                .schema(schemaBuilder().implementation(ProjectRequest.Create.class))))
+                .schema(schemaBuilder().implementation(RequestResponse.CreateProjectRequest.class))))
         .response(saveProject201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -97,7 +97,7 @@ class ProjectOpenAPIDocHelper {
             .responseCode("201")
             .description("Project successfully created")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .schema(schemaBuilder().implementation(ProjectResponse.Project.class)));
+                    .schema(schemaBuilder().implementation(RequestResponse.CreateProjectRequest.class)));
   }
 
   private Builder badResponseDoc() {
@@ -109,7 +109,7 @@ class ProjectOpenAPIDocHelper {
             .responseCode("200")
             .description("Retrieve all projects")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .array(arraySchemaBuilder().schema(schemaBuilder().implementation(ProjectResponse.Project.class))));
+                    .array(arraySchemaBuilder().schema(schemaBuilder().implementation(RequestResponse.ProjectResponse.class))));
   }
 
   private Builder project404ResponseDoc() {
@@ -125,7 +125,7 @@ class ProjectOpenAPIDocHelper {
             .responseCode("200")
             .description("Retrieve project successfully")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .schema(schemaBuilder().implementation(ProjectResponse.Project.class)));
+                    .schema(schemaBuilder().implementation(RequestResponse.ProjectResponse.class)));
   }
 
   private Builder getProjectVersionById200ResponseDoc() {
@@ -133,14 +133,14 @@ class ProjectOpenAPIDocHelper {
             .responseCode("200")
             .description("Retrieve project version successfully")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .schema(schemaBuilder().implementation(ProjectResponse.Version.class)));
+                    .schema(schemaBuilder().implementation(RequestResponse.VersionResponse.class)));
   }
 
   private Builder saveProjectVersion201ResponseDoc() {
     return responseBuilder()
         .responseCode("201")
         .description("Create project version successfully")
-        .content(contentBuilder().schema(schemaBuilder().implementation(ProjectResponse.Version.class)));
+        .content(contentBuilder().schema(schemaBuilder().implementation(RequestResponse.VersionResponse.class)));
   }
 
   private Builder getAllProjectVersion200ResponseDoc() {
@@ -148,7 +148,7 @@ class ProjectOpenAPIDocHelper {
         .responseCode("200")
         .description("Retrieve all project versions")
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .array(arraySchemaBuilder().arraySchema(schemaBuilder().implementation(ProjectResponse.Version.class))));
+                .array(arraySchemaBuilder().arraySchema(schemaBuilder().implementation(RequestResponse.VersionResponse.class))));
   }
 
   private Builder errorResponseDoc(HttpStatus httpStatus, String message) {
@@ -156,7 +156,7 @@ class ProjectOpenAPIDocHelper {
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(ProjectResponse.Error.class)));
+                .schema(schemaBuilder().implementation(RequestResponse.ErrorResponse.class)));
   }
   // @spotless:on
 }

@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.project.event;
 
-import com.github.devraghav.bugtracker.project.dto.ProjectResponse;
+import com.github.devraghav.bugtracker.project.dto.RequestResponse;
 import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
 import com.github.devraghav.data_model.event.project.ProjectCreated;
 import com.github.devraghav.data_model.schema.project.ProjectCreatedSchema;
@@ -14,12 +14,12 @@ class ProjectCreatedEventConverter
     implements EventConverter<ProjectEvent.Created, ProjectCreatedSchema> {
 
   private List<com.github.devraghav.data_model.domain.project.version.Version> getVersions(
-      Set<ProjectResponse.Version> versions) {
+      Set<RequestResponse.VersionResponse> versions) {
     return versions.stream().map(this::getVersion).collect(Collectors.toList());
   }
 
   private com.github.devraghav.data_model.domain.project.version.Version getVersion(
-      ProjectResponse.Version version) {
+      RequestResponse.VersionResponse version) {
     return com.github.devraghav.data_model.domain.project.version.Version.newBuilder()
         .setId(version.id())
         .setVersion(version.version())
@@ -27,7 +27,7 @@ class ProjectCreatedEventConverter
   }
 
   private com.github.devraghav.data_model.domain.project.Project getProject(
-      ProjectResponse.Project project) {
+      RequestResponse.ProjectResponse project) {
     var tags =
         project.tags().entrySet().stream()
             .collect(Collectors.toMap(Objects::toString, Object::toString));

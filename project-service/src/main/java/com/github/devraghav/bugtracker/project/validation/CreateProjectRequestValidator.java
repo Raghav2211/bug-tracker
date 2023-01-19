@@ -1,15 +1,17 @@
 package com.github.devraghav.bugtracker.project.validation;
 
-import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
+import com.github.devraghav.bugtracker.project.dto.RequestResponse;
 import com.github.devraghav.bugtracker.project.exception.ProjectException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public class CreateProjectRequestValidator implements Validator<ProjectRequest.Create> {
+public class CreateProjectRequestValidator
+    implements Validator<RequestResponse.CreateProjectRequest> {
   @Override
-  public Mono<ProjectRequest.Create> validate(ProjectRequest.Create createProjectRequest) {
+  public Mono<RequestResponse.CreateProjectRequest> validate(
+      RequestResponse.CreateProjectRequest createProjectRequest) {
     return validateName(createProjectRequest.name())
         .and(validateDescription(createProjectRequest.description()))
         .thenReturn(createProjectRequest);
