@@ -6,8 +6,7 @@ import com.github.devraghav.data_model.event.user.UserCreated;
 import com.github.devraghav.data_model.schema.user.UserCreatedSchema;
 import java.time.ZoneOffset;
 
-public class UserCreatedEventConverter
-    implements EventConverter<UserEvent.Created, UserCreatedSchema> {
+class UserCreatedEventConverter implements EventConverter<UserEvent.Created, UserCreatedSchema> {
 
   private com.github.devraghav.data_model.domain.user.User getUser(User user) {
     return com.github.devraghav.data_model.domain.user.User.newBuilder()

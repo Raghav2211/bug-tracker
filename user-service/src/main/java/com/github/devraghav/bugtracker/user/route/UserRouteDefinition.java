@@ -12,10 +12,10 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 @Configuration
-public class UserRouteDefinition {
+class UserRouteDefinition {
 
   @Bean
-  public RouterFunction<ServerResponse> userRoutes(
+  RouterFunction<ServerResponse> userRoutes(
       UserOpenAPIDocHelper docHelper, UserRouteHandler userRouteHandler) {
     Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
         builder -> {};

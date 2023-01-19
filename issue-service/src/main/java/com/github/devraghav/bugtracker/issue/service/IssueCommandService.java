@@ -5,6 +5,7 @@ import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
+import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
@@ -29,18 +30,21 @@ public class IssueCommandService {
   private final IssueAttachmentRepository issueAttachmentRepository;
   private final EventBus.ReactivePublisher<DomainEvent> domainEventPublisher;
 
-  public Mono<Issue> create(String userId, IssueRequest.Create createIssueRequest) {
+  public Mono<IssueResponse.Issue> create(String userId, IssueRequest.Create createIssueRequest) {
     return requestValidator
         .validate(userId, createIssueRequest)
         .map(validateRequest -> issueMapper.issueRequestToIssueEntity(userId, validateRequest))
         .flatMap(this::save);
   }
 
-  public Mono<Issue> update(String userId, String issueId, IssueRequest.Update request) {
+  public Mono<IssueResponse.Issue> update(
+      String userId, String issueId, IssueRequest.Update updateRequest) {
     return issueQueryService
         .findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
-        .map(issueEntity -> issueMapper.issueRequestToIssueEntity(issueEntity, request))
+        .map(
+            issueEntity ->
+                issueMapper.issueRequestToIssueEntity(userId, issueEntity, updateRequest))
         .flatMap(issueEntity -> update(userId, issueEntity))
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
@@ -131,14 +135,14 @@ public class IssueCommandService {
     return issueAttachmentRepository.upload(issueId, filePart.filename(), filePart.content());
   }
 
-  private Mono<Issue> save(IssueEntity issueEntity) {
+  private Mono<IssueResponse.Issue> save(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .flatMap(issueQueryService::generateIssue)
         .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Created(issue)));
   }
 
-  private Mono<Issue> update(String userId, IssueEntity issueEntity) {
+  private Mono<IssueResponse.Issue> update(String userId, IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .flatMap(issueQueryService::generateIssue)

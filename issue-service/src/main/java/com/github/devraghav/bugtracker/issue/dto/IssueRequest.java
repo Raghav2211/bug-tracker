@@ -2,6 +2,8 @@ package com.github.devraghav.bugtracker.issue.dto;
 
 import java.util.Map;
 import java.util.Set;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.reactive.function.server.ServerRequest;
 
 public interface IssueRequest {
 
@@ -25,11 +27,19 @@ public interface IssueRequest {
       String businessUnit,
       String header,
       String description,
-      // TODO : updateBy feature
-      String updateBy,
       Map<String, String> tags) {
     public Update {
       tags = Map.copyOf(tags == null ? Map.of() : tags);
+    }
+  }
+
+  record Page(Integer page, Integer size, Sort sort) {
+
+    public static Page of(ServerRequest request) {
+      return new Page(
+          request.queryParam("page").map(Integer::parseInt).orElseGet(() -> 0),
+          request.queryParam("size").map(Integer::parseInt).orElseGet(() -> 10),
+          request.queryParam("sort").map(Sort::by).orElseGet(() -> Sort.by("createdAt")));
     }
   }
 

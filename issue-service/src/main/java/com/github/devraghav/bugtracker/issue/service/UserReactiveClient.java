@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.User;
-import com.github.devraghav.bugtracker.issue.dto.UserClientException;
+import com.github.devraghav.bugtracker.issue.exception.UserClientException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;

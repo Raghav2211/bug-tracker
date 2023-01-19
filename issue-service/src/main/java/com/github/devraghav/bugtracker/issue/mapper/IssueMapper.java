@@ -25,6 +25,7 @@ public interface IssueMapper {
         qualifiedByName = "severityToValue"),
     @Mapping(target = "reporter", source = "reporter"),
     @Mapping(target = "watchers", expression = "java(Set.of())"),
+    @Mapping(target = "lastUpdateBy", source = "reporter"),
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "endedAt", ignore = true)
   })
@@ -55,10 +56,11 @@ public interface IssueMapper {
         target = "tags",
         expression =
             "java(Optional.ofNullable(updateIssueRequest.tags()).orElse(issueEntity.getTags()))"),
+    @Mapping(target = "lastUpdateBy", source = "updateBy"),
     @Mapping(target = "assignee", ignore = true)
   })
   IssueEntity issueRequestToIssueEntity(
-      IssueEntity issueEntity, IssueRequest.Update updateIssueRequest);
+      String updateBy, IssueEntity issueEntity, IssueRequest.Update updateIssueRequest);
 
   @Mappings({
     @Mapping(target = "priority", source = "priority", qualifiedByName = "valueToPriority"),
@@ -68,7 +70,7 @@ public interface IssueMapper {
     @Mapping(target = "watchers", ignore = true),
     @Mapping(target = "projects", ignore = true)
   })
-  Issue.IssueBuilder issueEntityToIssue(IssueEntity issueEntity);
+  IssueResponse.Issue.IssueBuilder issueEntityToIssue(IssueEntity issueEntity);
 
   @Named("priorityToValue")
   default Integer priorityToValue(Priority priority) {

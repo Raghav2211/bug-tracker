@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.dto.Issue;
+import com.github.devraghav.bugtracker.issue.dto.IssueResponse;
 import com.github.devraghav.bugtracker.issue.dto.Project;
 import com.github.devraghav.bugtracker.issue.dto.ProjectVersion;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
@@ -62,7 +62,7 @@ class IssueUpdatedEventConverter implements EventConverter<IssueEvent.Updated, I
     return projects.stream().map(this::getProject).collect(Collectors.toList());
   }
 
-  private com.github.devraghav.data_model.domain.issue.Issue getIssue(Issue issue) {
+  private com.github.devraghav.data_model.domain.issue.Issue getIssue(IssueResponse.Issue issue) {
     var issueBuilder =
         com.github.devraghav.data_model.domain.issue.Issue.newBuilder()
             .setId(issue.getId())

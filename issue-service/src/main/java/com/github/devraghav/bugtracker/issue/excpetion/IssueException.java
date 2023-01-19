@@ -1,5 +1,8 @@
-package com.github.devraghav.bugtracker.issue.dto;
+package com.github.devraghav.bugtracker.issue.excpetion;
 
+import com.github.devraghav.bugtracker.issue.dto.ProjectInfo;
+import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
+import com.github.devraghav.bugtracker.issue.exception.UserClientException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;

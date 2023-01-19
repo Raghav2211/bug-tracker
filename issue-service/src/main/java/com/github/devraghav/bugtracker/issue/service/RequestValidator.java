@@ -1,9 +1,9 @@
 package com.github.devraghav.bugtracker.issue.service;
 
-import com.github.devraghav.bugtracker.issue.dto.IssueException;
 import com.github.devraghav.bugtracker.issue.dto.IssueRequest;
 import com.github.devraghav.bugtracker.issue.dto.User;
-import com.github.devraghav.bugtracker.issue.dto.UserClientException;
+import com.github.devraghav.bugtracker.issue.exception.UserClientException;
+import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

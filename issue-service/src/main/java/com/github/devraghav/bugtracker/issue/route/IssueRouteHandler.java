@@ -1,6 +1,7 @@
 package com.github.devraghav.bugtracker.issue.route;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
+import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
 import com.github.devraghav.bugtracker.issue.service.IssueCommandService;
 import com.github.devraghav.bugtracker.issue.service.IssueQueryService;
@@ -32,7 +33,7 @@ class IssueRouteHandler {
         IssueFilter.builder()
             .projectId(serverRequest.queryParam("projectId"))
             .reportedBy(serverRequest.queryParam("reportedBy"))
-            .pageRequest(PageRequest.of(serverRequest))
+            .pageRequest(IssueRequest.Page.of(serverRequest))
             .build();
     return issueQueryService
         .findAllByFilter(issueFilter)

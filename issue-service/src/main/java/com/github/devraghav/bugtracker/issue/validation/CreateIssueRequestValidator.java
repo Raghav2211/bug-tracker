@@ -1,6 +1,8 @@
 package com.github.devraghav.bugtracker.issue.validation;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
+import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
+import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.service.ProjectReactiveClient;
 import com.github.devraghav.bugtracker.issue.service.UserReactiveClient;
 import java.util.Collection;

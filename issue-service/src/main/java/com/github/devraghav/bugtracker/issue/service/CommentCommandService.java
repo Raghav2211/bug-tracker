@@ -5,6 +5,8 @@ import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
+import com.github.devraghav.bugtracker.issue.exception.UserClientException;
+import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import java.time.LocalDateTime;
@@ -19,7 +21,7 @@ public record CommentCommandService(
     UserReactiveClient userReactiveClient,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<Comment> save(IssueRequest.CreateComment createCommentRequest) {
+  public Mono<CommentResponse.Comment> save(IssueRequest.CreateComment createCommentRequest) {
     // @spotless:off
     return requestValidator
         .validate(createCommentRequest)
@@ -32,7 +34,7 @@ public record CommentCommandService(
     // @spotless:on
   }
 
-  public Mono<Comment> update(IssueRequest.UpdateComment updateCommentRequest) {
+  public Mono<CommentResponse.Comment> update(IssueRequest.UpdateComment updateCommentRequest) {
     // @spotless:off
     return requestValidator
         .validate(updateCommentRequest)
@@ -61,7 +63,7 @@ public record CommentCommandService(
     return commentEntity.toBuilder().content(content).lastUpdatedAt(LocalDateTime.now()).build();
   }
 
-  private Mono<Comment> getComment(CommentEntity commentEntity) {
+  private Mono<CommentResponse.Comment> getComment(CommentEntity commentEntity) {
     return userReactiveClient
         .fetchUser(commentEntity.getUserId())
         .onErrorResume(

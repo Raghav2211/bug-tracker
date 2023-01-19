@@ -22,10 +22,10 @@ import org.springframework.context.annotation.Configuration;
     type = SecuritySchemeType.HTTP,
     bearerFormat = "JWT",
     scheme = "bearer")
-public class OpenApi30Config {
+class OpenApi30Config {
 
   @Bean
-  public GroupedOpenApi userOpenApi() {
+  GroupedOpenApi userOpenApi() {
     String paths[] = {"/api/rest/v1/user/**"};
     return GroupedOpenApi.builder().group("user-service").pathsToMatch(paths).build();
   }

@@ -3,6 +3,9 @@ package com.github.devraghav.bugtracker.issue.service;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
 import com.github.devraghav.bugtracker.issue.entity.ProjectInfoRef;
+import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
+import com.github.devraghav.bugtracker.issue.exception.UserClientException;
+import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
@@ -27,7 +30,7 @@ public record IssueQueryService(
     return issueRepository.count();
   }
 
-  public Flux<Issue> findAllByFilter(IssueFilter issueFilter) {
+  public Flux<IssueResponse.Issue> findAllByFilter(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
       return Mono.just(issueFilter.getProjectId())
           .map(Optional::get)
@@ -41,7 +44,7 @@ public record IssueQueryService(
     return issueRepository.findAllBy(issueFilter.getPageRequest()).flatMap(this::generateIssue);
   }
 
-  public Mono<Issue> get(String issueId) {
+  public Mono<IssueResponse.Issue> get(String issueId) {
     return findById(issueId).flatMap(this::generateIssue);
   }
 
@@ -52,7 +55,7 @@ public record IssueQueryService(
         .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
-  public Mono<Issue> generateIssue(IssueEntity issueEntity) {
+  public Mono<IssueResponse.Issue> generateIssue(IssueEntity issueEntity) {
     var watchersMono = getWatchers(issueEntity.getWatchers()).collect(Collectors.toSet());
     var projectsMono = getProjects(issueEntity.getProjects()).collectList();
     var reporterMono = fetchUser(issueEntity.getReporter());
@@ -75,7 +78,7 @@ public record IssueQueryService(
             exception -> Mono.error(IssueException.userServiceException(exception)));
   }
 
-  private Issue generateIssue(
+  private IssueResponse.Issue generateIssue(
       IssueEntity issueEntity, Tuple4<Set<User>, List<Project>, Optional<User>, User> tuple5) {
     var issueBuilder =
         issueMapper
@@ -96,7 +99,7 @@ public record IssueQueryService(
     return Flux.fromIterable(projectInfoRefs).flatMap(this::getProject);
   }
 
-  private Flux<Issue> getAllByReporter(String reporter) {
+  private Flux<IssueResponse.Issue> getAllByReporter(String reporter) {
     return fetchUser(reporter)
         .flatMapMany(
             unused -> issueRepository.findAllByReporter(reporter).flatMap(this::generateIssue));
@@ -121,7 +124,7 @@ public record IssueQueryService(
         .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
-  private Flux<Issue> getAllByProjectId(String projectId) {
+  private Flux<IssueResponse.Issue> getAllByProjectId(String projectId) {
     return validateProjectId(projectId)
         .flatMapMany(
             unused -> issueRepository.findAllByProjectId(projectId).flatMap(this::generateIssue));

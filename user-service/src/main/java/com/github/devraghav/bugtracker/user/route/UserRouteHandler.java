@@ -13,17 +13,17 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class UserRouteHandler {
+class UserRouteHandler {
   private final UserService userService;
   private final LoginService loginService;
 
-  public Mono<ServerResponse> getAll(ServerRequest request) {
+  Mono<ServerResponse> getAll(ServerRequest request) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(userService.findAll(), User.class);
   }
 
-  public Mono<ServerResponse> create(ServerRequest request) {
+  Mono<ServerResponse> create(ServerRequest request) {
     return request
         .bodyToMono(UserRequest.Create.class)
         .flatMap(userService::save)
@@ -32,14 +32,14 @@ public class UserRouteHandler {
         .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception));
   }
 
-  public Mono<ServerResponse> get(ServerRequest request) {
+  Mono<ServerResponse> get(ServerRequest request) {
     return userService
         .findById(request.pathVariable("id"))
         .flatMap(UserResponse::found)
         .onErrorResume(UserException.class, exception -> UserResponse.notFound(request, exception));
   }
 
-  public Mono<ServerResponse> login(ServerRequest request) {
+  Mono<ServerResponse> login(ServerRequest request) {
     return request
         .bodyToMono(LoginRequest.Request.class)
         .flatMap(loginService::login)

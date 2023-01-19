@@ -8,7 +8,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class EventConverterFactory {
+final class EventConverterFactory {
 
   private static final UserCreatedEventConverter USER_CREATED_EVENT_CONVERTER =
       new UserCreatedEventConverter();
@@ -20,7 +20,7 @@ public final class EventConverterFactory {
   }
 
   @SuppressWarnings("unchecked")
-  public <S extends DomainEvent, T extends SpecificRecordBase> EventConverter<S, T> getConverter(
+  <S extends DomainEvent, T extends SpecificRecordBase> EventConverter<S, T> getConverter(
       Class<S> sourceClass) {
     var converter = EVENT_SOURCE_MAP.get(sourceClass);
     if (converter == null) {

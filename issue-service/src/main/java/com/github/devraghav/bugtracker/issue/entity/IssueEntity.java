@@ -15,20 +15,14 @@ public class IssueEntity {
   private Integer priority;
   private Integer severity;
   private String businessUnit;
-
   private Set<ProjectInfoRef> projects;
-
   private String header;
-
   private String description;
   private String reporter;
-
   private String assignee;
-
   private Set<String> watchers;
-
   private Map<String, String> tags;
-
+  private String lastUpdateBy;
   private LocalDateTime createdAt;
   private LocalDateTime endedAt;
 

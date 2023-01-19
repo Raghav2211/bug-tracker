@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.mapper;
 
-import com.github.devraghav.bugtracker.issue.dto.Comment;
+import com.github.devraghav.bugtracker.issue.dto.CommentResponse;
 import com.github.devraghav.bugtracker.issue.dto.IssueRequest;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import java.time.LocalDateTime;
@@ -20,5 +20,5 @@ public interface CommentMapper {
   CommentEntity requestToEntity(IssueRequest.CreateComment createCommentRequest);
 
   @Mappings({@Mapping(target = "user", ignore = true)})
-  Comment.CommentBuilder entityToResponse(CommentEntity commentEntity);
+  CommentResponse.Comment.CommentBuilder entityToResponse(CommentEntity commentEntity);
 }

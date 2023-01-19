@@ -124,21 +124,22 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve issue successfully")
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue
+                .class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder saveIssue201ResponseDoc() {
     return responseBuilder()
         .responseCode("201")
         .description("Issue successfully created")
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder updateIssue200ResponseDoc() {
     return responseBuilder()
         .responseCode("200")
         .description("Issue successfully updated")
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder badResponseDoc() {
@@ -150,7 +151,7 @@ class IssueOpenAPIDocHelper {
         .responseCode("200")
         .description("Retrieve all issues")
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(Issue.class))));
+                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(IssueResponse.Issue.class))));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder errorResponseDoc(
@@ -158,7 +159,7 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueErrorResponse.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Error.class)));
   }
   // spotless:on
   record Assign(String user) {}

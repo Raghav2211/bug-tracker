@@ -1,11 +1,11 @@
 package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.event.internal.EventBus;
-import com.github.devraghav.bugtracker.issue.dto.Comment;
-import com.github.devraghav.bugtracker.issue.dto.CommentException;
-import com.github.devraghav.bugtracker.issue.dto.UserClientException;
+import com.github.devraghav.bugtracker.issue.dto.CommentResponse;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
+import com.github.devraghav.bugtracker.issue.exception.UserClientException;
+import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
 import java.util.UUID;
@@ -21,18 +21,18 @@ public record CommentQueryService(
     CommentRepository commentRepository,
     EventBus.ReactiveMessageBroker reactiveMessageBroker) {
 
-  public Flux<Comment> getComments(String issueId) {
+  public Flux<CommentResponse.Comment> getComments(String issueId) {
     return commentRepository.findAllByIssueId(issueId).flatMap(this::getComment);
   }
 
-  public Mono<Comment> getComment(String id) {
+  public Mono<CommentResponse.Comment> getComment(String id) {
     return commentRepository
         .findById(id)
         .flatMap(this::getComment)
         .switchIfEmpty(Mono.error(() -> CommentException.notFound(id)));
   }
 
-  public Flux<ServerSentEvent<Comment>> subscribe(String issueId) {
+  public Flux<ServerSentEvent<CommentResponse.Comment>> subscribe(String issueId) {
     var commentAddedStream =
         reactiveMessageBroker.tap(UUID::randomUUID, IssueEvent.CommentAdded.class).stream()
             .filter(commentAdded -> commentAdded.getComment().getIssueId().equals(issueId))
@@ -44,7 +44,7 @@ public record CommentQueryService(
     return Flux.merge(commentAddedStream, commentUpdatedStream);
   }
 
-  private Mono<Comment> getComment(CommentEntity commentEntity) {
+  private Mono<CommentResponse.Comment> getComment(CommentEntity commentEntity) {
     return userReactiveClient
         .fetchUser(commentEntity.getUserId())
         .onErrorResume(
@@ -54,16 +54,17 @@ public record CommentQueryService(
             commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
   }
 
-  private ServerSentEvent<Comment> convert(IssueEvent.CommentAdded commentAdded) {
-    return ServerSentEvent.<Comment>builder()
+  private ServerSentEvent<CommentResponse.Comment> convert(IssueEvent.CommentAdded commentAdded) {
+    return ServerSentEvent.<CommentResponse.Comment>builder()
         .id(commentAdded.getId().toString())
         .event(commentAdded.getName())
         .data(commentAdded.getComment())
         .build();
   }
 
-  private ServerSentEvent<Comment> convert(IssueEvent.CommentUpdated commentUpdated) {
-    return ServerSentEvent.<Comment>builder()
+  private ServerSentEvent<CommentResponse.Comment> convert(
+      IssueEvent.CommentUpdated commentUpdated) {
+    return ServerSentEvent.<CommentResponse.Comment>builder()
         .id(commentUpdated.getId().toString())
         .event(commentUpdated.getName())
         .data(commentUpdated.getComment())

@@ -14,7 +14,7 @@ import reactor.kafka.sender.SenderResult;
 
 @Component
 @Slf4j
-public class DomainEventProcessor
+class DomainEventProcessor
     implements EventBus.ReactivePublisher<DomainEvent>, EventBus.ReactiveSubscriber<DomainEvent> {
   private final EventBus.InputChannel<DomainEvent> channel;
   private final String eventStoreTopic;
