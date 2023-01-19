@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.project.event;
 
-import com.github.devraghav.bugtracker.project.dto.Version;
+import com.github.devraghav.bugtracker.project.dto.ProjectResponse;
 import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
 import com.github.devraghav.data_model.event.project.version.VersionCreated;
 import com.github.devraghav.data_model.schema.project.version.VersionCreatedSchema;
@@ -10,7 +10,7 @@ public class VersionCreatedEventConverter
     implements EventConverter<ProjectEvent.VersionCreated, VersionCreatedSchema> {
 
   private com.github.devraghav.data_model.domain.project.version.Version getVersion(
-      Version version) {
+      ProjectResponse.Version version) {
     return com.github.devraghav.data_model.domain.project.version.Version.newBuilder()
         .setId(version.id())
         .setVersion(version.version())

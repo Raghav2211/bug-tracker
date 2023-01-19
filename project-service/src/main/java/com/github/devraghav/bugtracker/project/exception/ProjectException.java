@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.dto;
+package com.github.devraghav.bugtracker.project.exception;
 
 import java.util.Map;
 import lombok.Getter;
@@ -26,10 +26,6 @@ public class ProjectException extends RuntimeException {
 
   public static ProjectException invalidDescription(String description) {
     return new ProjectException("Description is invalid", Map.of("description", description));
-  }
-
-  public static ProjectException userServiceException(UserClientException userClientException) {
-    return new ProjectException(userClientException.getMessage(), userClientException.getMeta());
   }
 
   public static ProjectException authorNotHaveWriteAccess(String author) {

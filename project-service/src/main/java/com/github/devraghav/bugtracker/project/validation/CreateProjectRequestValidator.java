@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.project.validation;
 
-import com.github.devraghav.bugtracker.project.dto.ProjectException;
 import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
+import com.github.devraghav.bugtracker.project.exception.ProjectException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;

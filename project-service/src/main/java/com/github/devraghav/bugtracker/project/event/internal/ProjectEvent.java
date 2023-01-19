@@ -1,20 +1,19 @@
 package com.github.devraghav.bugtracker.project.event.internal;
 
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.project.dto.Project;
-import com.github.devraghav.bugtracker.project.dto.Version;
+import com.github.devraghav.bugtracker.project.dto.ProjectResponse;
 import lombok.Getter;
 
 public interface ProjectEvent {
   @Getter
   class Created extends DomainEvent {
-    private final Project project;
+    private final ProjectResponse.Project project;
 
-    public Created(Project project) {
+    public Created(ProjectResponse.Project project) {
       super(
-          project.getId(),
+          project.id(),
           "Created",
-          new PublisherInfo("Project", Project.class, project.getAuthor().id()));
+          new PublisherInfo("Project", ProjectResponse.Project.class, project.author()));
       this.project = project;
     }
   }
@@ -22,10 +21,13 @@ public interface ProjectEvent {
   @Getter
   class VersionCreated extends DomainEvent {
     private final String projectId;
-    private final Version version;
+    private final ProjectResponse.Version version;
 
-    public VersionCreated(String userId, String projectId, Version version) {
-      super(projectId, "Created", new PublisherInfo("Project", Version.class, userId));
+    public VersionCreated(String projectId, ProjectResponse.Version version) {
+      super(
+          projectId,
+          "Created",
+          new PublisherInfo("Project", ProjectResponse.Version.class, version.userId()));
       this.projectId = projectId;
       this.version = version;
     }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -33,6 +34,10 @@ public class SecurityConfig {
     return http.authorizeExchange()
             .pathMatchers("/actuator/**")
             .permitAll()
+            .pathMatchers(HttpMethod.POST, "/api/rest/v1/project")
+            .hasAnyAuthority(Role.ROLE_ADMIN.name(),Role.ROLE_WRITE.name())
+            .pathMatchers(HttpMethod.POST, "/api/rest/v1/project/{id}/version")
+            .hasAnyAuthority(Role.ROLE_ADMIN.name(),Role.ROLE_WRITE.name())
             .anyExchange()
             .authenticated()
             .and()
@@ -81,11 +86,15 @@ public class SecurityConfig {
     }
 
     private UsernamePasswordAuthenticationToken getToken(Claims claims) {
-      String role = claims.get("role", String.class);
+      Role role = Role.valueOf(claims.get("role", String.class));
+      Boolean enabled = claims.get("enabled", Boolean.class);
       return UsernamePasswordAuthenticationToken.authenticated(
           claims.getSubject(),
           null,
-          Stream.of(role).map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+          Stream.of(role)
+              .map(Role::name)
+              .map(SimpleGrantedAuthority::new)
+              .collect(Collectors.toList()));
     }
   }
 
@@ -112,5 +121,11 @@ public class SecurityConfig {
       Authentication auth = new UsernamePasswordAuthenticationToken(authToken, authToken);
       return authenticationManager.authenticate(auth).map(SecurityContextImpl::new);
     }
+  }
+
+  private enum Role {
+    ROLE_ADMIN,
+    ROLE_READ,
+    ROLE_WRITE;
   }
 }

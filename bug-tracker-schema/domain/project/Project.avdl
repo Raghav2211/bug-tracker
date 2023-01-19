@@ -1,6 +1,5 @@
 @namespace("com.github.devraghav.data_model.domain.project")
 protocol Project {
-	import idl "../user/User.avdl";
 	import idl "./version/Version.avdl";
 	record Project {
 		string id;
@@ -8,7 +7,7 @@ protocol Project {
 		string description;
 		boolean enabled;
 		string status;
-		com.github.devraghav.data_model.domain.user.User author;
+		string author;
 		long createdAt;
 		array<com.github.devraghav.data_model.domain.project.version.Version> versions = [];
 		union {null,map<string>} tags = null;

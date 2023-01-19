@@ -18,31 +18,34 @@ public class ProjectRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> projectRoutes(
-      ProjectOpenAPIDocHelper docHelper, ProjectRouteHandler projectRouteHandler) {
+      ProjectOpenAPIDocHelper docHelper, ProjectRouteV1Handler projectRouteV1Handler) {
     Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
         builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET("", projectRouteHandler::get, docHelper::getProjectByIdOperationDoc)
+                .GET("", projectRouteV1Handler::getProject, docHelper::getProjectByIdOperationDoc)
                 .GET(
                     "/version",
-                    projectRouteHandler::getAllProjectVersion,
+                    projectRouteV1Handler::getAllProjectVersion,
                     docHelper::getAllVersionOperationDoc)
                 .POST(
-                    "/version", projectRouteHandler::addVersion, docHelper::saveVersionOperationDoc)
+                    "/version",
+                    projectRouteV1Handler::addVersionToProject,
+                    docHelper::saveVersionOperationDoc)
                 .GET(
                     "/version/{versionId}",
-                    projectRouteHandler::getProjectVersionById,
+                    projectRouteV1Handler::getProjectVersion,
                     docHelper::getProjectVersionByIdOperationDoc)
                 .build();
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET("", projectRouteHandler::getAll, docHelper::getAllProjectOperationDoc)
-                .POST(projectRouteHandler::create, docHelper::saveProjectOperationDoc)
+                .GET(
+                    "", projectRouteV1Handler::getAllProjects, docHelper::getAllProjectOperationDoc)
+                .POST(projectRouteV1Handler::createProject, docHelper::saveProjectOperationDoc)
                 .nest(
                     path("/{id}").and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
                     routerByIdSupplier,

@@ -1,11 +1,10 @@
 package com.github.devraghav.bugtracker.project.route;
 
 import com.github.devraghav.bugtracker.project.dto.*;
+import com.github.devraghav.bugtracker.project.exception.ProjectException;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -14,10 +13,10 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-class ProjectRouteHandler {
+class ProjectRouteV1Handler implements RouteHandler {
   private final ProjectService projectService;
 
-  public Mono<ServerResponse> getAll(ServerRequest serverRequest) {
+  public Mono<ServerResponse> getAllProjects(ServerRequest serverRequest) {
     // @spotless:off
     return projectService
         .findAll()
@@ -27,7 +26,8 @@ class ProjectRouteHandler {
     //@spotless:on
   }
 
-  public Mono<ServerResponse> create(ServerRequest request) {
+  @Override
+  public Mono<ServerResponse> createProject(ServerRequest request) {
     // @spotless:off
     var principalWithCreateRequestMono =
         Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(ProjectRequest.Create.class));
@@ -39,7 +39,8 @@ class ProjectRouteHandler {
     // @spotless:on
   }
 
-  public Mono<ServerResponse> get(ServerRequest request) {
+  @Override
+  public Mono<ServerResponse> getProject(ServerRequest request) {
     var projectId = request.pathVariable("id");
     // @spotless:off
     return projectService
@@ -49,7 +50,8 @@ class ProjectRouteHandler {
     // @spotless:on
   }
 
-  public Mono<ServerResponse> addVersion(ServerRequest request) {
+  @Override
+  public Mono<ServerResponse> addVersionToProject(ServerRequest request) {
     var projectId = request.pathVariable("id");
     // @spotless:off
     var principalWithCreateRequestMono =
@@ -62,28 +64,22 @@ class ProjectRouteHandler {
     // @spotless:on
   }
 
+  @Override
   public Mono<ServerResponse> getAllProjectVersion(ServerRequest request) {
     var projectId = request.pathVariable("id");
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findAllVersionByProjectId(projectId), Version.class);
+        .body(projectService.findAllVersionByProjectId(projectId), ProjectResponse.Version.class);
   }
 
-  public Mono<ServerResponse> getProjectVersionById(ServerRequest request) {
+  @Override
+  public Mono<ServerResponse> getProjectVersion(ServerRequest request) {
     var projectId = request.pathVariable("id");
     var versionId = request.pathVariable("versionId");
     // @spotless:off
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(projectService.findVersionByProjectIdAndVersionId(projectId, versionId), Version.class);
+        .body(projectService.findVersionByProjectIdAndVersionId(projectId, versionId), ProjectResponse.Version.class);
     // @spotless:on
-  }
-
-  private Mono<String> getAuthenticatedPrincipal(ServerRequest request) {
-    return request
-        .principal()
-        .cast(UsernamePasswordAuthenticationToken.class)
-        .map(UsernamePasswordAuthenticationToken::getPrincipal)
-        .map(Objects::toString);
   }
 }
