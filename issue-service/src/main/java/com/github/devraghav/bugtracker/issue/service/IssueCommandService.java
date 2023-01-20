@@ -9,6 +9,8 @@ import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
+import com.github.devraghav.bugtracker.issue.response.IssueResponse;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -29,16 +31,15 @@ public class IssueCommandService {
   private final IssueAttachmentRepository issueAttachmentRepository;
   private final EventBus.ReactivePublisher<DomainEvent> domainEventPublisher;
 
-  public Mono<IssueRequestResponse.IssueResponse> create(
-      String userId, IssueRequestResponse.CreateIssueRequest createIssueRequest) {
+  public Mono<IssueResponse.Issue> create(String userId, IssueRequest.CreateIssue createIssue) {
     return requestValidator
-        .validate(createIssueRequest)
+        .validate(createIssue)
         .map(validateRequest -> issueMapper.issueRequestToIssueEntity(userId, validateRequest))
         .flatMap(this::save);
   }
 
-  public Mono<IssueRequestResponse.IssueResponse> update(
-      String userId, String issueId, IssueRequestResponse.UpdateIssueRequest updateRequest) {
+  public Mono<IssueResponse.Issue> update(
+      String userId, String issueId, IssueRequest.UpdateIssue updateRequest) {
     return issueQueryService
         .findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
@@ -49,18 +50,18 @@ public class IssueCommandService {
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  public Mono<Void> monitor(String issueId, IssueRequestResponse.AssignRequest assignRequest) {
-    log.info("monitor {} with assignRequest {}", assignRequest.monitorType(), assignRequest);
+  public Mono<Void> monitor(String issueId, IssueRequest.Monitor monitor) {
+    log.info("monitor {} with assignRequest {}", monitor.monitorType(), monitor);
     var issueMono = issueQueryService.exists(issueId).map(unused -> issueId);
-    if (IssueRequestResponse.MonitorType.UNASSIGN == assignRequest.monitorType()) {
-      return unassigned(issueMono, assignRequest.requestedBy());
+    if (IssueRequest.MonitorType.UNASSIGN == monitor.monitorType()) {
+      return unassigned(issueMono, monitor.requestedBy());
     } else {
-      if (IssueRequestResponse.MonitorType.ASSIGN == assignRequest.monitorType()) {
-        return assignee(issueMono, assignRequest.user(), assignRequest.requestedBy());
-      } else if (IssueRequestResponse.MonitorType.WATCH == assignRequest.monitorType()) {
-        return watch(issueMono, assignRequest.user(), assignRequest.requestedBy());
+      if (IssueRequest.MonitorType.ASSIGN == monitor.monitorType()) {
+        return assignee(issueMono, monitor.user(), monitor.requestedBy());
+      } else if (IssueRequest.MonitorType.WATCH == monitor.monitorType()) {
+        return watch(issueMono, monitor.user(), monitor.requestedBy());
       } else {
-        return unwatch(issueMono, assignRequest.user(), assignRequest.requestedBy());
+        return unwatch(issueMono, monitor.user(), monitor.requestedBy());
       }
     }
   }
@@ -134,14 +135,14 @@ public class IssueCommandService {
     return issueAttachmentRepository.upload(issueId, filePart.filename(), filePart.content());
   }
 
-  private Mono<IssueRequestResponse.IssueResponse> save(IssueEntity issueEntity) {
+  private Mono<IssueResponse.Issue> save(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .map(issueMapper::issueEntityToIssue)
         .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Created(issue)));
   }
 
-  private Mono<IssueRequestResponse.IssueResponse> update(String userId, IssueEntity issueEntity) {
+  private Mono<IssueResponse.Issue> update(String userId, IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .map(issueMapper::issueEntityToIssue)

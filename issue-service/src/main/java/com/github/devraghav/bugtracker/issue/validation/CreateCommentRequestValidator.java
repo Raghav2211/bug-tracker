@@ -1,24 +1,22 @@
 package com.github.devraghav.bugtracker.issue.validation;
 
-import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
+import com.github.devraghav.bugtracker.issue.request.CommentRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
 record CreateCommentRequestValidator(IssueRepository issueRepository)
-    implements Validator<
-        CommentRequestResponse.CreateCommentRequest, CommentRequestResponse.CreateCommentRequest> {
+    implements Validator<CommentRequest.CreateComment, CommentRequest.CreateComment> {
 
   @Override
-  public Mono<CommentRequestResponse.CreateCommentRequest> validate(
-      CommentRequestResponse.CreateCommentRequest createCommentRequest) {
-    return validateCommentContent(createCommentRequest.content())
-        .and(validateIssueId(createCommentRequest.issueId()))
-        .thenReturn(createCommentRequest);
+  public Mono<CommentRequest.CreateComment> validate(CommentRequest.CreateComment createComment) {
+    return validateCommentContent(createComment.content())
+        .and(validateIssueId(createComment.issueId()))
+        .thenReturn(createComment);
   }
 
   private Mono<Void> validateCommentContent(String content) {

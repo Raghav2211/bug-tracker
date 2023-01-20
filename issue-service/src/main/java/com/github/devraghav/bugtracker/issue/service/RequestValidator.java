@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.issue.service;
 
-import com.github.devraghav.bugtracker.issue.dto.CommentRequestResponse;
-import com.github.devraghav.bugtracker.issue.dto.IssueRequestResponse;
+import com.github.devraghav.bugtracker.issue.request.CommentRequest;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import com.github.devraghav.bugtracker.issue.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -11,28 +11,22 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class RequestValidator {
 
-  private final Validator<
-          IssueRequestResponse.CreateIssueRequest, IssueRequestResponse.CreateIssueRequest>
+  private final Validator<IssueRequest.CreateIssue, IssueRequest.CreateIssue>
       createIssueRequestValidator;
-  private final Validator<
-          CommentRequestResponse.CreateCommentRequest, CommentRequestResponse.CreateCommentRequest>
+  private final Validator<CommentRequest.CreateComment, CommentRequest.CreateComment>
       createCommentRequestValidator;
-  private final Validator<
-          CommentRequestResponse.UpdateCommentRequest, CommentRequestResponse.UpdateCommentRequest>
+  private final Validator<CommentRequest.UpdateComment, CommentRequest.UpdateComment>
       updateCommentRequestValidator;
 
-  public Mono<IssueRequestResponse.CreateIssueRequest> validate(
-      final IssueRequestResponse.CreateIssueRequest request) {
+  public Mono<IssueRequest.CreateIssue> validate(final IssueRequest.CreateIssue request) {
     return createIssueRequestValidator.validate(request);
   }
 
-  public Mono<CommentRequestResponse.CreateCommentRequest> validate(
-      final CommentRequestResponse.CreateCommentRequest request) {
+  public Mono<CommentRequest.CreateComment> validate(final CommentRequest.CreateComment request) {
     return createCommentRequestValidator.validate(request);
   }
 
-  public Mono<CommentRequestResponse.UpdateCommentRequest> validate(
-      final CommentRequestResponse.UpdateCommentRequest request) {
+  public Mono<CommentRequest.UpdateComment> validate(final CommentRequest.UpdateComment request) {
     return updateCommentRequestValidator.validate(request);
   }
 }

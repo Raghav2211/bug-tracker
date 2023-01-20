@@ -1,7 +1,8 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.dto.IssueRequestResponse;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
+import com.github.devraghav.bugtracker.issue.response.IssueResponse;
 import com.github.devraghav.data_model.domain.issue.ProjectAttachment;
 import com.github.devraghav.data_model.event.issue.IssueCreated;
 import com.github.devraghav.data_model.schema.issue.IssueCreatedSchema;
@@ -12,19 +13,18 @@ import java.util.stream.Collectors;
 
 class IssueCreatedEventConverter implements EventConverter<IssueEvent.Created, IssueCreatedSchema> {
 
-  private ProjectAttachment getProject(IssueRequestResponse.ProjectInfo project) {
+  private ProjectAttachment getProject(IssueRequest.ProjectInfo project) {
     return ProjectAttachment.newBuilder()
         .setProjectId(project.projectId())
         .setProjectVersionId(project.versionId())
         .build();
   }
 
-  private List<ProjectAttachment> getProjects(Set<IssueRequestResponse.ProjectInfo> projects) {
+  private List<ProjectAttachment> getProjects(Set<IssueRequest.ProjectInfo> projects) {
     return projects.stream().map(this::getProject).collect(Collectors.toList());
   }
 
-  private com.github.devraghav.data_model.domain.issue.Issue getIssue(
-      IssueRequestResponse.IssueResponse issue) {
+  private com.github.devraghav.data_model.domain.issue.Issue getIssue(IssueResponse.Issue issue) {
     var issueBuilder =
         com.github.devraghav.data_model.domain.issue.Issue.newBuilder()
             .setId(issue.id())

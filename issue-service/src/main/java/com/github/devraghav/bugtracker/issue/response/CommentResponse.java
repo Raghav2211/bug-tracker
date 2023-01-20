@@ -1,14 +1,9 @@
-package com.github.devraghav.bugtracker.issue.dto;
+package com.github.devraghav.bugtracker.issue.response;
 
 import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -16,51 +11,45 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-public final class CommentRequestResponse {
-
-  public static record CreateCommentRequest(String userId, String issueId, String content) {}
-
-  public static record UpdateCommentRequest(
-      String userId, String issueId, String commentId, String content) {}
-
-  public static record CommentResponse(
+public final class CommentResponse {
+  public static record Comment(
       String id,
       String issueId,
       String userId,
       String content,
       LocalDateTime createdAt,
       LocalDateTime lastUpdatedAt)
-      implements Comparable<CommentResponse> {
+      implements Comparable<Comment> {
 
     @Override
-    public int compareTo(CommentResponse comment) {
+    public int compareTo(Comment comment) {
       return comment.createdAt().compareTo(this.createdAt);
     }
   }
 
-  @Data
-  @AllArgsConstructor
-  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class ErrorResponse {
-
-    private final int status;
-    private final String path;
-    private final String errorMessage;
-    private final LocalDateTime timeStamp;
-
-    private Map<String, Object> meta = new HashMap<>();
-
-    public static ErrorResponse of(String path, String errorMessage, HttpStatus httpStatus) {
-      return new ErrorResponse(httpStatus.value(), path, errorMessage, LocalDateTime.now());
+  public static record Error(
+      int status,
+      String path,
+      String errorMessage,
+      LocalDateTime timeStamp,
+      Map<String, Object> meta) {
+    public Error {
+      meta = Map.copyOf(meta == null ? Map.of() : meta);
     }
 
-    public static ErrorResponse of(
+    public static IssueResponse.Error of(String path, String errorMessage, HttpStatus httpStatus) {
+      return new IssueResponse.Error(
+          httpStatus.value(), path, errorMessage, LocalDateTime.now(), Map.of());
+    }
+
+    public static IssueResponse.Error of(
         String path, String errorMessage, HttpStatus httpStatus, Map<String, Object> meta) {
-      return new ErrorResponse(httpStatus.value(), path, errorMessage, LocalDateTime.now(), meta);
+      return new IssueResponse.Error(
+          httpStatus.value(), path, errorMessage, LocalDateTime.now(), meta);
     }
   }
 
-  public static Mono<ServerResponse> retrieve(Collection<CommentResponse> comments) {
+  public static Mono<ServerResponse> retrieve(Collection<Comment> comments) {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(BodyInserters.fromValue(comments));
@@ -70,14 +59,14 @@ public final class CommentRequestResponse {
     return ServerResponse.badRequest()
         .body(
             BodyInserters.fromValue(
-                ErrorResponse.of(request.path(), "Body not found", HttpStatus.BAD_REQUEST)));
+                Error.of(request.path(), "Body not found", HttpStatus.BAD_REQUEST)));
   }
 
   public static Mono<ServerResponse> invalid(ServerRequest request, CommentException exception) {
     return ServerResponse.status(HttpStatus.BAD_REQUEST)
         .body(
             BodyInserters.fromValue(
-                ErrorResponse.of(
+                Error.of(
                     request.path(),
                     exception.getMessage(),
                     HttpStatus.BAD_REQUEST,

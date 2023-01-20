@@ -1,8 +1,8 @@
 package com.github.devraghav.bugtracker.issue.event.internal;
 
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
-import com.github.devraghav.bugtracker.issue.dto.CommentRequestResponse;
-import com.github.devraghav.bugtracker.issue.dto.IssueRequestResponse;
+import com.github.devraghav.bugtracker.issue.response.CommentResponse;
+import com.github.devraghav.bugtracker.issue.response.IssueResponse;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
@@ -10,27 +10,26 @@ public interface IssueEvent {
 
   @Getter
   class Created extends DomainEvent {
-    private final IssueRequestResponse.IssueResponse createdIssue;
+    private final IssueResponse.Issue createdIssue;
 
-    public Created(IssueRequestResponse.IssueResponse createdIssue) {
+    public Created(IssueResponse.Issue createdIssue) {
       super(
           createdIssue.id(),
           "Created",
-          new PublisherInfo(
-              "Issue", IssueRequestResponse.IssueResponse.class, createdIssue.reporter()));
+          new PublisherInfo("Issue", IssueResponse.Issue.class, createdIssue.reporter()));
       this.createdIssue = createdIssue;
     }
   }
 
   @Getter
   class Updated extends DomainEvent {
-    private final IssueRequestResponse.IssueResponse updatedIssue;
+    private final IssueResponse.Issue updatedIssue;
 
-    public Updated(String updateBy, IssueRequestResponse.IssueResponse updatedIssue) {
+    public Updated(String updateBy, IssueResponse.Issue updatedIssue) {
       super(
           updatedIssue.id(),
           "Updated",
-          new PublisherInfo("Issue", IssueRequestResponse.IssueResponse.class, updateBy));
+          new PublisherInfo("Issue", IssueResponse.Issue.class, updateBy));
       this.updatedIssue = updatedIssue;
     }
   }
@@ -42,9 +41,7 @@ public interface IssueEvent {
 
     public Assigned(String issueId, String assignee, String requestedBy) {
       super(
-          issueId,
-          "Assigned",
-          new PublisherInfo("Issue", IssueRequestResponse.IssueResponse.class, requestedBy));
+          issueId, "Assigned", new PublisherInfo("Issue", IssueResponse.Issue.class, requestedBy));
       this.issueId = issueId;
       this.assignee = assignee;
     }
@@ -58,7 +55,7 @@ public interface IssueEvent {
       super(
           issueId,
           "Unassigned",
-          new PublisherInfo("Issue", IssueRequestResponse.IssueResponse.class, requestedBy));
+          new PublisherInfo("Issue", IssueResponse.Issue.class, requestedBy));
       this.issueId = issueId;
     }
   }
@@ -72,7 +69,7 @@ public interface IssueEvent {
       super(
           issueId,
           "WatchStarted",
-          new PublisherInfo("Issue", IssueRequestResponse.IssueResponse.class, requestedBy));
+          new PublisherInfo("Issue", IssueResponse.Issue.class, requestedBy));
       this.issueId = issueId;
       this.watcher = watcher;
     }
@@ -87,7 +84,7 @@ public interface IssueEvent {
       super(
           issueId,
           "WatchStarted",
-          new PublisherInfo("Issue", IssueRequestResponse.IssueResponse.class, requestedBy));
+          new PublisherInfo("Issue", IssueResponse.Issue.class, requestedBy));
       this.issueId = issueId;
       this.watchEndedBy = watchEndedBy;
     }
@@ -99,10 +96,7 @@ public interface IssueEvent {
     private final LocalDateTime resolvedAt;
 
     public Resolved(String issueId, LocalDateTime resolvedAt, String resolvedBy) {
-      super(
-          issueId,
-          "Resolved",
-          new PublisherInfo("Issue", IssueRequestResponse.IssueResponse.class, resolvedBy));
+      super(issueId, "Resolved", new PublisherInfo("Issue", IssueResponse.Issue.class, resolvedBy));
       this.issueId = issueId;
       this.resolvedAt = resolvedAt;
     }
@@ -111,14 +105,13 @@ public interface IssueEvent {
   @Getter
   class CommentAdded extends DomainEvent {
     private final String issueId;
-    private final CommentRequestResponse.CommentResponse comment;
+    private final CommentResponse.Comment comment;
 
-    public CommentAdded(String issueId, CommentRequestResponse.CommentResponse comment) {
+    public CommentAdded(String issueId, CommentResponse.Comment comment) {
       super(
           issueId,
           "Created",
-          new PublisherInfo(
-              "Issue", CommentRequestResponse.CommentResponse.class, comment.userId()));
+          new PublisherInfo("Issue", CommentResponse.Comment.class, comment.userId()));
       this.issueId = issueId;
       this.comment = comment;
     }
@@ -127,14 +120,13 @@ public interface IssueEvent {
   @Getter
   class CommentUpdated extends DomainEvent {
     private final String issueId;
-    private final CommentRequestResponse.CommentResponse comment;
+    private final CommentResponse.Comment comment;
     // TODO: updateAt fix
-    public CommentUpdated(String issueId, CommentRequestResponse.CommentResponse comment) {
+    public CommentUpdated(String issueId, CommentResponse.Comment comment) {
       super(
           issueId,
           "Updated",
-          new PublisherInfo(
-              "Issue", CommentRequestResponse.CommentResponse.class, comment.userId()));
+          new PublisherInfo("Issue", CommentResponse.Comment.class, comment.userId()));
       this.issueId = issueId;
       this.comment = comment;
     }

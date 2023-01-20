@@ -8,6 +8,8 @@ import com.github.devraghav.bugtracker.issue.event.internal.*;
 import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
+import com.github.devraghav.bugtracker.issue.request.CommentRequest;
+import com.github.devraghav.bugtracker.issue.response.CommentResponse;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -19,12 +21,11 @@ public record CommentCommandService(
     CommentRepository commentRepository,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<CommentRequestResponse.CommentResponse> save(
-      CommentRequestResponse.CreateCommentRequest createCommentRequest) {
+  public Mono<CommentResponse.Comment> save(CommentRequest.CreateComment createComment) {
     // @spotless:off
     return requestValidator
-        .validate(createCommentRequest)
-        .thenReturn(createCommentRequest)
+        .validate(createComment)
+        .thenReturn(createComment)
         .map(commentMapper::requestToEntity)
         .flatMap(commentRepository::save)
         .map(commentMapper::entityToResponse)
@@ -32,11 +33,10 @@ public record CommentCommandService(
     // @spotless:on
   }
 
-  public Mono<CommentRequestResponse.CommentResponse> update(
-      CommentRequestResponse.UpdateCommentRequest updateCommentRequest) {
+  public Mono<CommentResponse.Comment> update(CommentRequest.UpdateComment updateComment) {
     // @spotless:off
     return requestValidator
-        .validate(updateCommentRequest)
+        .validate(updateComment)
         .flatMap(validRequest -> findAndUpdateCommentContentById(validRequest.commentId(), validRequest.content()))
         .flatMap(commentRepository::save)
         .map(commentMapper::entityToResponse)

@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.issue.excpetion;
 
-import com.github.devraghav.bugtracker.issue.dto.IssueRequestResponse;
 import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
@@ -58,7 +58,7 @@ public class IssueException extends RuntimeException {
     return new IssueException("No project attached");
   }
 
-  public static IssueException invalidProject(IssueRequestResponse.ProjectInfo projectInfo) {
+  public static IssueException invalidProject(IssueRequest.ProjectInfo projectInfo) {
     var meta = new HashMap<String, Object>();
     meta.put("projectId", projectInfo.projectId());
     meta.put("versionId", projectInfo.versionId());

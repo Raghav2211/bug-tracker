@@ -9,7 +9,7 @@ import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import com.github.devraghav.bugtracker.issue.dto.*;
+import com.github.devraghav.bugtracker.issue.response.CommentResponse;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -83,7 +83,7 @@ class CommentOpenAPIDocHelper {
         .description("Retrieve all comments")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(CommentRequestResponse.CommentResponse.class))));
+                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(CommentResponse.Comment.class))));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder addOrUpdateComment200ResponseDoc() {
@@ -92,7 +92,7 @@ class CommentOpenAPIDocHelper {
         .description("Add/Update comment in comment successfully")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(CommentRequestResponse.CommentResponse.class)));
+                .schema(schemaBuilder().implementation(CommentResponse.Comment.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder badResponseDoc() {
@@ -106,7 +106,7 @@ class CommentOpenAPIDocHelper {
         .description(message)
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(CommentRequestResponse.ErrorResponse.class)));
+                .schema(schemaBuilder().implementation(CommentResponse.Error.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder getCommentById200ResponseDoc() {
@@ -115,7 +115,7 @@ class CommentOpenAPIDocHelper {
         .description("Retrieve comment successfully")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(CommentRequestResponse.CommentResponse .class)));
+                .schema(schemaBuilder().implementation(CommentResponse.Comment .class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder comment404ResponseDoc() {

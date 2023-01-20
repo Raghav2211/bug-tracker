@@ -2,6 +2,8 @@ package com.github.devraghav.bugtracker.issue.mapper;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
+import com.github.devraghav.bugtracker.issue.response.IssueResponse;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,8 +15,8 @@ import org.mapstruct.*;
       UUID.class,
       LocalDateTime.class,
       Optional.class,
-      IssueRequestResponse.Priority.class,
-      IssueRequestResponse.Severity.class
+      IssueResponse.Priority.class,
+      IssueResponse.Severity.class
     })
 public interface IssueMapper {
 
@@ -23,11 +25,11 @@ public interface IssueMapper {
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())"),
     @Mapping(
         target = "priority",
-        source = "createIssueRequest.priority",
+        source = "createIssue.priority",
         qualifiedByName = "priorityToValue"),
     @Mapping(
         target = "severity",
-        source = "createIssueRequest.severity",
+        source = "createIssue.severity",
         qualifiedByName = "severityToValue"),
     @Mapping(target = "reporter", source = "reporter"),
     @Mapping(target = "watchers", expression = "java(Set.of())"),
@@ -35,64 +37,60 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "endedAt", ignore = true)
   })
-  IssueEntity issueRequestToIssueEntity(
-      String reporter, IssueRequestResponse.CreateIssueRequest createIssueRequest);
+  IssueEntity issueRequestToIssueEntity(String reporter, IssueRequest.CreateIssue createIssue);
 
   @Mappings({
     @Mapping(
         target = "priority",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.priority()).map(IssueRequestResponse.Priority::getValue).orElse(issueEntity.getPriority()))"),
+            "java(Optional.ofNullable(updateIssue.priority()).map(IssueResponse.Priority::getValue).orElse(issueEntity.getPriority()))"),
     @Mapping(
         target = "severity",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.severity()).map(IssueRequestResponse.Severity::getValue).orElse(issueEntity.getSeverity()))"),
+            "java(Optional.ofNullable(updateIssue.severity()).map(IssueResponse.Severity::getValue).orElse(issueEntity.getSeverity()))"),
     @Mapping(
         target = "businessUnit",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.businessUnit()).orElse(issueEntity.getBusinessUnit()))"),
+            "java(Optional.ofNullable(updateIssue.businessUnit()).orElse(issueEntity.getBusinessUnit()))"),
     @Mapping(
         target = "header",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.header()).orElse(issueEntity.getHeader()))"),
+            "java(Optional.ofNullable(updateIssue.header()).orElse(issueEntity.getHeader()))"),
     @Mapping(
         target = "description",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.description()).orElse(issueEntity.getDescription()))"),
+            "java(Optional.ofNullable(updateIssue.description()).orElse(issueEntity.getDescription()))"),
     @Mapping(
         target = "tags",
-        expression =
-            "java(Optional.ofNullable(updateIssueRequest.tags()).orElse(issueEntity.getTags()))"),
+        expression = "java(Optional.ofNullable(updateIssue.tags()).orElse(issueEntity.getTags()))"),
     @Mapping(target = "lastUpdateBy", source = "updateBy"),
   })
   IssueEntity issueRequestToIssueEntity(
-      String updateBy,
-      IssueEntity issueEntity,
-      IssueRequestResponse.UpdateIssueRequest updateIssueRequest);
+      String updateBy, IssueEntity issueEntity, IssueRequest.UpdateIssue updateIssue);
 
   @Mappings({
     @Mapping(target = "priority", source = "priority", qualifiedByName = "valueToPriority"),
     @Mapping(target = "severity", source = "severity", qualifiedByName = "valueToSeverity"),
   })
-  IssueRequestResponse.IssueResponse issueEntityToIssue(IssueEntity issueEntity);
+  IssueResponse.Issue issueEntityToIssue(IssueEntity issueEntity);
 
   @Named("priorityToValue")
-  default Integer priorityToValue(IssueRequestResponse.Priority priority) {
+  default Integer priorityToValue(IssueResponse.Priority priority) {
     return priority.getValue();
   }
 
   @Named("severityToValue")
-  default Integer severityToValue(IssueRequestResponse.Severity severity) {
+  default Integer severityToValue(IssueResponse.Severity severity) {
     return severity.getValue();
   }
 
   @Named("valueToPriority")
-  default IssueRequestResponse.Priority valueToPriority(Integer priorityValue) {
-    return IssueRequestResponse.Priority.fromValue(priorityValue);
+  default IssueResponse.Priority valueToPriority(Integer priorityValue) {
+    return IssueResponse.Priority.fromValue(priorityValue);
   }
 
   @Named("valueToSeverity")
-  default IssueRequestResponse.Severity valueToSeverity(Integer severityValue) {
-    return IssueRequestResponse.Severity.fromValue(severityValue);
+  default IssueResponse.Severity valueToSeverity(Integer severityValue) {
+    return IssueResponse.Severity.fromValue(severityValue);
   }
 }
