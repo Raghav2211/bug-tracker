@@ -1,7 +1,8 @@
 package com.github.devraghav.bugtracker.project.route;
 
-import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.exception.ProjectException;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
+import com.github.devraghav.bugtracker.project.response.ProjectResponse;
 import com.github.devraghav.bugtracker.project.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -21,9 +22,9 @@ class ProjectRouteV1Handler implements RouteHandler {
     return projectService
         .findAll()
         .collectList()
-        .flatMap(RequestResponse::retrieve)
+        .flatMap(ProjectResponse::retrieve)
         .onErrorResume(ProjectException.class,
-                exception -> RequestResponse.invalid(serverRequest, exception));
+                exception -> ProjectResponse.invalid(serverRequest, exception));
     //@spotless:on
   }
 
@@ -31,12 +32,12 @@ class ProjectRouteV1Handler implements RouteHandler {
   public Mono<ServerResponse> createProject(ServerRequest request) {
     // @spotless:off
     var principalWithCreateRequestMono =
-        Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(RequestResponse.CreateProjectRequest.class));
+        Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(ProjectRequest.CreateProjectRequest.class));
     return principalWithCreateRequestMono
         .flatMap(tuple2 -> projectService.save(tuple2.getT1(), tuple2.getT2()))
-        .flatMap(project -> RequestResponse.create(request, project))
-        .switchIfEmpty(RequestResponse.noBody(request))
-        .onErrorResume(ProjectException.class, exception -> RequestResponse.invalid(request, exception));
+        .flatMap(project -> ProjectResponse.create(request, project))
+        .switchIfEmpty(ProjectResponse.noBody(request))
+        .onErrorResume(ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -48,7 +49,7 @@ class ProjectRouteV1Handler implements RouteHandler {
         .findById(projectId)
         .flatMap(project -> ServerResponse.ok().body(BodyInserters.fromValue(project)))
         .onErrorResume(ProjectException.class,
-                exception -> RequestResponse.notFound(request, exception));
+                exception -> ProjectResponse.notFound(request, exception));
     // @spotless:on
   }
 
@@ -57,12 +58,12 @@ class ProjectRouteV1Handler implements RouteHandler {
     var projectId = request.pathVariable("id");
     // @spotless:off
     var principalWithCreateRequestMono =
-        Mono.zip(getAuthenticatedPrincipal(request),request.bodyToMono(RequestResponse.CreateVersionRequest.class));
+        Mono.zip(getAuthenticatedPrincipal(request),request.bodyToMono(ProjectRequest.CreateVersionRequest.class));
 
     return principalWithCreateRequestMono
         .flatMap(tuple2 -> projectService.addVersionToProjectId(tuple2.getT1(), projectId, tuple2.getT2()))
-        .flatMap(RequestResponse::ok)
-        .onErrorResume(ProjectException.class, exception -> RequestResponse.invalid(request, exception));
+        .flatMap(ProjectResponse::ok)
+        .onErrorResume(ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -73,7 +74,7 @@ class ProjectRouteV1Handler implements RouteHandler {
         .contentType(MediaType.APPLICATION_JSON)
         .body(
             projectService.findAllVersionByProjectId(projectId),
-            RequestResponse.VersionResponse.class);
+            ProjectResponse.VersionResponse.class);
   }
 
   @Override
@@ -84,7 +85,7 @@ class ProjectRouteV1Handler implements RouteHandler {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(projectService.findVersionByProjectIdAndVersionId(projectId, versionId),
-                RequestResponse.VersionResponse.class);
+                ProjectResponse.VersionResponse.class);
     // @spotless:on
   }
 }

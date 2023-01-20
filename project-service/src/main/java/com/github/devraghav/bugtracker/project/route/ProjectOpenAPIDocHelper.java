@@ -9,7 +9,8 @@ import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import com.github.devraghav.bugtracker.project.dto.*;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
+import com.github.devraghav.bugtracker.project.response.ProjectResponse;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springframework.http.HttpStatus;
@@ -45,7 +46,7 @@ class ProjectOpenAPIDocHelper {
                 .name("id")
                 .schema(schemaBuilder().type("string")))
         .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder()
-                    .implementation(RequestResponse.CreateVersionRequest.class))));
+                    .implementation(ProjectRequest.CreateVersionRequest.class))));
   }
 
   void getProjectByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
@@ -86,7 +87,7 @@ class ProjectOpenAPIDocHelper {
         .summary("Create project")
         .requestBody(requestBodyBuilder()
         .content(contentBuilder()
-                .schema(schemaBuilder().implementation(RequestResponse.CreateProjectRequest.class))))
+                .schema(schemaBuilder().implementation(ProjectRequest.CreateProjectRequest.class))))
         .response(saveProject201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -97,7 +98,7 @@ class ProjectOpenAPIDocHelper {
             .responseCode("201")
             .description("Project successfully created")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .schema(schemaBuilder().implementation(RequestResponse.CreateProjectRequest.class)));
+                    .schema(schemaBuilder().implementation(ProjectRequest.CreateProjectRequest.class)));
   }
 
   private Builder badResponseDoc() {
@@ -109,7 +110,7 @@ class ProjectOpenAPIDocHelper {
             .responseCode("200")
             .description("Retrieve all projects")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .array(arraySchemaBuilder().schema(schemaBuilder().implementation(RequestResponse.ProjectResponse.class))));
+                    .array(arraySchemaBuilder().schema(schemaBuilder().implementation(ProjectResponse.Project.class))));
   }
 
   private Builder project404ResponseDoc() {
@@ -125,7 +126,7 @@ class ProjectOpenAPIDocHelper {
             .responseCode("200")
             .description("Retrieve project successfully")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .schema(schemaBuilder().implementation(RequestResponse.ProjectResponse.class)));
+                    .schema(schemaBuilder().implementation(ProjectResponse.Project.class)));
   }
 
   private Builder getProjectVersionById200ResponseDoc() {
@@ -133,14 +134,14 @@ class ProjectOpenAPIDocHelper {
             .responseCode("200")
             .description("Retrieve project version successfully")
             .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                    .schema(schemaBuilder().implementation(RequestResponse.VersionResponse.class)));
+                    .schema(schemaBuilder().implementation(ProjectResponse.VersionResponse.class)));
   }
 
   private Builder saveProjectVersion201ResponseDoc() {
     return responseBuilder()
         .responseCode("201")
         .description("Create project version successfully")
-        .content(contentBuilder().schema(schemaBuilder().implementation(RequestResponse.VersionResponse.class)));
+        .content(contentBuilder().schema(schemaBuilder().implementation(ProjectResponse.VersionResponse.class)));
   }
 
   private Builder getAllProjectVersion200ResponseDoc() {
@@ -148,7 +149,7 @@ class ProjectOpenAPIDocHelper {
         .responseCode("200")
         .description("Retrieve all project versions")
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .array(arraySchemaBuilder().arraySchema(schemaBuilder().implementation(RequestResponse.VersionResponse.class))));
+                .array(arraySchemaBuilder().arraySchema(schemaBuilder().implementation(ProjectResponse.VersionResponse.class))));
   }
 
   private Builder errorResponseDoc(HttpStatus httpStatus, String message) {
@@ -156,7 +157,7 @@ class ProjectOpenAPIDocHelper {
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(RequestResponse.ErrorResponse.class)));
+                .schema(schemaBuilder().implementation(ProjectResponse.Error.class)));
   }
   // @spotless:on
 }

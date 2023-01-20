@@ -1,8 +1,9 @@
 package com.github.devraghav.bugtracker.project.mapper;
 
-import com.github.devraghav.bugtracker.project.dto.RequestResponse;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.exception.ProjectException;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
+import com.github.devraghav.bugtracker.project.response.ProjectResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -26,22 +27,22 @@ public interface ProjectMapper {
     @Mapping(target = "author", source = "author")
   })
   ProjectEntity requestToEntity(
-      String author, RequestResponse.CreateProjectRequest createProjectRequest);
+      String author, ProjectRequest.CreateProjectRequest createProjectRequest);
 
   @Mappings({@Mapping(target = "status", source = "status", qualifiedByName = "valueToStatus")})
-  RequestResponse.ProjectResponse entityToResponse(ProjectEntity projectEntity);
+  ProjectResponse.Project entityToResponse(ProjectEntity projectEntity);
 
   @Named("statusToValue")
-  default Integer statusToValue(RequestResponse.ProjectStatus projectStatus) {
+  default Integer statusToValue(ProjectRequest.ProjectStatus projectStatus) {
     return switch (projectStatus) {
       case DEPLOYED, IN_PROGRESS, POC, UNKNOWN -> projectStatus.getValue();
     };
   }
 
   @Named("valueToStatus")
-  default RequestResponse.ProjectStatus valueToStatus(Integer projectStatusValue) {
+  default ProjectRequest.ProjectStatus valueToStatus(Integer projectStatusValue) {
     return switch (projectStatusValue) {
-      case -1, 0, 1, 2 -> RequestResponse.ProjectStatus.fromValue(projectStatusValue);
+      case -1, 0, 1, 2 -> ProjectRequest.ProjectStatus.fromValue(projectStatusValue);
       default -> throw ProjectException.unrecognizedStatus();
     };
   }

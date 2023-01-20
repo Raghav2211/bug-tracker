@@ -2,7 +2,6 @@ package com.github.devraghav.bugtracker.project.service;
 
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.event.internal.EventBus;
-import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
 import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
@@ -10,6 +9,8 @@ import com.github.devraghav.bugtracker.project.exception.ProjectException;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
+import com.github.devraghav.bugtracker.project.response.ProjectResponse;
 import com.github.devraghav.bugtracker.project.validation.RequestValidator;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -24,8 +25,8 @@ public record ProjectService(
     ProjectRepository projectRepository,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<RequestResponse.ProjectResponse> save(
-      String requestBy, RequestResponse.CreateProjectRequest createProjectRequest) {
+  public Mono<ProjectResponse.Project> save(
+      String requestBy, ProjectRequest.CreateProjectRequest createProjectRequest) {
     // @spotless:off
     return requestValidator
         .validate( createProjectRequest)
@@ -37,11 +38,11 @@ public record ProjectService(
     // @spotless:on
   }
 
-  public Flux<RequestResponse.ProjectResponse> findAll() {
+  public Flux<ProjectResponse.Project> findAll() {
     return projectRepository.findAll().map(projectMapper::entityToResponse);
   }
 
-  public Mono<RequestResponse.ProjectResponse> findById(String projectId) {
+  public Mono<ProjectResponse.Project> findById(String projectId) {
     return projectRepository
         .findById(projectId)
         .map(projectMapper::entityToResponse)
@@ -55,37 +56,37 @@ public record ProjectService(
         .switchIfEmpty(Mono.error(() -> ProjectException.notFound(projectId)));
   }
 
-  public Mono<RequestResponse.VersionResponse> addVersionToProjectId(
+  public Mono<ProjectResponse.VersionResponse> addVersionToProjectId(
       String requestBy,
       String projectId,
-      RequestResponse.CreateVersionRequest createVersionRequest) {
+      ProjectRequest.CreateVersionRequest createVersionRequest) {
     return exists(projectId)
         .thenReturn(createVersionRequest)
         .map(validRequest -> projectVersionMapper.requestToEntity(requestBy, validRequest))
         .flatMap(projectVersionEntity -> addVersion(projectId, projectVersionEntity));
   }
 
-  public Flux<RequestResponse.VersionResponse> findAllVersionByProjectId(String projectId) {
+  public Flux<ProjectResponse.VersionResponse> findAllVersionByProjectId(String projectId) {
     return projectRepository
         .findAllVersionByProjectId(projectId)
         .map(projectVersionMapper::entityToResponse);
   }
 
-  public Mono<RequestResponse.VersionResponse> findVersionByProjectIdAndVersionId(
+  public Mono<ProjectResponse.VersionResponse> findVersionByProjectIdAndVersionId(
       String projectId, String versionId) {
     return projectRepository
         .findVersionByProjectIdAndVersionId(projectId, versionId)
         .map(projectVersionMapper::entityToResponse);
   }
 
-  private Mono<RequestResponse.ProjectResponse> save(ProjectEntity projectEntity) {
+  private Mono<ProjectResponse.Project> save(ProjectEntity projectEntity) {
     return projectRepository
         .save(projectEntity)
         .map(author -> projectMapper.entityToResponse(projectEntity))
         .doOnSuccess(project -> eventReactivePublisher.publish(new ProjectEvent.Created(project)));
   }
 
-  private Mono<RequestResponse.VersionResponse> addVersion(
+  private Mono<ProjectResponse.VersionResponse> addVersion(
       String projectId, ProjectVersionEntity projectVersionEntity) {
     // @spotless:off
     return projectRepository
