@@ -45,7 +45,7 @@ public class SecurityConfig {
   SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
     // spotless:off
     return http.authorizeExchange()
-            .pathMatchers("/actuator/**")
+            .pathMatchers("/actuator/**", "/favicon.ico")
             .permitAll()
             .anyExchange()
             .authenticated()

@@ -48,7 +48,11 @@ public class SecurityConfig {
   SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
     // spotless:off
     return http.authorizeExchange()
-        .pathMatchers("/api/rest/v1/user/login", "/api/rest/v1/user/signup", "/actuator/**")
+        .pathMatchers(
+                "/api/rest/v1/user/login",
+                "/api/rest/v1/user/signup",
+                "/favicon.ico" ,
+                "/actuator/**")
         .permitAll()
         .pathMatchers(HttpMethod.GET,"/api/rest/v1/user")
         .hasAuthority("ROLE_ADMIN")

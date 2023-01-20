@@ -35,13 +35,13 @@ public final class IssueResponse {
       LocalDateTime createdAt,
       LocalDateTime endedAt) {}
 
-  static record Error(
+  public static record Error(
       int status,
       String path,
       String errorMessage,
       LocalDateTime timeStamp,
       Map<String, Object> meta) {
-    Error {
+    public Error {
       meta = Map.copyOf(meta == null ? Map.of() : meta);
     }
 

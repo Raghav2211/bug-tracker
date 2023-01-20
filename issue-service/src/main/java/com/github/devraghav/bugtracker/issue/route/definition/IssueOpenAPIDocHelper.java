@@ -160,7 +160,7 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Error.class)));
   }
   // spotless:on
   record Assign(String user) {}
