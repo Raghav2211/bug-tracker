@@ -1,49 +1,45 @@
 package com.github.devraghav.bugtracker.user.mapper;
 
-import com.github.devraghav.bugtracker.user.dto.AccessLevel;
-import com.github.devraghav.bugtracker.user.dto.User;
-import com.github.devraghav.bugtracker.user.dto.UserException;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
+import com.github.devraghav.bugtracker.user.request.UserRequest;
+import com.github.devraghav.bugtracker.user.response.UserResponse;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 import org.mapstruct.Named;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Mapper(
     componentModel = "spring",
     imports = {UUID.class})
-public interface UserMapper {
+public abstract class UserMapper {
+  @Autowired private PasswordEncoder passwordEncoder;
 
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
     @Mapping(target = "enabled", constant = "true"),
-    @Mapping(target = "access", source = "access", qualifiedByName = "accessLevelToValue")
+    @Mapping(target = "role", source = "role", qualifiedByName = "roleToValue"),
+    @Mapping(target = "password", source = "password", qualifiedByName = "encodePassword")
   })
-  UserEntity requestToEntity(UserRequest.Create createUserRequest);
+  public abstract UserEntity requestToEntity(UserRequest.CreateUser createUserUserRequest);
 
-  @Mappings({
-    @Mapping(target = "access", source = "access", qualifiedByName = "valueToAccessLevel")
-  })
-  User entityToResponse(UserEntity userEntity);
+  @Mappings({@Mapping(target = "role", source = "role", qualifiedByName = "valueToRole")})
+  public abstract UserResponse.User entityToResponse(UserEntity userEntity);
 
-  @Named("accessLevelToValue")
-  default Integer accessLevelToValue(AccessLevel accessLevel) {
-    return switch (accessLevel) {
-      case READ -> AccessLevel.READ.getValue();
-      case WRITE -> AccessLevel.WRITE.getValue();
-      case ADMIN -> AccessLevel.ADMIN.getValue();
-    };
+  @Named("roleToValue")
+  Integer roleToValue(UserRequest.Role role) {
+    return role.getValue();
   }
 
-  @Named("valueToAccessLevel")
-  default AccessLevel valueToAccessLevel(Integer accessLevelValue) {
-    return switch (accessLevelValue) {
-      case 1 -> AccessLevel.READ;
-      case 2 -> AccessLevel.WRITE;
-      case 0 -> AccessLevel.ADMIN;
-      default -> throw UserException.unrecognizedAccessLevel();
-    };
+  @Named("encodePassword")
+  String getEncodePassword(String password) {
+    return passwordEncoder.encode(password);
+  }
+
+  @Named("valueToRole")
+  UserRequest.Role valueToRole(Integer roleValue) {
+    return UserRequest.Role.fromValue(roleValue);
   }
 }

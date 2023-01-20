@@ -3,6 +3,7 @@ protocol Watcher {
 	import idl "../user/User.avdl";
 	record Watcher {
 		string issueId;
-		com.github.devraghav.data_model.domain.user.User watcher;
+		string watcher;
+		string updateBy;
 	}
 }

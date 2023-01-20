@@ -2,13 +2,15 @@ package com.github.devraghav.bugtracker.project.service;
 
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.event.internal.EventBus;
-import com.github.devraghav.bugtracker.project.dto.*;
 import com.github.devraghav.bugtracker.project.entity.ProjectEntity;
 import com.github.devraghav.bugtracker.project.entity.ProjectVersionEntity;
 import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
+import com.github.devraghav.bugtracker.project.exception.ProjectException;
 import com.github.devraghav.bugtracker.project.mapper.ProjectMapper;
 import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
+import com.github.devraghav.bugtracker.project.response.ProjectResponse;
 import com.github.devraghav.bugtracker.project.validation.RequestValidator;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -20,29 +22,30 @@ public record ProjectService(
     ProjectMapper projectMapper,
     ProjectVersionMapper projectVersionMapper,
     RequestValidator requestValidator,
-    UserReactiveClient userReactiveClient,
     ProjectRepository projectRepository,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<Project> save(ProjectRequest.Create createProjectRequest) {
-    return Mono.just(createProjectRequest)
-        .flatMap(requestValidator::validate)
-        .map(projectMapper::requestToEntity)
+  public Mono<ProjectResponse.Project> save(
+      String requestBy, ProjectRequest.CreateProject createProject) {
+    // @spotless:off
+    return requestValidator
+        .validate(createProject)
+        .map(validRequest -> projectMapper.requestToEntity(requestBy, validRequest))
         .flatMap(this::save)
         .onErrorResume(
             DuplicateKeyException.class,
-            exception ->
-                Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
+            exception -> Mono.error(ProjectException.alreadyExistsByName(createProject.name())));
+    // @spotless:on
   }
 
-  public Flux<Project> findAll() {
-    return projectRepository.findAll().flatMap(this::getProject);
+  public Flux<ProjectResponse.Project> findAll() {
+    return projectRepository.findAll().map(projectMapper::entityToResponse);
   }
 
-  public Mono<Project> findById(String projectId) {
+  public Mono<ProjectResponse.Project> findById(String projectId) {
     return projectRepository
         .findById(projectId)
-        .flatMap(this::getProject)
+        .map(projectMapper::entityToResponse)
         .switchIfEmpty(Mono.error(() -> ProjectException.notFound(projectId)));
   }
 
@@ -53,53 +56,42 @@ public record ProjectService(
         .switchIfEmpty(Mono.error(() -> ProjectException.notFound(projectId)));
   }
 
-  public Mono<Version> addVersionToProjectId(
-      String projectId, ProjectRequest.CreateVersion createVersionRequest) {
+  public Mono<ProjectResponse.Version> addVersionToProjectId(
+      String requestBy, String projectId, ProjectRequest.CreateVersion createVersion) {
     return exists(projectId)
-        .thenReturn(createVersionRequest)
-        .map(projectVersionMapper::requestToEntity)
-        .flatMap(projectVersionEntity -> save(projectId, projectVersionEntity));
+        .thenReturn(createVersion)
+        .map(validRequest -> projectVersionMapper.requestToEntity(requestBy, validRequest))
+        .flatMap(projectVersionEntity -> addVersion(projectId, projectVersionEntity));
   }
 
-  public Flux<Version> findAllVersionByProjectId(String projectId) {
+  public Flux<ProjectResponse.Version> findAllVersionByProjectId(String projectId) {
     return projectRepository
         .findAllVersionByProjectId(projectId)
         .map(projectVersionMapper::entityToResponse);
   }
 
-  public Mono<Version> findVersionByProjectIdAndVersionId(String projectId, String versionId) {
+  public Mono<ProjectResponse.Version> findVersionByProjectIdAndVersionId(
+      String projectId, String versionId) {
     return projectRepository
         .findVersionByProjectIdAndVersionId(projectId, versionId)
         .map(projectVersionMapper::entityToResponse);
   }
 
-  public Mono<Project> getProject(ProjectEntity projectEntity) {
-    return fetchAuthor(projectEntity.getAuthor())
-        .map(author -> projectMapper.entityToResponse(projectEntity).author(author).build());
-  }
-
-  private Mono<Project> save(ProjectEntity projectEntity) {
+  private Mono<ProjectResponse.Project> save(ProjectEntity projectEntity) {
     return projectRepository
         .save(projectEntity)
-        .flatMap(this::getProject)
+        .map(author -> projectMapper.entityToResponse(projectEntity))
         .doOnSuccess(project -> eventReactivePublisher.publish(new ProjectEvent.Created(project)));
   }
 
-  private Mono<Version> save(String projectId, ProjectVersionEntity projectVersionEntity) {
+  private Mono<ProjectResponse.Version> addVersion(
+      String projectId, ProjectVersionEntity projectVersionEntity) {
+    // @spotless:off
     return projectRepository
         .saveVersion(projectId, projectVersionEntity)
         .map(projectVersionMapper::entityToResponse)
-        .doOnSuccess(
-            version ->
-                eventReactivePublisher.publish(
-                    new ProjectEvent.VersionCreated(projectId, version)));
-  }
-
-  private Mono<User> fetchAuthor(String authorId) {
-    return userReactiveClient
-        .fetchUser(authorId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(ProjectException.userServiceException(exception)));
+        .doOnSuccess(version ->
+                eventReactivePublisher.publish(new ProjectEvent.VersionCreated(projectId, version)));
+    // @spotless:on
   }
 }

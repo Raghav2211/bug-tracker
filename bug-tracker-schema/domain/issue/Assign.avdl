@@ -3,6 +3,7 @@ protocol Assign {
 	import idl "../user/User.avdl";
 	record Assign {
 		string issueId;
-		com.github.devraghav.data_model.domain.user.User assignee;
+		string assignee;
+		string updateBy;
 	}
 }

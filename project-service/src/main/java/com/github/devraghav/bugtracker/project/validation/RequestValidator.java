@@ -1,13 +1,16 @@
 package com.github.devraghav.bugtracker.project.validation;
 
-import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public record RequestValidator(Validator<ProjectRequest.Create> createUserRequestValidator) {
+@RequiredArgsConstructor
+public class RequestValidator {
+  private final Validator<ProjectRequest.CreateProject> createUserRequestValidator;
 
-  public Mono<ProjectRequest.Create> validate(final ProjectRequest.Create request) {
+  public Mono<ProjectRequest.CreateProject> validate(final ProjectRequest.CreateProject request) {
     return createUserRequestValidator.validate(request);
   }
 }

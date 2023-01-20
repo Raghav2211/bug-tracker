@@ -1,9 +1,7 @@
 package com.github.devraghav.bugtracker.project.event;
 
-import com.github.devraghav.bugtracker.project.dto.Project;
-import com.github.devraghav.bugtracker.project.dto.User;
-import com.github.devraghav.bugtracker.project.dto.Version;
 import com.github.devraghav.bugtracker.project.event.internal.ProjectEvent;
+import com.github.devraghav.bugtracker.project.response.ProjectResponse;
 import com.github.devraghav.data_model.event.project.ProjectCreated;
 import com.github.devraghav.data_model.schema.project.ProjectCreatedSchema;
 import java.time.ZoneOffset;
@@ -12,47 +10,37 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ProjectCreatedEventConverter
+class ProjectCreatedEventConverter
     implements EventConverter<ProjectEvent.Created, ProjectCreatedSchema> {
 
-  private com.github.devraghav.data_model.domain.user.User getUser(User user) {
-    return com.github.devraghav.data_model.domain.user.User.newBuilder()
-        .setId(user.id())
-        .setAccessLevel(user.access().name())
-        .setEmail(user.email())
-        .setEnabled(user.enabled())
-        .setFirstName(user.firstName())
-        .setLastName(user.lastName())
-        .build();
-  }
-
   private List<com.github.devraghav.data_model.domain.project.version.Version> getVersions(
-      Set<Version> versions) {
+      Set<ProjectResponse.Version> versions) {
     return versions.stream().map(this::getVersion).collect(Collectors.toList());
   }
 
   private com.github.devraghav.data_model.domain.project.version.Version getVersion(
-      Version version) {
+      ProjectResponse.Version version) {
     return com.github.devraghav.data_model.domain.project.version.Version.newBuilder()
         .setId(version.id())
         .setVersion(version.version())
         .build();
   }
 
-  private com.github.devraghav.data_model.domain.project.Project getProject(Project project) {
+  private com.github.devraghav.data_model.domain.project.Project getProject(
+      ProjectResponse.Project project) {
     var tags =
-        project.getTags().entrySet().stream()
+        project.tags().entrySet().stream()
             .collect(Collectors.toMap(Objects::toString, Object::toString));
     return com.github.devraghav.data_model.domain.project.Project.newBuilder()
-        .setId(project.getId())
-        .setName(project.getName())
-        .setAuthor(getUser(project.getAuthor()))
-        .setDescription(project.getDescription())
-        .setEnabled(project.getEnabled())
-        .setCreatedAt(project.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
+        .setId(project.id())
+        .setName(project.name())
+        .setAuthor(project.author())
+        .setDescription(project.description())
+        .setEnabled(project.enabled())
+        .setCreatedAt(project.createdAt().toEpochSecond(ZoneOffset.UTC))
         .setTags(tags)
-        .setStatus(project.getStatus().name())
-        .setVersions(getVersions(project.getVersions()))
+        .setStatus(project.status().name())
+        .setVersions(getVersions(project.versions()))
         .build();
   }
 

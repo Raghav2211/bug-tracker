@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class UserEntity {
   @Id private String id;
   private String password;
-  private Integer access;
+  private Integer role;
   private String firstName;
   private String lastName;
   private String email;

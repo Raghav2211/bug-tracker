@@ -8,7 +8,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.stereotype.Component;
 
 @Component
-public final class EventConverterFactory {
+final class EventConverterFactory {
 
   private static final VersionCreatedEventConverter VERSION_CREATED_EVENT_CONVERTER =
       new VersionCreatedEventConverter();

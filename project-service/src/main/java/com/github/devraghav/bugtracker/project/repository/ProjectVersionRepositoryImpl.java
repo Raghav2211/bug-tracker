@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public record ProjectVersionRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate)
+record ProjectVersionRepositoryImpl(ReactiveMongoTemplate reactiveMongoTemplate)
     implements ProjectVersionRepository {
   @Override
   public Mono<ProjectVersionEntity> saveVersion(String projectId, ProjectVersionEntity entity) {

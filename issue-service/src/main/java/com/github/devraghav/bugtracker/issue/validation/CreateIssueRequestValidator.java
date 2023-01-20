@@ -1,30 +1,34 @@
 package com.github.devraghav.bugtracker.issue.validation;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
+import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
+import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
+import com.github.devraghav.bugtracker.issue.response.IssueResponse;
 import com.github.devraghav.bugtracker.issue.service.ProjectReactiveClient;
-import com.github.devraghav.bugtracker.issue.service.UserReactiveClient;
 import java.util.Collection;
 import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-// TODO: check user have write access
 @Component
-public record CreateIssueRequestValidator(
-    ProjectReactiveClient projectReactiveClient, UserReactiveClient userReactiveClient)
-    implements Validator<IssueRequest.Create, IssueRequest.Create> {
+@RequiredArgsConstructor
+class CreateIssueRequestValidator
+    implements Validator<IssueRequest.CreateIssue, IssueRequest.CreateIssue> {
+
+  private final ProjectReactiveClient projectReactiveClient;
 
   @Override
-  public Mono<IssueRequest.Create> validate(IssueRequest.Create createIssueRequest) {
-    return validateHeader(createIssueRequest.header())
-        .and(validateDescription(createIssueRequest.description()))
-        .and(validatePriority(createIssueRequest.priority()))
-        .and(validateSeverity(createIssueRequest.severity()))
-        .and(validatedProjectInfo(createIssueRequest.projects()))
-        .and(validateReporter(createIssueRequest.reporter()))
-        .thenReturn(createIssueRequest);
+  public Mono<IssueRequest.CreateIssue> validate(IssueRequest.CreateIssue createIssue) {
+    return validateHeader(createIssue.header())
+        .and(validateDescription(createIssue.description()))
+        .and(validatePriority(createIssue.priority()))
+        .and(validateSeverity(createIssue.severity()))
+        .and(validatedProjectInfo(createIssue.projects()))
+        .thenReturn(createIssue);
   }
 
   private Mono<Void> validateHeader(String header) {
@@ -43,21 +47,21 @@ public record CreateIssueRequestValidator(
         .then();
   }
 
-  private Mono<Void> validatePriority(Priority priority) {
+  private Mono<Void> validatePriority(IssueResponse.Priority priority) {
     return Mono.justOrEmpty(priority)
         .filter(Objects::nonNull)
         .switchIfEmpty(Mono.error(IssueException::nullPriority))
         .then();
   }
 
-  private Mono<Void> validateSeverity(Severity severity) {
+  private Mono<Void> validateSeverity(IssueResponse.Severity severity) {
     return Mono.justOrEmpty(severity)
         .filter(Objects::nonNull)
         .switchIfEmpty(Mono.error(IssueException::nullSeverity))
         .then();
   }
 
-  private Mono<Void> validatedProjectInfo(Collection<ProjectInfo> projectInfos) {
+  private Mono<Void> validatedProjectInfo(Collection<IssueRequest.ProjectInfo> projectInfos) {
     return Flux.fromIterable(projectInfos)
         .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
         .flatMap(this::validateProjectInfo)
@@ -65,14 +69,14 @@ public record CreateIssueRequestValidator(
         .then();
   }
 
-  private Mono<Boolean> validateProjectInfo(ProjectInfo projectInfo) {
+  private Mono<Boolean> validateProjectInfo(IssueRequest.ProjectInfo projectInfo) {
     return Mono.just(projectInfo)
-        .filter(ProjectInfo::isValid)
+        .filter(IssueRequest.ProjectInfo::isValid)
         .flatMap(this::isProjectInfoExists)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidProject(projectInfo)));
   }
 
-  private Mono<Boolean> isProjectInfoExists(ProjectInfo projectInfo) {
+  private Mono<Boolean> isProjectInfoExists(IssueRequest.ProjectInfo projectInfo) {
     return Mono.zip(
             validateProjectId(projectInfo.projectId()),
             validateProjectVersion(projectInfo.projectId(), projectInfo.versionId()),
@@ -94,17 +98,5 @@ public record CreateIssueRequestValidator(
         .onErrorResume(
             ProjectClientException.class,
             exception -> Mono.error(IssueException.projectServiceException(exception)));
-  }
-
-  private Mono<Void> validateReporter(String reporter) {
-    return fetchUser(reporter).then();
-  }
-
-  private Mono<User> fetchUser(String userId) {
-    return userReactiveClient
-        .fetchUser(userId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(IssueException.userServiceException(exception)));
   }
 }

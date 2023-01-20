@@ -11,9 +11,9 @@ import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.client.HttpClient;
 
 @Configuration
-public class ProjectWebClientConfiguration {
+class ProjectWebClientConfiguration {
   @Bean
-  public WebClient projectWebClient(WebClient.Builder webClientBuilder) {
+  WebClient projectWebClient(WebClient.Builder webClientBuilder) {
 
     HttpClient httpClient =
         HttpClient.create()

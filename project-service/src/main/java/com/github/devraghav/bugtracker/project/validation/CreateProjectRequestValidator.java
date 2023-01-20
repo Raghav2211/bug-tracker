@@ -1,23 +1,18 @@
 package com.github.devraghav.bugtracker.project.validation;
 
-import com.github.devraghav.bugtracker.project.dto.ProjectException;
-import com.github.devraghav.bugtracker.project.dto.ProjectRequest;
-import com.github.devraghav.bugtracker.project.dto.User;
-import com.github.devraghav.bugtracker.project.dto.UserClientException;
-import com.github.devraghav.bugtracker.project.service.UserReactiveClient;
+import com.github.devraghav.bugtracker.project.exception.ProjectException;
+import com.github.devraghav.bugtracker.project.request.ProjectRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public record CreateProjectRequestValidator(UserReactiveClient userReactiveClient)
-    implements Validator<ProjectRequest.Create> {
+public class CreateProjectRequestValidator implements Validator<ProjectRequest.CreateProject> {
   @Override
-  public Mono<ProjectRequest.Create> validate(ProjectRequest.Create createProjectRequest) {
-    return validateName(createProjectRequest.name())
-        .and(validateDescription(createProjectRequest.description()))
-        .and(validateAuthor(createProjectRequest.author()))
-        .thenReturn(createProjectRequest);
+  public Mono<ProjectRequest.CreateProject> validate(ProjectRequest.CreateProject createProject) {
+    return validateName(createProject.name())
+        .and(validateDescription(createProject.description()))
+        .thenReturn(createProject);
   }
 
   private Mono<Void> validateName(String name) {
@@ -33,29 +28,5 @@ public record CreateProjectRequestValidator(UserReactiveClient userReactiveClien
         .filter(projectDesc -> StringUtils.hasLength(projectDesc) && projectDesc.length() <= 200)
         .switchIfEmpty(Mono.error(() -> ProjectException.invalidDescription(description)))
         .then();
-  }
-
-  private Mono<Void> validateAuthor(String author) {
-    return Mono.justOrEmpty(author)
-        .filter(StringUtils::hasLength)
-        .switchIfEmpty(Mono.error(ProjectException::nullAuthor))
-        .flatMap(this::fetchAndValidateAuthorAccess)
-        .then();
-  }
-
-  private Mono<Boolean> fetchAndValidateAuthorAccess(String author) {
-    return fetchAuthor(author)
-        .map(User::hasWriteAccess)
-        .map(Boolean::booleanValue)
-        .filter(Boolean::booleanValue)
-        .switchIfEmpty(Mono.error(() -> ProjectException.authorNotHaveWriteAccess(author)));
-  }
-
-  private Mono<User> fetchAuthor(String authorId) {
-    return userReactiveClient
-        .fetchUser(authorId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(ProjectException.userServiceException(exception)));
   }
 }

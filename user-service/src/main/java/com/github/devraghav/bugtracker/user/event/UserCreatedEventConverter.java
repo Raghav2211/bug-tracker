@@ -1,18 +1,17 @@
 package com.github.devraghav.bugtracker.user.event;
 
-import com.github.devraghav.bugtracker.user.dto.User;
 import com.github.devraghav.bugtracker.user.event.internal.UserEvent;
+import com.github.devraghav.bugtracker.user.response.UserResponse;
 import com.github.devraghav.data_model.event.user.UserCreated;
 import com.github.devraghav.data_model.schema.user.UserCreatedSchema;
 import java.time.ZoneOffset;
 
-public class UserCreatedEventConverter
-    implements EventConverter<UserEvent.Created, UserCreatedSchema> {
+class UserCreatedEventConverter implements EventConverter<UserEvent.Created, UserCreatedSchema> {
 
-  private com.github.devraghav.data_model.domain.user.User getUser(User user) {
+  private com.github.devraghav.data_model.domain.user.User getUser(UserResponse.User user) {
     return com.github.devraghav.data_model.domain.user.User.newBuilder()
         .setId(user.id())
-        .setAccessLevel(user.access().name())
+        .setAccessLevel(user.role().name())
         .setEmail(user.email())
         .setEnabled(user.enabled())
         .setFirstName(user.firstName())

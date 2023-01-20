@@ -1,18 +1,20 @@
 package com.github.devraghav.bugtracker.issue.entity;
 
 import java.time.LocalDateTime;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Document("comments")
 @NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 public class CommentEntity {
   @Id private String id;
   private String issueId;
   private String userId;
   private String content;
   private LocalDateTime createdAt;
+  private LocalDateTime lastUpdatedAt;
 }

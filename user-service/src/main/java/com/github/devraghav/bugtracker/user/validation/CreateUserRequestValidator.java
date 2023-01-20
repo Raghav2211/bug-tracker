@@ -1,23 +1,23 @@
 package com.github.devraghav.bugtracker.user.validation;
 
-import com.github.devraghav.bugtracker.user.dto.UserException;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
+import com.github.devraghav.bugtracker.user.exception.UserException;
+import com.github.devraghav.bugtracker.user.request.UserRequest;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public class CreateUserRequestValidator implements Validator<UserRequest.Create> {
+class CreateUserRequestValidator implements Validator<UserRequest.CreateUser> {
 
   private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 
   @Override
-  public Mono<UserRequest.Create> validate(UserRequest.Create createUserRequest) {
-    return validateFirstName(createUserRequest.firstName())
-        .and(validateLastName(createUserRequest.lastName()))
-        .and(validateEmail(createUserRequest.email()))
-        .thenReturn(createUserRequest);
+  public Mono<UserRequest.CreateUser> validate(UserRequest.CreateUser createUserUserRequest) {
+    return validateFirstName(createUserUserRequest.firstName())
+        .and(validateLastName(createUserUserRequest.lastName()))
+        .and(validateEmail(createUserUserRequest.email()))
+        .thenReturn(createUserUserRequest);
   }
 
   private Mono<Void> validateEmail(String email) {

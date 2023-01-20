@@ -1,7 +1,9 @@
 package com.github.devraghav.bugtracker.issue.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Content;
@@ -26,7 +28,12 @@ import org.springframework.http.MediaType;
             title = "Issue Service",
             version = "1.0.0",
             description = "Issue service WebFlux Rest API"))
-public class OpenApi30Config {
+@SecurityScheme(
+    name = "bearerAuth",
+    type = SecuritySchemeType.HTTP,
+    bearerFormat = "JWT",
+    scheme = "bearer")
+class OpenApi30Config {
 
   private Content uploadContent =
       new Content()
@@ -51,7 +58,7 @@ public class OpenApi30Config {
               .forEach(uploadOperationUpdateConsumer);
 
   @Bean
-  public GroupedOpenApi issueOpenApi() {
+  GroupedOpenApi issueOpenApi() {
     String includePaths[] = {"/api/rest/**/issue/**"};
     String excludePaths[] = {
       "/api/rest/**/comment**", "/api/rest/**/comment/**",
@@ -65,7 +72,7 @@ public class OpenApi30Config {
   }
 
   @Bean
-  public GroupedOpenApi commentOpenApi() {
+  GroupedOpenApi commentOpenApi() {
     String includePaths[] = {"/api/rest/**/issue/{id}/comment/**", "/api/rest/**/comment/**"};
     String excludePaths[] = {"/api/rest/**/issue/{id}/comment/stream**"};
     return GroupedOpenApi.builder()

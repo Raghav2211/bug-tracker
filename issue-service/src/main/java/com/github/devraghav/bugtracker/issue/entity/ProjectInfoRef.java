@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.entity;
 
-import com.github.devraghav.bugtracker.issue.dto.ProjectInfo;
+import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,7 +10,7 @@ public class ProjectInfoRef {
   private String projectId;
   private String versionId;
 
-  public ProjectInfoRef(ProjectInfo projectInfo) {
+  public ProjectInfoRef(IssueRequest.ProjectInfo projectInfo) {
     this.projectId = projectInfo.projectId();
     this.versionId = projectInfo.versionId();
   }

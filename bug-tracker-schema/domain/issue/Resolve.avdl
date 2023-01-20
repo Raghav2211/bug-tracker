@@ -3,5 +3,6 @@ protocol Resolve {
 	record Resolve {
 		string issueId;
 		long endedAt;
+		string updateBy;
 	}
 }
