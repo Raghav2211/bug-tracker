@@ -1,9 +1,10 @@
-package com.github.devraghav.bugtracker.issue.route;
+package com.github.devraghav.bugtracker.issue.route.definition;
 
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
 
+import com.github.devraghav.bugtracker.issue.route.handler.CommentRouteHandler;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.springdoc.core.fn.builders.operation.Builder;

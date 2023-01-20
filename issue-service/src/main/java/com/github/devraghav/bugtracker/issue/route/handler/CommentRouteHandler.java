@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.issue.route;
+package com.github.devraghav.bugtracker.issue.route.handler;
 
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;

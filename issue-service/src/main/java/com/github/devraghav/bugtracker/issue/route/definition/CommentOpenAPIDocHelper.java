@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.issue.route;
+package com.github.devraghav.bugtracker.issue.route.definition;
 
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.arrayschema.Builder.arraySchemaBuilder;

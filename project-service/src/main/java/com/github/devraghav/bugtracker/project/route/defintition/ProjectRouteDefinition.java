@@ -1,8 +1,9 @@
-package com.github.devraghav.bugtracker.project.route;
+package com.github.devraghav.bugtracker.project.route.defintition;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
+import com.github.devraghav.bugtracker.project.route.handler.ProjectRouteHandler;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -18,33 +19,33 @@ class ProjectRouteDefinition {
 
   @Bean
   RouterFunction<ServerResponse> projectRoutes(
-      ProjectOpenAPIDocHelper docHelper, RouteHandler routeHandler) {
+      ProjectOpenAPIDocHelper docHelper, ProjectRouteHandler projectRouteHandler) {
     Consumer<org.springdoc.core.fn.builders.operation.Builder> emptyOperationsConsumer =
         builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET("", routeHandler::getProject, docHelper::getProjectByIdOperationDoc)
+                .GET("", projectRouteHandler::getProject, docHelper::getProjectByIdOperationDoc)
                 .GET(
                     "/version",
-                    routeHandler::getAllProjectVersion,
+                    projectRouteHandler::getAllProjectVersion,
                     docHelper::getAllVersionOperationDoc)
                 .POST(
                     "/version",
-                    routeHandler::addVersionToProject,
+                    projectRouteHandler::addVersionToProject,
                     docHelper::saveVersionOperationDoc)
                 .GET(
                     "/version/{versionId}",
-                    routeHandler::getProjectVersion,
+                    projectRouteHandler::getProjectVersion,
                     docHelper::getProjectVersionByIdOperationDoc)
                 .build();
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET("", routeHandler::getAllProjects, docHelper::getAllProjectOperationDoc)
-                .POST(routeHandler::createProject, docHelper::saveProjectOperationDoc)
+                .GET("", projectRouteHandler::getAllProjects, docHelper::getAllProjectOperationDoc)
+                .POST(projectRouteHandler::createProject, docHelper::saveProjectOperationDoc)
                 .nest(
                     path("/{id}").and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
                     routerByIdSupplier,

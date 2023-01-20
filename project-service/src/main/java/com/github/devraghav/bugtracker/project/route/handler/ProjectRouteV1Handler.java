@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.project.route;
+package com.github.devraghav.bugtracker.project.route.handler;
 
 import com.github.devraghav.bugtracker.project.exception.ProjectException;
 import com.github.devraghav.bugtracker.project.request.ProjectRequest;
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-class ProjectRouteV1Handler implements RouteHandler {
+class ProjectRouteV1Handler implements ProjectRouteHandler {
   private final ProjectService projectService;
 
   public Mono<ServerResponse> getAllProjects(ServerRequest serverRequest) {

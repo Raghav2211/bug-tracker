@@ -1,11 +1,11 @@
-package com.github.devraghav.bugtracker.project.route;
+package com.github.devraghav.bugtracker.project.route.handler;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-public interface RouteHandler {
+public interface ProjectRouteHandler {
 
   Mono<ServerResponse> getAllProjects(ServerRequest serverRequest);
 

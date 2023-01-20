@@ -1,11 +1,11 @@
-package com.github.devraghav.bugtracker.issue.route;
+package com.github.devraghav.bugtracker.issue.route.handler;
 
 import java.util.Objects;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Mono;
 
-public interface RouteHandler {
+interface RouteHandler {
 
   default Mono<String> getAuthenticatedPrincipal(ServerRequest request) {
     return request

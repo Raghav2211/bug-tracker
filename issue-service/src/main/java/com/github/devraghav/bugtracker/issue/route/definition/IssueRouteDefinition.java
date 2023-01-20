@@ -1,9 +1,10 @@
-package com.github.devraghav.bugtracker.issue.route;
+package com.github.devraghav.bugtracker.issue.route.definition;
 
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
 import com.github.devraghav.bugtracker.issue.request.IssueRequest;
+import com.github.devraghav.bugtracker.issue.route.handler.IssueRouteHandler;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
