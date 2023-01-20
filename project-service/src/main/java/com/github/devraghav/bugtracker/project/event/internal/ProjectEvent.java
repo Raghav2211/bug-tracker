@@ -21,13 +21,13 @@ public interface ProjectEvent {
   @Getter
   class VersionCreated extends DomainEvent {
     private final String projectId;
-    private final ProjectResponse.VersionResponse version;
+    private final ProjectResponse.Version version;
 
-    public VersionCreated(String projectId, ProjectResponse.VersionResponse version) {
+    public VersionCreated(String projectId, ProjectResponse.Version version) {
       super(
           projectId,
           "Created",
-          new PublisherInfo("Project", ProjectResponse.VersionResponse.class, version.userId()));
+          new PublisherInfo("Project", ProjectResponse.Version.class, version.userId()));
       this.projectId = projectId;
       this.version = version;
     }

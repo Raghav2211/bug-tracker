@@ -8,10 +8,9 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class RequestValidator {
-  private final Validator<ProjectRequest.CreateProjectRequest> createUserRequestValidator;
+  private final Validator<ProjectRequest.CreateProject> createUserRequestValidator;
 
-  public Mono<ProjectRequest.CreateProjectRequest> validate(
-      final ProjectRequest.CreateProjectRequest request) {
+  public Mono<ProjectRequest.CreateProject> validate(final ProjectRequest.CreateProject request) {
     return createUserRequestValidator.validate(request);
   }
 }

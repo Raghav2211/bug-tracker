@@ -28,12 +28,12 @@ public final class ProjectRequest {
     }
   }
 
-  public static record CreateProjectRequest(
+  public static record CreateProject(
       String name, String description, ProjectStatus status, Map<String, Object> tags) {
-    public CreateProjectRequest {
+    public CreateProject {
       tags = Map.copyOf(tags == null ? Map.of() : tags);
     }
   }
 
-  public static record CreateVersionRequest(String version) {}
+  public static record CreateVersion(String version) {}
 }

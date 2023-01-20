@@ -24,7 +24,7 @@ public final class ProjectResponse {
       ProjectRequest.ProjectStatus status,
       String author,
       LocalDateTime createdAt,
-      Set<VersionResponse> versions,
+      Set<Version> versions,
       Map<String, Object> tags) {}
 
   public static record Error(
@@ -44,7 +44,7 @@ public final class ProjectResponse {
     }
   }
 
-  public static record VersionResponse(String id, String version, String userId) {}
+  public static record Version(String id, String version, String userId) {}
 
   public static Mono<ServerResponse> retrieve(List<Project> projects) {
     return ServerResponse.ok()
@@ -57,7 +57,7 @@ public final class ProjectResponse {
         .body(BodyInserters.fromValue(project));
   }
 
-  public static Mono<ServerResponse> ok(VersionResponse version) {
+  public static Mono<ServerResponse> ok(Version version) {
     return ServerResponse.ok().body(BodyInserters.fromValue(version));
   }
 
@@ -77,10 +77,6 @@ public final class ProjectResponse {
                     exception.getMessage(),
                     HttpStatus.BAD_REQUEST,
                     exception.getMeta())));
-  }
-
-  static Mono<ServerResponse> alreadyExists(ServerRequest request, ProjectException exception) {
-    return exception(request, exception, HttpStatus.BAD_REQUEST);
   }
 
   public static Mono<ServerResponse> notFound(ServerRequest request, ProjectException exception) {

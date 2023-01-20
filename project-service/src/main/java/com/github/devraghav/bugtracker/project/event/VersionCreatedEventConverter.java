@@ -10,7 +10,7 @@ class VersionCreatedEventConverter
     implements EventConverter<ProjectEvent.VersionCreated, VersionCreatedSchema> {
 
   private com.github.devraghav.data_model.domain.project.version.Version getVersion(
-      ProjectResponse.VersionResponse version) {
+      ProjectResponse.Version version) {
     return com.github.devraghav.data_model.domain.project.version.Version.newBuilder()
         .setId(version.id())
         .setVersion(version.version())

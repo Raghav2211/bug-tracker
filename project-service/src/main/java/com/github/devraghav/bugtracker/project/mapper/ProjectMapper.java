@@ -18,16 +18,12 @@ public interface ProjectMapper {
   @Mappings({
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
     @Mapping(target = "enabled", constant = "true"),
-    @Mapping(
-        target = "status",
-        source = "createProjectRequest.status",
-        qualifiedByName = "statusToValue"),
+    @Mapping(target = "status", source = "createProject.status", qualifiedByName = "statusToValue"),
     @Mapping(target = "versions", expression = "java(List.of())"),
     @Mapping(target = "createdAt", expression = "java(LocalDateTime.now())"),
     @Mapping(target = "author", source = "author")
   })
-  ProjectEntity requestToEntity(
-      String author, ProjectRequest.CreateProjectRequest createProjectRequest);
+  ProjectEntity requestToEntity(String author, ProjectRequest.CreateProject createProject);
 
   @Mappings({@Mapping(target = "status", source = "status", qualifiedByName = "valueToStatus")})
   ProjectResponse.Project entityToResponse(ProjectEntity projectEntity);

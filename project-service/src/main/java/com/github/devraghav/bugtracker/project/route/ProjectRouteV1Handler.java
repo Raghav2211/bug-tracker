@@ -32,7 +32,7 @@ class ProjectRouteV1Handler implements RouteHandler {
   public Mono<ServerResponse> createProject(ServerRequest request) {
     // @spotless:off
     var principalWithCreateRequestMono =
-        Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(ProjectRequest.CreateProjectRequest.class));
+        Mono.zip(getAuthenticatedPrincipal(request), request.bodyToMono(ProjectRequest.CreateProject.class));
     return principalWithCreateRequestMono
         .flatMap(tuple2 -> projectService.save(tuple2.getT1(), tuple2.getT2()))
         .flatMap(project -> ProjectResponse.create(request, project))
@@ -58,7 +58,7 @@ class ProjectRouteV1Handler implements RouteHandler {
     var projectId = request.pathVariable("id");
     // @spotless:off
     var principalWithCreateRequestMono =
-        Mono.zip(getAuthenticatedPrincipal(request),request.bodyToMono(ProjectRequest.CreateVersionRequest.class));
+        Mono.zip(getAuthenticatedPrincipal(request),request.bodyToMono(ProjectRequest.CreateVersion.class));
 
     return principalWithCreateRequestMono
         .flatMap(tuple2 -> projectService.addVersionToProjectId(tuple2.getT1(), projectId, tuple2.getT2()))
@@ -72,9 +72,7 @@ class ProjectRouteV1Handler implements RouteHandler {
     var projectId = request.pathVariable("id");
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(
-            projectService.findAllVersionByProjectId(projectId),
-            ProjectResponse.VersionResponse.class);
+        .body(projectService.findAllVersionByProjectId(projectId), ProjectResponse.Version.class);
   }
 
   @Override
@@ -85,7 +83,7 @@ class ProjectRouteV1Handler implements RouteHandler {
     return ServerResponse.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(projectService.findVersionByProjectIdAndVersionId(projectId, versionId),
-                ProjectResponse.VersionResponse.class);
+                ProjectResponse.Version.class);
     // @spotless:on
   }
 }

@@ -26,15 +26,15 @@ public record ProjectService(
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
   public Mono<ProjectResponse.Project> save(
-      String requestBy, ProjectRequest.CreateProjectRequest createProjectRequest) {
+      String requestBy, ProjectRequest.CreateProject createProject) {
     // @spotless:off
     return requestValidator
-        .validate( createProjectRequest)
+        .validate(createProject)
         .map(validRequest -> projectMapper.requestToEntity(requestBy, validRequest))
         .flatMap(this::save)
         .onErrorResume(
             DuplicateKeyException.class,
-            exception -> Mono.error(ProjectException.alreadyExistsByName(createProjectRequest.name())));
+            exception -> Mono.error(ProjectException.alreadyExistsByName(createProject.name())));
     // @spotless:on
   }
 
@@ -56,23 +56,21 @@ public record ProjectService(
         .switchIfEmpty(Mono.error(() -> ProjectException.notFound(projectId)));
   }
 
-  public Mono<ProjectResponse.VersionResponse> addVersionToProjectId(
-      String requestBy,
-      String projectId,
-      ProjectRequest.CreateVersionRequest createVersionRequest) {
+  public Mono<ProjectResponse.Version> addVersionToProjectId(
+      String requestBy, String projectId, ProjectRequest.CreateVersion createVersion) {
     return exists(projectId)
-        .thenReturn(createVersionRequest)
+        .thenReturn(createVersion)
         .map(validRequest -> projectVersionMapper.requestToEntity(requestBy, validRequest))
         .flatMap(projectVersionEntity -> addVersion(projectId, projectVersionEntity));
   }
 
-  public Flux<ProjectResponse.VersionResponse> findAllVersionByProjectId(String projectId) {
+  public Flux<ProjectResponse.Version> findAllVersionByProjectId(String projectId) {
     return projectRepository
         .findAllVersionByProjectId(projectId)
         .map(projectVersionMapper::entityToResponse);
   }
 
-  public Mono<ProjectResponse.VersionResponse> findVersionByProjectIdAndVersionId(
+  public Mono<ProjectResponse.Version> findVersionByProjectIdAndVersionId(
       String projectId, String versionId) {
     return projectRepository
         .findVersionByProjectIdAndVersionId(projectId, versionId)
@@ -86,7 +84,7 @@ public record ProjectService(
         .doOnSuccess(project -> eventReactivePublisher.publish(new ProjectEvent.Created(project)));
   }
 
-  private Mono<ProjectResponse.VersionResponse> addVersion(
+  private Mono<ProjectResponse.Version> addVersion(
       String projectId, ProjectVersionEntity projectVersionEntity) {
     // @spotless:off
     return projectRepository

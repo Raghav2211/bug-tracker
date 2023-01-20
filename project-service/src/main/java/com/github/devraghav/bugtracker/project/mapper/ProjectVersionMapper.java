@@ -17,8 +17,7 @@ public interface ProjectVersionMapper {
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())"),
     @Mapping(target = "userId", source = "userId")
   })
-  ProjectVersionEntity requestToEntity(
-      String userId, ProjectRequest.CreateVersionRequest projectRequest);
+  ProjectVersionEntity requestToEntity(String userId, ProjectRequest.CreateVersion projectRequest);
 
-  ProjectResponse.VersionResponse entityToResponse(ProjectVersionEntity projectEntity);
+  ProjectResponse.Version entityToResponse(ProjectVersionEntity projectEntity);
 }

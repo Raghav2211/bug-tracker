@@ -7,14 +7,12 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public class CreateProjectRequestValidator
-    implements Validator<ProjectRequest.CreateProjectRequest> {
+public class CreateProjectRequestValidator implements Validator<ProjectRequest.CreateProject> {
   @Override
-  public Mono<ProjectRequest.CreateProjectRequest> validate(
-      ProjectRequest.CreateProjectRequest createProjectRequest) {
-    return validateName(createProjectRequest.name())
-        .and(validateDescription(createProjectRequest.description()))
-        .thenReturn(createProjectRequest);
+  public Mono<ProjectRequest.CreateProject> validate(ProjectRequest.CreateProject createProject) {
+    return validateName(createProject.name())
+        .and(validateDescription(createProject.description()))
+        .thenReturn(createProject);
   }
 
   private Mono<Void> validateName(String name) {

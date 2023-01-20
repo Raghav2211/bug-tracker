@@ -14,12 +14,12 @@ class ProjectCreatedEventConverter
     implements EventConverter<ProjectEvent.Created, ProjectCreatedSchema> {
 
   private List<com.github.devraghav.data_model.domain.project.version.Version> getVersions(
-      Set<ProjectResponse.VersionResponse> versions) {
+      Set<ProjectResponse.Version> versions) {
     return versions.stream().map(this::getVersion).collect(Collectors.toList());
   }
 
   private com.github.devraghav.data_model.domain.project.version.Version getVersion(
-      ProjectResponse.VersionResponse version) {
+      ProjectResponse.Version version) {
     return com.github.devraghav.data_model.domain.project.version.Version.newBuilder()
         .setId(version.id())
         .setVersion(version.version())

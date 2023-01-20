@@ -18,22 +18,22 @@ public class CommentRouteDefinition {
 
   @Bean
   public RouterFunction<ServerResponse> commentRoutes(
-      CommentOpenAPIDocHelper docHelper, CommentRouteV1Handler commentRouteV1Handler) {
+      CommentOpenAPIDocHelper docHelper, CommentRouteHandler commentRouteHandler) {
     Consumer<Builder> emptyOperationsConsumer = builder -> {};
 
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
         () ->
             SpringdocRouteBuilder.route()
                 .GET(
-                    "/comment", commentRouteV1Handler::getAll, docHelper::getAllCommentOperationDoc)
+                    "/comment", commentRouteHandler::getAll, docHelper::getAllCommentOperationDoc)
                 .GET(
                     path("/comments").and(contentType(TEXT_EVENT_STREAM)),
-                    commentRouteV1Handler::subscribeCommentStream,
+                    commentRouteHandler::subscribeCommentStream,
                     builder -> builder.operationId("stream").hidden(true).ignoreJsonView(true))
-                .POST("/comment", commentRouteV1Handler::save, docHelper::addCommentOperationDoc)
+                .POST("/comment", commentRouteHandler::save, docHelper::addCommentOperationDoc)
                 .PUT(
                     "/comment/{commentId}",
-                    commentRouteV1Handler::update,
+                    commentRouteHandler::update,
                     docHelper::updateCommentOperationDoc)
                 .build();
 
@@ -45,7 +45,7 @@ public class CommentRouteDefinition {
             emptyOperationsConsumer)
         .GET(
             "/api/rest/v1/comment/{commentId}",
-            commentRouteV1Handler::get,
+            commentRouteHandler::get,
             docHelper::getCommentByIdOperationDoc)
         .build();
   }
