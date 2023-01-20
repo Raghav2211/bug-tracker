@@ -1,4 +1,4 @@
-package com.github.devraghav.bugtracker.user.route;
+package com.github.devraghav.bugtracker.user.route.definition;
 
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.arrayschema.Builder.arraySchemaBuilder;
@@ -9,10 +9,8 @@ import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import com.github.devraghav.bugtracker.user.dto.LoginRequest;
-import com.github.devraghav.bugtracker.user.dto.User;
-import com.github.devraghav.bugtracker.user.dto.UserErrorResponse;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
+import com.github.devraghav.bugtracker.user.request.UserRequest;
+import com.github.devraghav.bugtracker.user.response.UserResponse;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springdoc.core.fn.builders.apiresponse.Builder;
 import org.springframework.stereotype.Component;
@@ -25,10 +23,10 @@ class UserOpenAPIDocHelper {
        .summary("Login user")
        .requestBody(requestBodyBuilder()
                .content(contentBuilder()
-                       .schema(schemaBuilder().implementation(LoginRequest.Request.class))))
+                       .schema(schemaBuilder().implementation(UserRequest.AuthRequest.class))))
        .response(responseBuilder().responseCode("200")
                .content(contentBuilder()
-                       .schema(schemaBuilder().implementation(LoginRequest.Response.class))))
+                       .schema(schemaBuilder().implementation(UserRequest.AuthResponse.class))))
        .response(responseBuilder()
                .responseCode("401")
                .description("Unauthorized user"))
@@ -40,7 +38,7 @@ class UserOpenAPIDocHelper {
         .summary("User Signup ")
         .requestBody(requestBodyBuilder()
                 .content(contentBuilder()
-                        .schema(schemaBuilder().implementation(UserRequest.Create.class))))
+                        .schema(schemaBuilder().implementation(UserRequest.CreateUser.class))))
         .response(saveUser201ResponseDoc())
         .response(savUser400ResponseDoc())
         .build();
@@ -76,7 +74,8 @@ class UserOpenAPIDocHelper {
         .description("User successfully created")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(User.class)));
+                .schema(schemaBuilder().implementation(UserResponse.User
+                        .class)));
   }
 
   private Builder savUser400ResponseDoc() {
@@ -85,7 +84,7 @@ class UserOpenAPIDocHelper {
         .description("Bad Request")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(UserErrorResponse.class)));
+                .schema(schemaBuilder().implementation(UserResponse.Error.class)));
   }
 
   private Builder getAll200ResponseDoc() {
@@ -94,7 +93,7 @@ class UserOpenAPIDocHelper {
         .description("Retrieve all users")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(User.class))));
+                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(UserResponse.User.class))));
   }
 
   private Builder getUserById404ResponseDoc() {
@@ -103,7 +102,7 @@ class UserOpenAPIDocHelper {
         .description("User not found")
         .content(contentBuilder()
                 .mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(UserErrorResponse.class)));
+                .schema(schemaBuilder().implementation(UserResponse.Error.class)));
   }
 
   private Builder getUserById200ResponseDoc() {
@@ -111,7 +110,7 @@ class UserOpenAPIDocHelper {
         .responseCode("200")
         .description("Retrieve user successfully")
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .schema(schemaBuilder().implementation(User.class)));
+                .schema(schemaBuilder().implementation(UserResponse.User.class)));
   }
   // spotless:on
 }

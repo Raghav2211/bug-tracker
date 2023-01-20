@@ -2,7 +2,7 @@ package com.github.devraghav.bugtracker.user.security;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.devraghav.bugtracker.user.dto.User;
+import com.github.devraghav.bugtracker.user.response.UserResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -47,7 +47,7 @@ public class JWTService {
     return expiration.before(new Date());
   }
 
-  public String generateToken(User user) {
+  public String generateToken(UserResponse.User user) {
     var claims = objectMapper.convertValue(user, new TypeReference<Map<String, Object>>() {});
     return doGenerateToken(claims, user.id());
   }

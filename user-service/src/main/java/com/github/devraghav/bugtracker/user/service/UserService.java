@@ -2,13 +2,13 @@ package com.github.devraghav.bugtracker.user.service;
 
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.event.internal.EventBus;
-import com.github.devraghav.bugtracker.user.dto.User;
-import com.github.devraghav.bugtracker.user.dto.UserException;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
 import com.github.devraghav.bugtracker.user.event.internal.UserEvent;
+import com.github.devraghav.bugtracker.user.exception.UserException;
 import com.github.devraghav.bugtracker.user.mapper.UserMapper;
 import com.github.devraghav.bugtracker.user.repository.UserRepository;
+import com.github.devraghav.bugtracker.user.request.UserRequest;
+import com.github.devraghav.bugtracker.user.response.UserResponse;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -22,35 +22,35 @@ public record UserService(
     EventBus.ReactivePublisher<DomainEvent> domainEventReactivePublisher) {
 
   // @spotless:off
-  public Mono<User> save(UserRequest.Create createUserRequest) {
+  public Mono<UserResponse.User> save(UserRequest.CreateUser createUserUserRequest) {
     return requestValidator
-        .validate(createUserRequest)
+        .validate(createUserUserRequest)
         .map(userMapper::requestToEntity)
         .flatMap(this::save)
         .onErrorResume(DuplicateKeyException.class,
-                exception -> Mono.error(UserException.alreadyExistsWithEmail(createUserRequest.email())));
+                exception -> Mono.error(UserException.alreadyExistsWithEmail(createUserUserRequest.email())));
   }
   // @spotless:on
 
-  public Flux<User> findAll() {
+  public Flux<UserResponse.User> findAll() {
     return userRepository.findAll().map(userMapper::entityToResponse);
   }
 
-  public Mono<User> findByEmail(String email) {
+  public Mono<UserResponse.User> findByEmail(String email) {
     return userRepository
         .findByEmail(email)
         .map(userMapper::entityToResponse)
         .switchIfEmpty(Mono.error(UserException.notFoundByEmail(email)));
   }
 
-  public Mono<User> findById(String userId) {
+  public Mono<UserResponse.User> findById(String userId) {
     return userRepository
         .findById(userId)
         .map(userMapper::entityToResponse)
         .switchIfEmpty(Mono.error(() -> UserException.notFoundById(userId)));
   }
 
-  private Mono<User> save(UserEntity userEntity) {
+  private Mono<UserResponse.User> save(UserEntity userEntity) {
     return userRepository
         .save(userEntity)
         .map(userMapper::entityToResponse)

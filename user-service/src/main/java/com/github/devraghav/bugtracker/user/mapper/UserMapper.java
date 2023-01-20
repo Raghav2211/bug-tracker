@@ -1,9 +1,8 @@
 package com.github.devraghav.bugtracker.user.mapper;
 
-import com.github.devraghav.bugtracker.user.dto.Role;
-import com.github.devraghav.bugtracker.user.dto.User;
-import com.github.devraghav.bugtracker.user.dto.UserRequest;
 import com.github.devraghav.bugtracker.user.entity.UserEntity;
+import com.github.devraghav.bugtracker.user.request.UserRequest;
+import com.github.devraghav.bugtracker.user.response.UserResponse;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,13 +23,13 @@ public abstract class UserMapper {
     @Mapping(target = "role", source = "role", qualifiedByName = "roleToValue"),
     @Mapping(target = "password", source = "password", qualifiedByName = "encodePassword")
   })
-  public abstract UserEntity requestToEntity(UserRequest.Create createUserRequest);
+  public abstract UserEntity requestToEntity(UserRequest.CreateUser createUserUserRequest);
 
   @Mappings({@Mapping(target = "role", source = "role", qualifiedByName = "valueToRole")})
-  public abstract User entityToResponse(UserEntity userEntity);
+  public abstract UserResponse.User entityToResponse(UserEntity userEntity);
 
   @Named("roleToValue")
-  Integer roleToValue(Role role) {
+  Integer roleToValue(UserRequest.Role role) {
     return role.getValue();
   }
 
@@ -40,7 +39,7 @@ public abstract class UserMapper {
   }
 
   @Named("valueToRole")
-  Role valueToRole(Integer roleValue) {
-    return Role.fromValue(roleValue);
+  UserRequest.Role valueToRole(Integer roleValue) {
+    return UserRequest.Role.fromValue(roleValue);
   }
 }

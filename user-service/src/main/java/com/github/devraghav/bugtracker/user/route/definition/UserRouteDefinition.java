@@ -1,8 +1,9 @@
-package com.github.devraghav.bugtracker.user.route;
+package com.github.devraghav.bugtracker.user.route.definition;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
+import com.github.devraghav.bugtracker.user.route.handler.UserRouteHandler;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;

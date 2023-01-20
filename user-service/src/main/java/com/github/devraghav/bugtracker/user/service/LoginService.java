@@ -1,7 +1,7 @@
 package com.github.devraghav.bugtracker.user.service;
 
-import com.github.devraghav.bugtracker.user.dto.LoginRequest;
-import com.github.devraghav.bugtracker.user.dto.UserException;
+import com.github.devraghav.bugtracker.user.exception.UserException;
+import com.github.devraghav.bugtracker.user.request.UserRequest;
 import com.github.devraghav.bugtracker.user.security.JWTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,12 +15,12 @@ public class LoginService {
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
 
-  public Mono<LoginRequest.Response> login(LoginRequest.Request request) {
+  public Mono<UserRequest.AuthResponse> login(UserRequest.AuthRequest request) {
     return userService
         .findByEmail(request.email())
         .filter(user -> passwordEncoder.matches(request.password(), user.password()))
         .map(jwtService::generateToken)
-        .map(LoginRequest.Response::new)
+        .map(UserRequest.AuthResponse::new)
         .switchIfEmpty(Mono.error(() -> UserException.unauthorizedAccess(request.email())));
   }
 }
