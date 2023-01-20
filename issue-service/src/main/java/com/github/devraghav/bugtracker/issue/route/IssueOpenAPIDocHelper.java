@@ -31,7 +31,7 @@ class IssueOpenAPIDocHelper {
     ops.operationId("create")
         .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Create issue")
-        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequest.Create.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(RequestResponse.CreateIssueRequest.class))))
         .response(saveIssue201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -41,7 +41,7 @@ class IssueOpenAPIDocHelper {
     ops.operationId("update")
         .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Update issue")
-        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequest.Update.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(RequestResponse.UpdateIssueRequest.class))))
         .response(updateIssue200ResponseDoc())
         .response(badResponseDoc())
         .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")))

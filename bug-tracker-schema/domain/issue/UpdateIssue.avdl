@@ -9,6 +9,7 @@ protocol UpdateIssue {
 		string priority;
 		string severity;
 		array<ProjectAttachment> projectAttachments = [];
+		string updateBy;
 		union {null, map<string>} tags = null;
 	}
 }

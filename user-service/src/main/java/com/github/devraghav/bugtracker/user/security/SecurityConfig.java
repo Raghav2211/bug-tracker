@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -49,7 +50,7 @@ public class SecurityConfig {
     return http.authorizeExchange()
         .pathMatchers("/api/rest/v1/user/login", "/api/rest/v1/user/signup", "/actuator/**")
         .permitAll()
-        .pathMatchers("/api/rest/v1/user")
+        .pathMatchers(HttpMethod.GET,"/api/rest/v1/user")
         .hasAuthority("ROLE_ADMIN")
         .anyExchange()
         .authenticated()

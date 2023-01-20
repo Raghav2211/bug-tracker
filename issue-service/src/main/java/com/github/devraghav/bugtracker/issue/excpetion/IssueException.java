@@ -2,7 +2,6 @@ package com.github.devraghav.bugtracker.issue.excpetion;
 
 import com.github.devraghav.bugtracker.issue.dto.ProjectInfo;
 import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
-import com.github.devraghav.bugtracker.issue.exception.UserClientException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
@@ -39,10 +38,6 @@ public class IssueException extends RuntimeException {
   public static IssueException invalidDescription(String requestedDescription) {
     return new IssueException(
         "Description is invalid", Map.of("description", requestedDescription));
-  }
-
-  public static IssueException userServiceException(UserClientException userClientException) {
-    return new IssueException(userClientException.getMessage(), userClientException.getMeta());
   }
 
   public static IssueException projectServiceException(

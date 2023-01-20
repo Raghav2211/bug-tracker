@@ -24,9 +24,9 @@ public final class RequestResponse {
     POC(0),
     IN_PROGRESS(1),
     DEPLOYED(2);
-    @Getter private int value;
+    @Getter private final int value;
 
-    private static Map<Integer, ProjectStatus> reverseLookup =
+    private static final Map<Integer, ProjectStatus> VALUE_TO_STATUS_LOOKUP =
         Arrays.stream(ProjectStatus.values())
             .collect(Collectors.toUnmodifiableMap(ProjectStatus::getValue, Function.identity()));
 
@@ -35,7 +35,7 @@ public final class RequestResponse {
     }
 
     public static ProjectStatus fromValue(int value) {
-      return reverseLookup.getOrDefault(value, ProjectStatus.UNKNOWN);
+      return VALUE_TO_STATUS_LOOKUP.getOrDefault(value, ProjectStatus.UNKNOWN);
     }
   }
 

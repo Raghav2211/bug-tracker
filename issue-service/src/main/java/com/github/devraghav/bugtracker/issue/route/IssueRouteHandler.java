@@ -33,7 +33,7 @@ class IssueRouteHandler {
         IssueFilter.builder()
             .projectId(serverRequest.queryParam("projectId"))
             .reportedBy(serverRequest.queryParam("reportedBy"))
-            .pageRequest(IssueRequest.Page.of(serverRequest))
+            .pageRequest(RequestResponse.Page.of(serverRequest))
             .build();
     return issueQueryService
         .findAllByFilter(issueFilter)
@@ -48,7 +48,8 @@ class IssueRouteHandler {
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return Mono.zip(
-            getAuthenticatedPrincipal(request), request.bodyToMono(IssueRequest.Create.class))
+            getAuthenticatedPrincipal(request),
+            request.bodyToMono(RequestResponse.CreateIssueRequest.class))
         .flatMap(tuple2 -> issueCommandService.create(tuple2.getT1(), tuple2.getT2()))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
@@ -59,7 +60,8 @@ class IssueRouteHandler {
   public Mono<ServerResponse> update(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return Mono.zip(
-            getAuthenticatedPrincipal(request), request.bodyToMono(IssueRequest.Update.class))
+            getAuthenticatedPrincipal(request),
+            request.bodyToMono(RequestResponse.UpdateIssueRequest.class))
         .flatMap(tuple2 -> issueCommandService.update(tuple2.getT1(), issueId, tuple2.getT2()))
         .flatMap(issue -> IssueResponse.create(request, issue))
         .switchIfEmpty(IssueResponse.noBody(request))
@@ -84,7 +86,7 @@ class IssueRouteHandler {
     return Mono.zip(
             getAuthenticatedPrincipal(request),
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}))
-        .map(tuple2 -> new IssueRequest.Assign(issueId, tuple2.getT2().get("user"), monitorType, tuple2.getT1()))
+        .map(tuple2 -> new RequestResponse.AssignRequest(issueId, tuple2.getT2().get("user"), monitorType, tuple2.getT1()))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
         .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception));

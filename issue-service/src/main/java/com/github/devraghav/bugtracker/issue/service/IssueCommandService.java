@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 @Service
 @Slf4j
@@ -30,15 +29,16 @@ public class IssueCommandService {
   private final IssueAttachmentRepository issueAttachmentRepository;
   private final EventBus.ReactivePublisher<DomainEvent> domainEventPublisher;
 
-  public Mono<IssueResponse.Issue> create(String userId, IssueRequest.Create createIssueRequest) {
+  public Mono<IssueResponse.Issue> create(
+      String userId, RequestResponse.CreateIssueRequest createIssueRequest) {
     return requestValidator
-        .validate(userId, createIssueRequest)
+        .validate(createIssueRequest)
         .map(validateRequest -> issueMapper.issueRequestToIssueEntity(userId, validateRequest))
         .flatMap(this::save);
   }
 
   public Mono<IssueResponse.Issue> update(
-      String userId, String issueId, IssueRequest.Update updateRequest) {
+      String userId, String issueId, RequestResponse.UpdateIssueRequest updateRequest) {
     return issueQueryService
         .findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
@@ -49,34 +49,32 @@ public class IssueCommandService {
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  public Mono<Void> monitor(String issueId, IssueRequest.Assign assignRequest) {
+  public Mono<Void> monitor(String issueId, RequestResponse.AssignRequest assignRequest) {
     log.info("monitor {} with assignRequest {}", assignRequest.monitorType(), assignRequest);
     var issueMono = issueQueryService.exists(issueId).map(unused -> issueId);
     if (MonitorType.UNASSIGN == assignRequest.monitorType()) {
       return unassigned(issueMono, assignRequest.requestedBy());
     } else {
-      var userMono = issueQueryService.fetchUser(assignRequest.user());
-      var issueUserMono = Mono.zip(issueMono, userMono);
       if (MonitorType.ASSIGN == assignRequest.monitorType()) {
-        return assignee(issueUserMono, assignRequest.requestedBy());
+        return assignee(issueMono, assignRequest.user(), assignRequest.requestedBy());
       } else if (MonitorType.WATCH == assignRequest.monitorType()) {
-        return watch(issueUserMono, assignRequest.requestedBy());
+        return watch(issueMono, assignRequest.user(), assignRequest.requestedBy());
       } else {
-        return unwatch(issueUserMono, assignRequest.requestedBy());
+        return unwatch(issueMono, assignRequest.user(), assignRequest.requestedBy());
       }
     }
   }
 
-  private Mono<Void> assignee(Mono<Tuple2<String, User>> issueUserMono, String requestedBy) {
-    return issueUserMono.flatMap(tuple2 -> assignee(tuple2.getT1(), tuple2.getT2(), requestedBy));
+  private Mono<Void> assignee(Mono<String> issueMono, String userId, String requestedBy) {
+    return issueMono.flatMap(issueId -> assignee(issueId, userId, requestedBy));
   }
 
-  private Mono<Void> assignee(String issueId, User user, String requestedBy) {
+  private Mono<Void> assignee(String issueId, String userId, String requestedBy) {
     return issueRepository
-        .findAndSetAssigneeById(issueId, user.id())
+        .findAndSetAssigneeById(issueId, userId)
         .doOnSuccess(
             unused ->
-                domainEventPublisher.publish(new IssueEvent.Assigned(issueId, user, requestedBy)))
+                domainEventPublisher.publish(new IssueEvent.Assigned(issueId, userId, requestedBy)))
         .then();
   }
 
@@ -92,31 +90,32 @@ public class IssueCommandService {
         .then();
   }
 
-  private Mono<Void> watch(Mono<Tuple2<String, User>> issueUserMono, String requestedBy) {
-    return issueUserMono.flatMap(tuple2 -> watch(tuple2.getT1(), tuple2.getT2(), requestedBy));
+  private Mono<Void> watch(Mono<String> issueMono, String userId, String requestedBy) {
+    return issueMono.flatMap(issueId -> watch(issueId, userId, requestedBy));
   }
 
-  private Mono<Void> watch(String issueId, User user, String requestedBy) {
-    log.info("Watch by issueId {} and user {}", issueId, user);
+  private Mono<Void> watch(String issueId, String userId, String requestedBy) {
+    log.info("Watch by issueId {} and user {}", issueId, userId);
     return issueRepository
-        .findAndAddWatcherById(issueId, user.id())
+        .findAndAddWatcherById(issueId, userId)
         .doOnSuccess(
             unused ->
                 domainEventPublisher.publish(
-                    new IssueEvent.WatchStarted(issueId, user, requestedBy)))
+                    new IssueEvent.WatchStarted(issueId, userId, requestedBy)))
         .then();
   }
 
-  private Mono<Void> unwatch(Mono<Tuple2<String, User>> issueUserMono, String requestedBy) {
-    return issueUserMono.flatMap(tuple2 -> unwatch(tuple2.getT1(), tuple2.getT2(), requestedBy));
+  private Mono<Void> unwatch(Mono<String> issueMono, String userId, String requestedBy) {
+    return issueMono.flatMap(issueId -> unwatch(issueId, userId, requestedBy));
   }
 
-  private Mono<Void> unwatch(String issueId, User user, String requestedBy) {
+  private Mono<Void> unwatch(String issueId, String userId, String requestedBy) {
     return issueRepository
-        .findAndPullWatcherById(issueId, user.id())
+        .findAndPullWatcherById(issueId, userId)
         .doOnSuccess(
             unused ->
-                domainEventPublisher.publish(new IssueEvent.WatchEnded(issueId, user, requestedBy)))
+                domainEventPublisher.publish(
+                    new IssueEvent.WatchEnded(issueId, userId, requestedBy)))
         .then();
   }
 
@@ -138,14 +137,14 @@ public class IssueCommandService {
   private Mono<IssueResponse.Issue> save(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
-        .flatMap(issueQueryService::generateIssue)
+        .map(issueMapper::issueEntityToIssue)
         .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Created(issue)));
   }
 
   private Mono<IssueResponse.Issue> update(String userId, IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
-        .flatMap(issueQueryService::generateIssue)
+        .map(issueMapper::issueEntityToIssue)
         .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Updated(userId, issue)));
   }
 }

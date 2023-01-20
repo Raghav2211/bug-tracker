@@ -1,9 +1,16 @@
 package com.github.devraghav.bugtracker.issue.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+import java.util.Date;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -22,10 +29,17 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Configuration
-@RequiredArgsConstructor
 public class SecurityConfig {
 
   private final JWTService jwtService;
+  private final ReactiveAuthenticationManager authenticationManager;
+  private final ServerSecurityContextRepository securityContextRepository;
+
+  public SecurityConfig(@Value("${app.security.jwt.secret}") String secret) {
+    this.jwtService = new JWTService(secret);
+    authenticationManager = new AuthenticationManager(jwtService);
+    securityContextRepository = new SecurityContextRepository(authenticationManager);
+  }
 
   @Bean
   SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
@@ -42,25 +56,16 @@ public class SecurityConfig {
             .disable()
             .httpBasic()
             .disable()
-            .authenticationManager(reactiveAuthenticationManager(jwtService))
-            .securityContextRepository(securityContextRepository(reactiveAuthenticationManager(jwtService)))
+            .authenticationManager(authenticationManager)
+            .securityContextRepository(securityContextRepository)
             .exceptionHandling()
-            .authenticationEntryPoint((serverWebExchange, authenticationException) -> Mono.fromRunnable(() ->serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
-            .accessDeniedHandler((serverWebExchange, authenticationException) -> Mono.fromRunnable(() -> serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
+            .authenticationEntryPoint((serverWebExchange, authenticationException) ->
+                    Mono.fromRunnable(() ->serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)))
+            .accessDeniedHandler((serverWebExchange, authenticationException) ->
+                    Mono.fromRunnable(() -> serverWebExchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN)))
             .and()
             .build();
     // spotless:on
-  }
-
-  @Bean
-  public ReactiveAuthenticationManager reactiveAuthenticationManager(JWTService jwtService) {
-    return new AuthenticationManager(jwtService);
-  }
-
-  @Bean
-  public ServerSecurityContextRepository securityContextRepository(
-      ReactiveAuthenticationManager authenticationManager) {
-    return new SecurityContextRepository(authenticationManager);
   }
 
   @RequiredArgsConstructor
@@ -112,5 +117,40 @@ public class SecurityConfig {
       Authentication auth = new UsernamePasswordAuthenticationToken(authToken, authToken);
       return authenticationManager.authenticate(auth).map(SecurityContextImpl::new);
     }
+  }
+
+  @Slf4j
+  private static class JWTService {
+
+    private final Key key;
+
+    public JWTService(String secret) {
+      key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    Claims getAllClaimsFromToken(String token) {
+      return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    }
+
+    Date getExpirationDateFromToken(String token) {
+      return getAllClaimsFromToken(token).getExpiration();
+    }
+
+    Boolean validateToken(String token) {
+      boolean isTokenNotExpired = isTokenExpired(token);
+      log.atDebug().log("is token expired?  {}", isTokenNotExpired);
+      return BooleanUtils.negate(isTokenNotExpired);
+    }
+
+    private Boolean isTokenExpired(String token) {
+      final Date expiration = getExpirationDateFromToken(token);
+      return expiration.before(new Date());
+    }
+  }
+
+  private enum Role {
+    ROLE_ADMIN,
+    ROLE_READ,
+    ROLE_WRITE;
   }
 }

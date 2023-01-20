@@ -5,7 +5,6 @@ import com.github.devraghav.bugtracker.event.internal.EventBus;
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.CommentEntity;
 import com.github.devraghav.bugtracker.issue.event.internal.*;
-import com.github.devraghav.bugtracker.issue.exception.UserClientException;
 import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import com.github.devraghav.bugtracker.issue.mapper.CommentMapper;
 import com.github.devraghav.bugtracker.issue.repository.CommentRepository;
@@ -18,33 +17,30 @@ public record CommentCommandService(
     RequestValidator requestValidator,
     CommentMapper commentMapper,
     CommentRepository commentRepository,
-    UserReactiveClient userReactiveClient,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<CommentResponse.Comment> save(IssueRequest.CreateComment createCommentRequest) {
+  public Mono<CommentResponse.Comment> save(
+      RequestResponse.CreateCommentRequest createCommentRequest) {
     // @spotless:off
     return requestValidator
         .validate(createCommentRequest)
         .thenReturn(createCommentRequest)
         .map(commentMapper::requestToEntity)
         .flatMap(commentRepository::save)
-        .flatMap(this::getComment)
-        .doOnSuccess(comment -> eventReactivePublisher
-                    .publish(new IssueEvent.CommentAdded(comment.getIssueId(), comment)));
+        .map(commentMapper::entityToResponse)
+        .doOnSuccess(comment -> eventReactivePublisher.publish(new IssueEvent.CommentAdded(comment.issueId(), comment)));
     // @spotless:on
   }
 
-  public Mono<CommentResponse.Comment> update(IssueRequest.UpdateComment updateCommentRequest) {
+  public Mono<CommentResponse.Comment> update(
+      RequestResponse.UpdateCommentRequest updateCommentRequest) {
     // @spotless:off
     return requestValidator
         .validate(updateCommentRequest)
-        .flatMap(
-            validRequest ->
-                findAndUpdateCommentContentById(validRequest.commentId(), validRequest.content()))
+        .flatMap(validRequest -> findAndUpdateCommentContentById(validRequest.commentId(), validRequest.content()))
         .flatMap(commentRepository::save)
-        .flatMap(this::getComment)
-        .doOnSuccess(comment -> eventReactivePublisher
-                    .publish(new IssueEvent.CommentUpdated(comment.getIssueId(), comment)));
+        .map(commentMapper::entityToResponse)
+        .doOnSuccess(comment -> eventReactivePublisher.publish(new IssueEvent.CommentUpdated(comment.issueId(), comment)));
     // @spotless:on
   }
 
@@ -61,15 +57,5 @@ public record CommentCommandService(
 
   private CommentEntity updateIssueCommentEntity(String content, CommentEntity commentEntity) {
     return commentEntity.toBuilder().content(content).lastUpdatedAt(LocalDateTime.now()).build();
-  }
-
-  private Mono<CommentResponse.Comment> getComment(CommentEntity commentEntity) {
-    return userReactiveClient
-        .fetchUser(commentEntity.getUserId())
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(CommentException.userServiceException(exception)))
-        .map(
-            commentUser -> commentMapper.entityToResponse(commentEntity).user(commentUser).build());
   }
 }

@@ -2,23 +2,11 @@ package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.data_model.domain.issue.Assign;
-import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.IssueAssigned;
 import com.github.devraghav.data_model.schema.issue.IssueAssignedSchema;
 import java.time.ZoneOffset;
 
 class AssignedEventConverter implements EventConverter<IssueEvent.Assigned, IssueAssignedSchema> {
-
-  private User getAssignee(com.github.devraghav.bugtracker.issue.dto.User author) {
-    return User.newBuilder()
-        .setId(author.id())
-        .setAccessLevel(author.access().name())
-        .setEmail(author.email())
-        .setEnabled(author.enabled())
-        .setFirstName(author.firstName())
-        .setLastName(author.lastName())
-        .build();
-  }
 
   @Override
   public IssueAssignedSchema convert(IssueEvent.Assigned event) {
@@ -31,7 +19,7 @@ class AssignedEventConverter implements EventConverter<IssueEvent.Assigned, Issu
                 .setPayload(
                     Assign.newBuilder()
                         .setIssueId(event.getIssueId())
-                        .setAssignee(getAssignee(event.getAssignee()))
+                        .setAssignee(event.getAssignee())
                         .build())
                 .setPublisher(event.getPublisher())
                 .build())

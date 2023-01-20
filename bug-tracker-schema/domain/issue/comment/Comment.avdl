@@ -5,7 +5,7 @@ protocol Comment {
 		string id;
 		string issueId;
 		string content;
-		com.github.devraghav.data_model.domain.user.User commenter;
+		string commenter;
 		long createdAt;
 	}
 }

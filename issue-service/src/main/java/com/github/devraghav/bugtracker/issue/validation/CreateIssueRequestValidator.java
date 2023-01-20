@@ -4,7 +4,6 @@ import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
 import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.service.ProjectReactiveClient;
-import com.github.devraghav.bugtracker.issue.service.UserReactiveClient;
 import java.util.Collection;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -13,16 +12,16 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-// TODO: check user have write access
 @Component
 @RequiredArgsConstructor
-class CreateIssueRequestValidator implements Validator<IssueRequest.Create, IssueRequest.Create> {
+class CreateIssueRequestValidator
+    implements Validator<RequestResponse.CreateIssueRequest, RequestResponse.CreateIssueRequest> {
 
   private final ProjectReactiveClient projectReactiveClient;
-  private final UserReactiveClient userReactiveClient;
 
   @Override
-  public Mono<IssueRequest.Create> validate(IssueRequest.Create createIssueRequest) {
+  public Mono<RequestResponse.CreateIssueRequest> validate(
+      RequestResponse.CreateIssueRequest createIssueRequest) {
     return validateHeader(createIssueRequest.header())
         .and(validateDescription(createIssueRequest.description()))
         .and(validatePriority(createIssueRequest.priority()))

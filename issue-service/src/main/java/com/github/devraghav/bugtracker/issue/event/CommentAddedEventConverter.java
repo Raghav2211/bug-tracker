@@ -2,7 +2,6 @@ package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.dto.CommentResponse;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
-import com.github.devraghav.data_model.domain.user.User;
 import com.github.devraghav.data_model.event.issue.comment.CommentAdded;
 import com.github.devraghav.data_model.schema.issue.CommentAddedSchema;
 import java.time.ZoneOffset;
@@ -10,25 +9,14 @@ import java.time.ZoneOffset;
 class CommentAddedEventConverter
     implements EventConverter<IssueEvent.CommentAdded, CommentAddedSchema> {
 
-  private User getUser(com.github.devraghav.bugtracker.issue.dto.User author) {
-    return User.newBuilder()
-        .setId(author.id())
-        .setAccessLevel(author.access().name())
-        .setEmail(author.email())
-        .setEnabled(author.enabled())
-        .setFirstName(author.firstName())
-        .setLastName(author.lastName())
-        .build();
-  }
-
   private com.github.devraghav.data_model.domain.issue.comment.Comment getComment(
       String issueId, CommentResponse.Comment comment) {
     return com.github.devraghav.data_model.domain.issue.comment.Comment.newBuilder()
-        .setId(comment.getId())
+        .setId(comment.id())
         .setIssueId(issueId)
-        .setContent(comment.getContent())
-        .setCommenter(getUser(comment.getUser()))
-        .setCreatedAt(comment.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
+        .setContent(comment.content())
+        .setCommenter(comment.userId())
+        .setCreatedAt(comment.createdAt().toEpochSecond(ZoneOffset.UTC))
         .build();
   }
 

@@ -1,28 +1,23 @@
 package com.github.devraghav.bugtracker.issue.validation;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
-import com.github.devraghav.bugtracker.issue.exception.UserClientException;
 import com.github.devraghav.bugtracker.issue.excpetion.CommentException;
 import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.repository.IssueRepository;
-import com.github.devraghav.bugtracker.issue.service.UserReactiveClient;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-record UpdateCommentRequestValidator(
-    IssueRepository issueRepository, UserReactiveClient userReactiveClient)
-    implements Validator<IssueRequest.UpdateComment, IssueRequest.UpdateComment> {
+record UpdateCommentRequestValidator(IssueRepository issueRepository)
+    implements Validator<
+        RequestResponse.UpdateCommentRequest, RequestResponse.UpdateCommentRequest> {
 
   @Override
-  public Mono<IssueRequest.UpdateComment> validate(
-      IssueRequest.UpdateComment updateCommentRequest) {
+  public Mono<RequestResponse.UpdateCommentRequest> validate(
+      RequestResponse.UpdateCommentRequest updateCommentRequest) {
     return validateCommentContent(updateCommentRequest.content())
-        .and(
-            Mono.zip(
-                validateCommentUserId(updateCommentRequest.userId()),
-                validateIssueId(updateCommentRequest.issueId())))
+        .and(validateIssueId(updateCommentRequest.issueId()))
         .thenReturn(updateCommentRequest);
   }
 
@@ -33,14 +28,6 @@ record UpdateCommentRequestValidator(
                 StringUtils.hasLength(commentContent) && commentContent.length() <= 256)
         .switchIfEmpty(Mono.error(() -> CommentException.invalidComment(content)))
         .then();
-  }
-
-  private Mono<User> validateCommentUserId(String userId) {
-    return userReactiveClient
-        .fetchUser(userId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(CommentException.userServiceException(exception)));
   }
 
   public Mono<Boolean> validateIssueId(String issueId) {

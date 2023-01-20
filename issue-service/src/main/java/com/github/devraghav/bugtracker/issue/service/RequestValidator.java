@@ -1,9 +1,6 @@
 package com.github.devraghav.bugtracker.issue.service;
 
-import com.github.devraghav.bugtracker.issue.dto.IssueRequest;
-import com.github.devraghav.bugtracker.issue.dto.User;
-import com.github.devraghav.bugtracker.issue.exception.UserClientException;
-import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
+import com.github.devraghav.bugtracker.issue.dto.RequestResponse;
 import com.github.devraghav.bugtracker.issue.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,36 +10,27 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class RequestValidator {
 
-  private final Validator<IssueRequest.Create, IssueRequest.Create> createIssueRequestValidator;
-  private final Validator<IssueRequest.CreateComment, IssueRequest.CreateComment>
+  private final Validator<RequestResponse.CreateIssueRequest, RequestResponse.CreateIssueRequest>
+      createIssueRequestValidator;
+  private final Validator<
+          RequestResponse.CreateCommentRequest, RequestResponse.CreateCommentRequest>
       createCommentRequestValidator;
-  private final Validator<IssueRequest.UpdateComment, IssueRequest.UpdateComment>
+  private final Validator<
+          RequestResponse.UpdateCommentRequest, RequestResponse.UpdateCommentRequest>
       updateCommentRequestValidator;
-  private final UserReactiveClient userReactiveClient;
 
-  public Mono<IssueRequest.Create> validate(
-      final String reporter, final IssueRequest.Create request) {
-    return Mono.zip(createIssueRequestValidator.validate(request), validateReporter(reporter))
-        .thenReturn(request);
+  public Mono<RequestResponse.CreateIssueRequest> validate(
+      final RequestResponse.CreateIssueRequest request) {
+    return createIssueRequestValidator.validate(request);
   }
 
-  public Mono<String> validateReporter(String reporter) {
-    return fetchUser(reporter).thenReturn(reporter);
-  }
-
-  private Mono<User> fetchUser(String userId) {
-    return userReactiveClient
-        .fetchUser(userId)
-        .onErrorResume(
-            UserClientException.class,
-            exception -> Mono.error(IssueException.userServiceException(exception)));
-  }
-
-  public Mono<IssueRequest.CreateComment> validate(final IssueRequest.CreateComment request) {
+  public Mono<RequestResponse.CreateCommentRequest> validate(
+      final RequestResponse.CreateCommentRequest request) {
     return createCommentRequestValidator.validate(request);
   }
 
-  public Mono<IssueRequest.UpdateComment> validate(final IssueRequest.UpdateComment request) {
+  public Mono<RequestResponse.UpdateCommentRequest> validate(
+      final RequestResponse.UpdateCommentRequest request) {
     return updateCommentRequestValidator.validate(request);
   }
 }

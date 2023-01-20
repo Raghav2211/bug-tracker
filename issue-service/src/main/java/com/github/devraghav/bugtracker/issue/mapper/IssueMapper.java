@@ -29,7 +29,8 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true),
     @Mapping(target = "endedAt", ignore = true)
   })
-  IssueEntity issueRequestToIssueEntity(String reporter, IssueRequest.Create createIssueRequest);
+  IssueEntity issueRequestToIssueEntity(
+      String reporter, RequestResponse.CreateIssueRequest createIssueRequest);
 
   @Mappings({
     @Mapping(
@@ -60,17 +61,16 @@ public interface IssueMapper {
     @Mapping(target = "assignee", ignore = true)
   })
   IssueEntity issueRequestToIssueEntity(
-      String updateBy, IssueEntity issueEntity, IssueRequest.Update updateIssueRequest);
+      String updateBy,
+      IssueEntity issueEntity,
+      RequestResponse.UpdateIssueRequest updateIssueRequest);
 
   @Mappings({
     @Mapping(target = "priority", source = "priority", qualifiedByName = "valueToPriority"),
     @Mapping(target = "severity", source = "severity", qualifiedByName = "valueToSeverity"),
-    @Mapping(target = "assignee", ignore = true),
-    @Mapping(target = "reporter", ignore = true),
-    @Mapping(target = "watchers", ignore = true),
     @Mapping(target = "projects", ignore = true)
   })
-  IssueResponse.Issue.IssueBuilder issueEntityToIssue(IssueEntity issueEntity);
+  IssueResponse.Issue issueEntityToIssue(IssueEntity issueEntity);
 
   @Named("priorityToValue")
   default Integer priorityToValue(Priority priority) {

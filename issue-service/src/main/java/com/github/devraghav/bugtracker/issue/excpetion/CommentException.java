@@ -1,6 +1,5 @@
 package com.github.devraghav.bugtracker.issue.excpetion;
 
-import com.github.devraghav.bugtracker.issue.exception.UserClientException;
 import java.util.Map;
 import lombok.Getter;
 
@@ -23,9 +22,5 @@ public class CommentException extends RuntimeException {
 
   public static CommentException notFound(String commentId) {
     return new CommentException("Comment not found", Map.of("commentId", commentId));
-  }
-
-  public static CommentException userServiceException(UserClientException userClientException) {
-    return new CommentException(userClientException.getMessage(), userClientException.getMeta());
   }
 }

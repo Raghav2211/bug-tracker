@@ -36,7 +36,7 @@ public class SecurityConfig {
   private final ReactiveAuthenticationManager authenticationManager;
   private final ServerSecurityContextRepository securityContextRepository;
 
-  public SecurityConfig(@Value("${app.jwt.secret}") String secret) {
+  public SecurityConfig(@Value("${app.security.jwt.secret}") String secret) {
     this.jwtService = new JWTService(secret);
     authenticationManager = new AuthenticationManager(jwtService);
     securityContextRepository = new SecurityContextRepository(authenticationManager);

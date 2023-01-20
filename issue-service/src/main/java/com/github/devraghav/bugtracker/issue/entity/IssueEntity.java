@@ -25,8 +25,4 @@ public class IssueEntity {
   private String lastUpdateBy;
   private LocalDateTime createdAt;
   private LocalDateTime endedAt;
-
-  public Optional<String> getAssignee() {
-    return Optional.ofNullable(assignee);
-  }
 }

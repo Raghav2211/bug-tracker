@@ -3,7 +3,6 @@ package com.github.devraghav.bugtracker.issue.event.internal;
 import com.github.devraghav.bugtracker.event.internal.DomainEvent;
 import com.github.devraghav.bugtracker.issue.dto.CommentResponse;
 import com.github.devraghav.bugtracker.issue.dto.IssueResponse;
-import com.github.devraghav.bugtracker.issue.dto.User;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
@@ -15,9 +14,9 @@ public interface IssueEvent {
 
     public Created(IssueResponse.Issue createdIssue) {
       super(
-          createdIssue.getId(),
+          createdIssue.id(),
           "Created",
-          new PublisherInfo("Issue", IssueResponse.Issue.class, createdIssue.getReporter().id()));
+          new PublisherInfo("Issue", IssueResponse.Issue.class, createdIssue.reporter()));
       this.createdIssue = createdIssue;
     }
   }
@@ -28,7 +27,7 @@ public interface IssueEvent {
 
     public Updated(String updateBy, IssueResponse.Issue updatedIssue) {
       super(
-          updatedIssue.getId(),
+          updatedIssue.id(),
           "Updated",
           new PublisherInfo("Issue", IssueResponse.Issue.class, updateBy));
       this.updatedIssue = updatedIssue;
@@ -38,9 +37,9 @@ public interface IssueEvent {
   @Getter
   class Assigned extends DomainEvent {
     private final String issueId;
-    private final User assignee;
+    private final String assignee;
 
-    public Assigned(String issueId, User assignee, String requestedBy) {
+    public Assigned(String issueId, String assignee, String requestedBy) {
       super(
           issueId, "Assigned", new PublisherInfo("Issue", IssueResponse.Issue.class, requestedBy));
       this.issueId = issueId;
@@ -64,9 +63,9 @@ public interface IssueEvent {
   @Getter
   class WatchStarted extends DomainEvent {
     private final String issueId;
-    private final User watcher;
+    private final String watcher;
 
-    public WatchStarted(String issueId, User watcher, String requestedBy) {
+    public WatchStarted(String issueId, String watcher, String requestedBy) {
       super(
           issueId,
           "WatchStarted",
@@ -79,9 +78,9 @@ public interface IssueEvent {
   @Getter
   class WatchEnded extends DomainEvent {
     private final String issueId;
-    private final User watchEndedBy;
+    private final String watchEndedBy;
 
-    public WatchEnded(String issueId, User watchEndedBy, String requestedBy) {
+    public WatchEnded(String issueId, String watchEndedBy, String requestedBy) {
       super(
           issueId,
           "WatchStarted",
@@ -112,7 +111,7 @@ public interface IssueEvent {
       super(
           issueId,
           "Created",
-          new PublisherInfo("Issue", CommentResponse.Comment.class, comment.getUser().id()));
+          new PublisherInfo("Issue", CommentResponse.Comment.class, comment.userId()));
       this.issueId = issueId;
       this.comment = comment;
     }
@@ -127,7 +126,7 @@ public interface IssueEvent {
       super(
           issueId,
           "Updated",
-          new PublisherInfo("Issue", CommentResponse.Comment.class, comment.getUser().id()));
+          new PublisherInfo("Issue", CommentResponse.Comment.class, comment.userId()));
       this.issueId = issueId;
       this.comment = comment;
     }

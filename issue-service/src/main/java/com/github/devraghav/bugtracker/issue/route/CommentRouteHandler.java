@@ -38,7 +38,7 @@ public record CommentRouteHandler(
         Mono.zip(getAuthenticatedPrincipal(request),
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}));
     return principalWithCreateRequestMono
-        .map(tuple2 ->new IssueRequest.CreateComment(
+        .map(tuple2 ->new RequestResponse.CreateCommentRequest(
                     tuple2.getT1(), issueId, tuple2.getT2().get("content")))
         .flatMap(commentCommandService::save)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
@@ -60,7 +60,7 @@ public record CommentRouteHandler(
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}));
     return principalWithUpdateRequestMono
         .map(tuple2 ->
-                new IssueRequest.UpdateComment(tuple2.getT1(), issueId, commentId, tuple2.getT2().get("content")))
+                new RequestResponse.UpdateCommentRequest(tuple2.getT1(), issueId, commentId, tuple2.getT2().get("content")))
         .flatMap(commentCommandService::update)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
         .switchIfEmpty(CommentResponse.noBody(request))

@@ -9,7 +9,7 @@ public record Project(
     String description,
     Boolean enabled,
     ProjectStatus status,
-    User author,
+    String author,
     LocalDateTime createdAt,
     Set<ProjectVersion> versions) {
 

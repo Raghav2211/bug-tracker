@@ -5,9 +5,9 @@ import java.util.Set;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.reactive.function.server.ServerRequest;
 
-public interface IssueRequest {
+public final class RequestResponse {
 
-  record Create(
+  public static record CreateIssueRequest(
       Priority priority,
       Severity severity,
       String businessUnit,
@@ -15,25 +15,25 @@ public interface IssueRequest {
       String header,
       String description,
       Map<String, String> tags) {
-    public Create {
+    public CreateIssueRequest {
       projects = Set.copyOf(projects == null ? Set.of() : projects);
       tags = Map.copyOf(tags == null ? Map.of() : tags);
     }
   }
 
-  record Update(
+  public static record UpdateIssueRequest(
       Priority priority,
       Severity severity,
       String businessUnit,
       String header,
       String description,
       Map<String, String> tags) {
-    public Update {
+    public UpdateIssueRequest {
       tags = Map.copyOf(tags == null ? Map.of() : tags);
     }
   }
 
-  record Page(Integer page, Integer size, Sort sort) {
+  public static record Page(Integer page, Integer size, Sort sort) {
 
     public static Page of(ServerRequest request) {
       return new Page(
@@ -43,9 +43,11 @@ public interface IssueRequest {
     }
   }
 
-  record Assign(String issueId, String user, MonitorType monitorType, String requestedBy) {}
+  public static record AssignRequest(
+      String issueId, String user, MonitorType monitorType, String requestedBy) {}
 
-  record CreateComment(String userId, String issueId, String content) {}
+  public static record CreateCommentRequest(String userId, String issueId, String content) {}
 
-  record UpdateComment(String userId, String issueId, String commentId, String content) {}
+  public static record UpdateCommentRequest(
+      String userId, String issueId, String commentId, String content) {}
 }

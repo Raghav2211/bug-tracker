@@ -17,23 +17,18 @@ import reactor.core.publisher.Mono;
 
 public final class CommentResponse {
 
-  @Getter
-  @Builder
-  public static class Comment implements Comparable<Comment> {
-    private String id;
-    private String issueId;
-    private User user;
-    private String content;
-    private LocalDateTime createdAt;
-    private LocalDateTime lastUpdatedAt;
-
-    public static class CommentBuilder {
-      public CommentBuilder() {}
-    }
+  public static record Comment(
+      String id,
+      String issueId,
+      String userId,
+      String content,
+      LocalDateTime createdAt,
+      LocalDateTime lastUpdatedAt)
+      implements Comparable<Comment> {
 
     @Override
     public int compareTo(Comment comment) {
-      return comment.getCreatedAt().compareTo(this.getCreatedAt());
+      return comment.createdAt.compareTo(this.createdAt);
     }
   }
 
@@ -66,7 +61,7 @@ public final class CommentResponse {
   }
 
   public static Mono<ServerResponse> create(ServerRequest request, IssueResponse.Issue issue) {
-    return ServerResponse.created(URI.create(request.path() + "/" + issue.getId()))
+    return ServerResponse.created(URI.create(request.path() + "/" + issue.id()))
         .body(BodyInserters.fromValue(issue));
   }
 

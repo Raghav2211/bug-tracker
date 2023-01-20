@@ -6,7 +6,6 @@ import com.github.devraghav.data_model.domain.issue.Issue;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.*;
@@ -19,12 +18,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-interface ABC {
-  static String hello() {
-    return "world";
-  }
-}
-
 public interface IssueResponse {
 
   static <E, T extends Page<E>> Mono<ServerResponse> retrieve(T pageable) {
@@ -35,7 +28,7 @@ public interface IssueResponse {
   }
 
   static Mono<ServerResponse> create(ServerRequest request, Issue issue) {
-    return ServerResponse.created(URI.create(request.path() + "/" + issue.getId()))
+    return ServerResponse.created(URI.create(request.path() + "/" + issue.id()))
         .body(BodyInserters.fromValue(issue));
   }
 
@@ -72,28 +65,20 @@ public interface IssueResponse {
                     exception.getMeta())));
   }
 
-  @Getter
-  @Builder
-  @ToString
-  class Issue {
-    private String id;
-    private Priority priority;
-    private Severity severity;
-    private String businessUnit;
-    private List<Project> projects;
-    private String header;
-    private String description;
-    private User assignee;
-    private User reporter;
-    private Set<User> watchers;
-    private Map<String, String> tags;
-    private LocalDateTime createdAt;
-    private LocalDateTime endedAt;
-
-    public static class IssueBuilder {
-      public IssueBuilder() {}
-    }
-  }
+  record Issue(
+      String id,
+      Priority priority,
+      Severity severity,
+      String businessUnit,
+      Set<ProjectInfo> projects,
+      String header,
+      String description,
+      String assignee,
+      String reporter,
+      Set<String> watchers,
+      Map<String, String> tags,
+      LocalDateTime createdAt,
+      LocalDateTime endedAt) {}
 
   @Data
   @AllArgsConstructor
