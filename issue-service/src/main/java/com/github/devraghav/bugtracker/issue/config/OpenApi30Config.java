@@ -33,7 +33,7 @@ import org.springframework.http.MediaType;
     type = SecuritySchemeType.HTTP,
     bearerFormat = "JWT",
     scheme = "bearer")
-public class OpenApi30Config {
+class OpenApi30Config {
 
   private Content uploadContent =
       new Content()
@@ -58,7 +58,7 @@ public class OpenApi30Config {
               .forEach(uploadOperationUpdateConsumer);
 
   @Bean
-  public GroupedOpenApi issueOpenApi() {
+  GroupedOpenApi issueOpenApi() {
     String includePaths[] = {"/api/rest/**/issue/**"};
     String excludePaths[] = {
       "/api/rest/**/comment**", "/api/rest/**/comment/**",
@@ -72,7 +72,7 @@ public class OpenApi30Config {
   }
 
   @Bean
-  public GroupedOpenApi commentOpenApi() {
+  GroupedOpenApi commentOpenApi() {
     String includePaths[] = {"/api/rest/**/issue/{id}/comment/**", "/api/rest/**/comment/**"};
     String excludePaths[] = {"/api/rest/**/issue/{id}/comment/stream**"};
     return GroupedOpenApi.builder()

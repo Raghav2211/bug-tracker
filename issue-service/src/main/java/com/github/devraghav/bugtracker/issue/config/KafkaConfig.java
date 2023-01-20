@@ -9,9 +9,9 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import reactor.kafka.sender.SenderOptions;
 
 @Configuration
-public class KafkaConfig {
+class KafkaConfig {
   @Bean
-  public ReactiveKafkaProducerTemplate<String, SpecificRecordBase> reactiveKafkaProducerTemplate(
+  ReactiveKafkaProducerTemplate<String, SpecificRecordBase> reactiveKafkaProducerTemplate(
       KafkaProperties properties) {
     Map<String, Object> props = properties.buildProducerProperties();
     return new ReactiveKafkaProducerTemplate<>(SenderOptions.create(props));

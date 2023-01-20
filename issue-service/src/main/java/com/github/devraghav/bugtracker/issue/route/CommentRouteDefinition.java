@@ -24,8 +24,7 @@ public class CommentRouteDefinition {
     Supplier<RouterFunction<ServerResponse>> routerFunctionSupplier =
         () ->
             SpringdocRouteBuilder.route()
-                .GET(
-                    "/comment", commentRouteHandler::getAll, docHelper::getAllCommentOperationDoc)
+                .GET("/comment", commentRouteHandler::getAll, docHelper::getAllCommentOperationDoc)
                 .GET(
                     path("/comments").and(contentType(TEXT_EVENT_STREAM)),
                     commentRouteHandler::subscribeCommentStream,
