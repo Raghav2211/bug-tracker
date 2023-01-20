@@ -1,4 +1,4 @@
 User Service
 
 - Workflow
-  ![Workflow](./user-service.png)
+  ![Workflow](./architecture/user-service.png)
