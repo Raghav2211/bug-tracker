@@ -15,13 +15,14 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 class CreateIssueRequestValidator
-    implements Validator<RequestResponse.CreateIssueRequest, RequestResponse.CreateIssueRequest> {
+    implements Validator<
+        IssueRequestResponse.CreateIssueRequest, IssueRequestResponse.CreateIssueRequest> {
 
   private final ProjectReactiveClient projectReactiveClient;
 
   @Override
-  public Mono<RequestResponse.CreateIssueRequest> validate(
-      RequestResponse.CreateIssueRequest createIssueRequest) {
+  public Mono<IssueRequestResponse.CreateIssueRequest> validate(
+      IssueRequestResponse.CreateIssueRequest createIssueRequest) {
     return validateHeader(createIssueRequest.header())
         .and(validateDescription(createIssueRequest.description()))
         .and(validatePriority(createIssueRequest.priority()))
@@ -46,21 +47,22 @@ class CreateIssueRequestValidator
         .then();
   }
 
-  private Mono<Void> validatePriority(Priority priority) {
+  private Mono<Void> validatePriority(IssueRequestResponse.Priority priority) {
     return Mono.justOrEmpty(priority)
         .filter(Objects::nonNull)
         .switchIfEmpty(Mono.error(IssueException::nullPriority))
         .then();
   }
 
-  private Mono<Void> validateSeverity(Severity severity) {
+  private Mono<Void> validateSeverity(IssueRequestResponse.Severity severity) {
     return Mono.justOrEmpty(severity)
         .filter(Objects::nonNull)
         .switchIfEmpty(Mono.error(IssueException::nullSeverity))
         .then();
   }
 
-  private Mono<Void> validatedProjectInfo(Collection<ProjectInfo> projectInfos) {
+  private Mono<Void> validatedProjectInfo(
+      Collection<IssueRequestResponse.ProjectInfo> projectInfos) {
     return Flux.fromIterable(projectInfos)
         .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
         .flatMap(this::validateProjectInfo)
@@ -68,14 +70,14 @@ class CreateIssueRequestValidator
         .then();
   }
 
-  private Mono<Boolean> validateProjectInfo(ProjectInfo projectInfo) {
+  private Mono<Boolean> validateProjectInfo(IssueRequestResponse.ProjectInfo projectInfo) {
     return Mono.just(projectInfo)
-        .filter(ProjectInfo::isValid)
+        .filter(IssueRequestResponse.ProjectInfo::isValid)
         .flatMap(this::isProjectInfoExists)
         .switchIfEmpty(Mono.error(() -> IssueException.invalidProject(projectInfo)));
   }
 
-  private Mono<Boolean> isProjectInfoExists(ProjectInfo projectInfo) {
+  private Mono<Boolean> isProjectInfoExists(IssueRequestResponse.ProjectInfo projectInfo) {
     return Mono.zip(
             validateProjectId(projectInfo.projectId()),
             validateProjectVersion(projectInfo.projectId(), projectInfo.versionId()),

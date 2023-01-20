@@ -9,7 +9,13 @@ import org.mapstruct.*;
 
 @Mapper(
     componentModel = "spring",
-    imports = {UUID.class, LocalDateTime.class, Optional.class, Priority.class, Severity.class})
+    imports = {
+      UUID.class,
+      LocalDateTime.class,
+      Optional.class,
+      IssueRequestResponse.Priority.class,
+      IssueRequestResponse.Severity.class
+    })
 public interface IssueMapper {
 
   @Mappings({
@@ -30,17 +36,17 @@ public interface IssueMapper {
     @Mapping(target = "endedAt", ignore = true)
   })
   IssueEntity issueRequestToIssueEntity(
-      String reporter, RequestResponse.CreateIssueRequest createIssueRequest);
+      String reporter, IssueRequestResponse.CreateIssueRequest createIssueRequest);
 
   @Mappings({
     @Mapping(
         target = "priority",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.priority()).map(Priority::getValue).orElse(issueEntity.getPriority()))"),
+            "java(Optional.ofNullable(updateIssueRequest.priority()).map(IssueRequestResponse.Priority::getValue).orElse(issueEntity.getPriority()))"),
     @Mapping(
         target = "severity",
         expression =
-            "java(Optional.ofNullable(updateIssueRequest.severity()).map(Severity::getValue).orElse(issueEntity.getSeverity()))"),
+            "java(Optional.ofNullable(updateIssueRequest.severity()).map(IssueRequestResponse.Severity::getValue).orElse(issueEntity.getSeverity()))"),
     @Mapping(
         target = "businessUnit",
         expression =
@@ -58,37 +64,35 @@ public interface IssueMapper {
         expression =
             "java(Optional.ofNullable(updateIssueRequest.tags()).orElse(issueEntity.getTags()))"),
     @Mapping(target = "lastUpdateBy", source = "updateBy"),
-    @Mapping(target = "assignee", ignore = true)
   })
   IssueEntity issueRequestToIssueEntity(
       String updateBy,
       IssueEntity issueEntity,
-      RequestResponse.UpdateIssueRequest updateIssueRequest);
+      IssueRequestResponse.UpdateIssueRequest updateIssueRequest);
 
   @Mappings({
     @Mapping(target = "priority", source = "priority", qualifiedByName = "valueToPriority"),
     @Mapping(target = "severity", source = "severity", qualifiedByName = "valueToSeverity"),
-    @Mapping(target = "projects", ignore = true)
   })
-  IssueResponse.Issue issueEntityToIssue(IssueEntity issueEntity);
+  IssueRequestResponse.IssueResponse issueEntityToIssue(IssueEntity issueEntity);
 
   @Named("priorityToValue")
-  default Integer priorityToValue(Priority priority) {
+  default Integer priorityToValue(IssueRequestResponse.Priority priority) {
     return priority.getValue();
   }
 
   @Named("severityToValue")
-  default Integer severityToValue(Severity severity) {
+  default Integer severityToValue(IssueRequestResponse.Severity severity) {
     return severity.getValue();
   }
 
   @Named("valueToPriority")
-  default Priority valueToPriority(Integer priorityValue) {
-    return Priority.fromValue(priorityValue);
+  default IssueRequestResponse.Priority valueToPriority(Integer priorityValue) {
+    return IssueRequestResponse.Priority.fromValue(priorityValue);
   }
 
   @Named("valueToSeverity")
-  default Severity valueToSeverity(Integer severityValue) {
-    return Severity.fromValue(severityValue);
+  default IssueRequestResponse.Severity valueToSeverity(Integer severityValue) {
+    return IssueRequestResponse.Severity.fromValue(severityValue);
   }
 }

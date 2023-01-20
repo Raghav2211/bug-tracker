@@ -3,7 +3,7 @@ package com.github.devraghav.bugtracker.issue.route;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 
-import com.github.devraghav.bugtracker.issue.dto.MonitorType;
+import com.github.devraghav.bugtracker.issue.dto.IssueRequestResponse;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -34,19 +34,25 @@ public class IssueRouteDefinition {
                     docHelper::uploadFileOperationDoc)
                 .PATCH(
                     "/assignee",
-                    request -> issueRouteHandler.monitor(request, MonitorType.ASSIGN),
+                    request ->
+                        issueRouteHandler.monitor(request, IssueRequestResponse.MonitorType.ASSIGN),
                     docHelper::assigneeOperationDoc)
                 .DELETE(
                     "/assignee",
-                    request -> issueRouteHandler.monitor(request, MonitorType.UNASSIGN),
+                    request ->
+                        issueRouteHandler.monitor(
+                            request, IssueRequestResponse.MonitorType.UNASSIGN),
                     docHelper::unassignedOperationDoc)
                 .PATCH(
                     "/watch",
-                    request -> issueRouteHandler.monitor(request, MonitorType.WATCH),
+                    request ->
+                        issueRouteHandler.monitor(request, IssueRequestResponse.MonitorType.WATCH),
                     docHelper::watcherOperationDoc)
                 .DELETE(
                     "/watch",
-                    request -> issueRouteHandler.monitor(request, MonitorType.UNWATCH),
+                    request ->
+                        issueRouteHandler.monitor(
+                            request, IssueRequestResponse.MonitorType.UNWATCH),
                     docHelper::removeWatcherOperationDoc)
                 .PATCH("/resolve", issueRouteHandler::resolve, docHelper::resolveIssueOperationDoc)
                 .build();

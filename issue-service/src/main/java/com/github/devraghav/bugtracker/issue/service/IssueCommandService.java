@@ -29,16 +29,16 @@ public class IssueCommandService {
   private final IssueAttachmentRepository issueAttachmentRepository;
   private final EventBus.ReactivePublisher<DomainEvent> domainEventPublisher;
 
-  public Mono<IssueResponse.Issue> create(
-      String userId, RequestResponse.CreateIssueRequest createIssueRequest) {
+  public Mono<IssueRequestResponse.IssueResponse> create(
+      String userId, IssueRequestResponse.CreateIssueRequest createIssueRequest) {
     return requestValidator
         .validate(createIssueRequest)
         .map(validateRequest -> issueMapper.issueRequestToIssueEntity(userId, validateRequest))
         .flatMap(this::save);
   }
 
-  public Mono<IssueResponse.Issue> update(
-      String userId, String issueId, RequestResponse.UpdateIssueRequest updateRequest) {
+  public Mono<IssueRequestResponse.IssueResponse> update(
+      String userId, String issueId, IssueRequestResponse.UpdateIssueRequest updateRequest) {
     return issueQueryService
         .findById(issueId)
         .filter(issueEntity -> Objects.nonNull(issueEntity.getEndedAt()))
@@ -49,15 +49,15 @@ public class IssueCommandService {
         .switchIfEmpty(Mono.error(() -> IssueException.alreadyEnded(issueId)));
   }
 
-  public Mono<Void> monitor(String issueId, RequestResponse.AssignRequest assignRequest) {
+  public Mono<Void> monitor(String issueId, IssueRequestResponse.AssignRequest assignRequest) {
     log.info("monitor {} with assignRequest {}", assignRequest.monitorType(), assignRequest);
     var issueMono = issueQueryService.exists(issueId).map(unused -> issueId);
-    if (MonitorType.UNASSIGN == assignRequest.monitorType()) {
+    if (IssueRequestResponse.MonitorType.UNASSIGN == assignRequest.monitorType()) {
       return unassigned(issueMono, assignRequest.requestedBy());
     } else {
-      if (MonitorType.ASSIGN == assignRequest.monitorType()) {
+      if (IssueRequestResponse.MonitorType.ASSIGN == assignRequest.monitorType()) {
         return assignee(issueMono, assignRequest.user(), assignRequest.requestedBy());
-      } else if (MonitorType.WATCH == assignRequest.monitorType()) {
+      } else if (IssueRequestResponse.MonitorType.WATCH == assignRequest.monitorType()) {
         return watch(issueMono, assignRequest.user(), assignRequest.requestedBy());
       } else {
         return unwatch(issueMono, assignRequest.user(), assignRequest.requestedBy());
@@ -134,14 +134,14 @@ public class IssueCommandService {
     return issueAttachmentRepository.upload(issueId, filePart.filename(), filePart.content());
   }
 
-  private Mono<IssueResponse.Issue> save(IssueEntity issueEntity) {
+  private Mono<IssueRequestResponse.IssueResponse> save(IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .map(issueMapper::issueEntityToIssue)
         .doOnSuccess(issue -> domainEventPublisher.publish(new IssueEvent.Created(issue)));
   }
 
-  private Mono<IssueResponse.Issue> update(String userId, IssueEntity issueEntity) {
+  private Mono<IssueRequestResponse.IssueResponse> update(String userId, IssueEntity issueEntity) {
     return issueRepository
         .save(issueEntity)
         .map(issueMapper::issueEntityToIssue)

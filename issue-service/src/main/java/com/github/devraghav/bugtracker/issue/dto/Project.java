@@ -11,9 +11,4 @@ public record Project(
     ProjectStatus status,
     String author,
     LocalDateTime createdAt,
-    Set<ProjectVersion> versions) {
-
-  public void removeProjectVersionIfNotEqual(String versionId) {
-    versions.removeIf(version -> !version.id().equals(versionId));
-  }
-}
+    Set<ProjectVersion> versions) {}

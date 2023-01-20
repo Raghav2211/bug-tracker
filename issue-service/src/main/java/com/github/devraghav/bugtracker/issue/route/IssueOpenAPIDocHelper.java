@@ -31,7 +31,7 @@ class IssueOpenAPIDocHelper {
     ops.operationId("create")
         .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Create issue")
-        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(RequestResponse.CreateIssueRequest.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequestResponse.CreateIssueRequest.class))))
         .response(saveIssue201ResponseDoc())
         .response(badResponseDoc())
         .build();
@@ -41,7 +41,7 @@ class IssueOpenAPIDocHelper {
     ops.operationId("update")
         .security(securityRequirementBuilder().name("bearerAuth"))
         .summary("Update issue")
-        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(RequestResponse.UpdateIssueRequest.class))))
+        .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder().implementation(IssueRequestResponse.UpdateIssueRequest.class))))
         .response(updateIssue200ResponseDoc())
         .response(badResponseDoc())
         .parameter(parameterBuilder().in(ParameterIn.PATH).name("id").schema(schemaBuilder().type("string")))
@@ -124,7 +124,7 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("200")
         .description("Retrieve issue successfully")
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueRequestResponse.IssueResponse
                 .class)));
   }
 
@@ -132,14 +132,14 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode("201")
         .description("Issue successfully created")
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueRequestResponse.IssueResponse.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder updateIssue200ResponseDoc() {
     return responseBuilder()
         .responseCode("200")
         .description("Issue successfully updated")
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Issue.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueRequestResponse.IssueResponse.class)));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder badResponseDoc() {
@@ -151,7 +151,7 @@ class IssueOpenAPIDocHelper {
         .responseCode("200")
         .description("Retrieve all issues")
         .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE)
-                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(IssueResponse.Issue.class))));
+                .array(arraySchemaBuilder().schema(schemaBuilder().implementation(IssueRequestResponse.IssueResponse.class))));
   }
 
   private org.springdoc.core.fn.builders.apiresponse.Builder errorResponseDoc(
@@ -159,7 +159,7 @@ class IssueOpenAPIDocHelper {
     return responseBuilder()
         .responseCode(String.valueOf(httpStatus.value()))
         .description(message)
-        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueResponse.Error.class)));
+        .content(contentBuilder().mediaType(APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(IssueRequestResponse.IssueResponse.class)));
   }
   // spotless:on
   record Assign(String user) {}

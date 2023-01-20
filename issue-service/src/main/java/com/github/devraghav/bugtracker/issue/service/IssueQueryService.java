@@ -23,7 +23,7 @@ public record IssueQueryService(
     return issueRepository.count();
   }
 
-  public Flux<IssueResponse.Issue> findAllByFilter(IssueFilter issueFilter) {
+  public Flux<IssueRequestResponse.IssueResponse> findAllByFilter(IssueFilter issueFilter) {
     if (issueFilter.getProjectId().isPresent()) {
       return Mono.just(issueFilter.getProjectId())
           .map(Optional::get)
@@ -39,7 +39,7 @@ public record IssueQueryService(
         .map(issueMapper::issueEntityToIssue);
   }
 
-  public Mono<IssueResponse.Issue> get(String issueId) {
+  public Mono<IssueRequestResponse.IssueResponse> get(String issueId) {
     return findById(issueId).map(issueMapper::issueEntityToIssue);
   }
 
@@ -56,11 +56,11 @@ public record IssueQueryService(
         .switchIfEmpty(Mono.error(() -> IssueException.invalidIssue(issueId)));
   }
 
-  private Flux<IssueResponse.Issue> getAllByReporter(String reporter) {
+  private Flux<IssueRequestResponse.IssueResponse> getAllByReporter(String reporter) {
     return issueRepository.findAllByReporter(reporter).map(issueMapper::issueEntityToIssue);
   }
 
-  private Flux<IssueResponse.Issue> getAllByProjectId(String projectId) {
+  private Flux<IssueRequestResponse.IssueResponse> getAllByProjectId(String projectId) {
     return validateProjectId(projectId)
         .flatMapMany(
             unused ->

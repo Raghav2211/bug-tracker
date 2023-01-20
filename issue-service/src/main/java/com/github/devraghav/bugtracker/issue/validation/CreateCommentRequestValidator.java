@@ -11,11 +11,11 @@ import reactor.core.publisher.Mono;
 @Component
 record CreateCommentRequestValidator(IssueRepository issueRepository)
     implements Validator<
-        RequestResponse.CreateCommentRequest, RequestResponse.CreateCommentRequest> {
+        CommentRequestResponse.CreateCommentRequest, CommentRequestResponse.CreateCommentRequest> {
 
   @Override
-  public Mono<RequestResponse.CreateCommentRequest> validate(
-      RequestResponse.CreateCommentRequest createCommentRequest) {
+  public Mono<CommentRequestResponse.CreateCommentRequest> validate(
+      CommentRequestResponse.CreateCommentRequest createCommentRequest) {
     return validateCommentContent(createCommentRequest.content())
         .and(validateIssueId(createCommentRequest.issueId()))
         .thenReturn(createCommentRequest);

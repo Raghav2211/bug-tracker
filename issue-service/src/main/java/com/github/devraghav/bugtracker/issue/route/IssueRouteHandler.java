@@ -33,7 +33,7 @@ class IssueRouteHandler {
         IssueFilter.builder()
             .projectId(serverRequest.queryParam("projectId"))
             .reportedBy(serverRequest.queryParam("reportedBy"))
-            .pageRequest(RequestResponse.Page.of(serverRequest))
+            .pageRequest(IssueRequestResponse.Page.of(serverRequest))
             .build();
     return issueQueryService
         .findAllByFilter(issueFilter)
@@ -41,32 +41,33 @@ class IssueRouteHandler {
         .log()
         .zipWith(issueQueryService.count())
         .map(tuple -> new PageImpl<>(tuple.getT1(), issueFilter.getPageRequest(), tuple.getT2()))
-        .flatMap(IssueResponse::retrieve)
+        .flatMap(IssueRequestResponse::retrieve)
         .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(serverRequest, exception));
+            IssueException.class,
+            exception -> IssueRequestResponse.invalid(serverRequest, exception));
   }
 
   public Mono<ServerResponse> create(ServerRequest request) {
     return Mono.zip(
             getAuthenticatedPrincipal(request),
-            request.bodyToMono(RequestResponse.CreateIssueRequest.class))
+            request.bodyToMono(IssueRequestResponse.CreateIssueRequest.class))
         .flatMap(tuple2 -> issueCommandService.create(tuple2.getT1(), tuple2.getT2()))
-        .flatMap(issue -> IssueResponse.create(request, issue))
-        .switchIfEmpty(IssueResponse.noBody(request))
+        .flatMap(issue -> IssueRequestResponse.create(request, issue))
+        .switchIfEmpty(IssueRequestResponse.noBody(request))
         .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
+            IssueException.class, exception -> IssueRequestResponse.invalid(request, exception));
   }
 
   public Mono<ServerResponse> update(ServerRequest request) {
     var issueId = request.pathVariable("id");
     return Mono.zip(
             getAuthenticatedPrincipal(request),
-            request.bodyToMono(RequestResponse.UpdateIssueRequest.class))
+            request.bodyToMono(IssueRequestResponse.UpdateIssueRequest.class))
         .flatMap(tuple2 -> issueCommandService.update(tuple2.getT1(), issueId, tuple2.getT2()))
-        .flatMap(issue -> IssueResponse.create(request, issue))
-        .switchIfEmpty(IssueResponse.noBody(request))
+        .flatMap(issue -> IssueRequestResponse.create(request, issue))
+        .switchIfEmpty(IssueRequestResponse.noBody(request))
         .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
+            IssueException.class, exception -> IssueRequestResponse.invalid(request, exception));
   }
 
   public Mono<ServerResponse> get(ServerRequest request) {
@@ -75,21 +76,24 @@ class IssueRouteHandler {
         .get(id)
         .flatMap(issue -> ServerResponse.ok().body(BodyInserters.fromValue(issue)))
         .onErrorResume(
-            IssueNotFoundException.class, exception -> IssueResponse.notFound(request, exception))
+            IssueNotFoundException.class,
+            exception -> IssueRequestResponse.notFound(request, exception))
         .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
+            IssueException.class, exception -> IssueRequestResponse.invalid(request, exception));
   }
 
-  public Mono<ServerResponse> monitor(ServerRequest request, MonitorType monitorType) {
+  public Mono<ServerResponse> monitor(
+      ServerRequest request, IssueRequestResponse.MonitorType monitorType) {
     var issueId = request.pathVariable("id");
     // @spotless:off
     return Mono.zip(
             getAuthenticatedPrincipal(request),
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}))
-        .map(tuple2 -> new RequestResponse.AssignRequest(issueId, tuple2.getT2().get("user"), monitorType, tuple2.getT1()))
+        .map(tuple2 -> new IssueRequestResponse.AssignRequest(issueId, tuple2.getT2().get("user"), monitorType, tuple2.getT1()))
         .flatMap(assignRequest -> issueCommandService.monitor(issueId, assignRequest))
-        .then(IssueResponse.noContent())
-        .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception));
+        .then(IssueRequestResponse
+                .noContent())
+        .onErrorResume(IssueException.class, exception -> IssueRequestResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -109,10 +113,11 @@ class IssueRouteHandler {
   public Mono<ServerResponse> resolve(ServerRequest request) {
     return getAuthenticatedPrincipal(request)
         .flatMap(principal -> issueCommandService.resolve(request.pathVariable("id"), principal))
-        .then(IssueResponse.noContent())
+        .then(IssueRequestResponse.noContent())
         .onErrorResume(
             IssueException.class,
-            issueNotFoundException -> IssueResponse.invalid(request, issueNotFoundException));
+            issueNotFoundException ->
+                IssueRequestResponse.invalid(request, issueNotFoundException));
   }
 
   private Mono<String> getAuthenticatedPrincipal(ServerRequest request) {

@@ -26,9 +26,10 @@ public record CommentRouteHandler(
     return commentQueryService
         .getComments(issueId)
         .collectList()
-        .flatMap(CommentResponse::retrieve)
+        .flatMap(CommentRequestResponse::retrieve)
         .onErrorResume(
-            CommentException.class, exception -> CommentResponse.invalid(serverRequest, exception));
+            CommentException.class,
+            exception -> CommentRequestResponse.invalid(serverRequest, exception));
   }
 
   public Mono<ServerResponse> save(ServerRequest request) {
@@ -38,15 +39,15 @@ public record CommentRouteHandler(
         Mono.zip(getAuthenticatedPrincipal(request),
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}));
     return principalWithCreateRequestMono
-        .map(tuple2 ->new RequestResponse.CreateCommentRequest(
+        .map(tuple2 ->new CommentRequestResponse.CreateCommentRequest(
                     tuple2.getT1(), issueId, tuple2.getT2().get("content")))
         .flatMap(commentCommandService::save)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
-        .switchIfEmpty(CommentResponse.noBody(request))
+        .switchIfEmpty(CommentRequestResponse.noBody(request))
         .onErrorResume(
-            CommentException.class, exception -> CommentResponse.invalid(request, exception))
+            CommentException.class, exception -> CommentRequestResponse.invalid(request, exception))
         .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
+            IssueException.class, exception -> IssueRequestResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -60,14 +61,14 @@ public record CommentRouteHandler(
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}));
     return principalWithUpdateRequestMono
         .map(tuple2 ->
-                new RequestResponse.UpdateCommentRequest(tuple2.getT1(), issueId, commentId, tuple2.getT2().get("content")))
+                new CommentRequestResponse.UpdateCommentRequest(tuple2.getT1(), issueId, commentId, tuple2.getT2().get("content")))
         .flatMap(commentCommandService::update)
         .flatMap(issueComment -> ServerResponse.ok().body(BodyInserters.fromValue(issueComment)))
-        .switchIfEmpty(CommentResponse.noBody(request))
+        .switchIfEmpty(CommentRequestResponse.noBody(request))
         .onErrorResume(
-            CommentException.class, exception -> CommentResponse.invalid(request, exception))
+            CommentException.class, exception -> CommentRequestResponse.invalid(request, exception))
         .onErrorResume(
-            IssueException.class, exception -> IssueResponse.invalid(request, exception));
+            IssueException.class, exception -> IssueRequestResponse.invalid(request, exception));
     // @spotless:on
   }
 
@@ -77,7 +78,8 @@ public record CommentRouteHandler(
         .getComment(commentId)
         .flatMap(project -> ServerResponse.ok().body(BodyInserters.fromValue(project)))
         .onErrorResume(
-            CommentException.class, exception -> CommentResponse.invalid(request, exception));
+            CommentException.class,
+            exception -> CommentRequestResponse.invalid(request, exception));
   }
 
   public Mono<ServerResponse> subscribeCommentStream(ServerRequest request) {

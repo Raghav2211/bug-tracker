@@ -19,8 +19,8 @@ public record CommentCommandService(
     CommentRepository commentRepository,
     EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
 
-  public Mono<CommentResponse.Comment> save(
-      RequestResponse.CreateCommentRequest createCommentRequest) {
+  public Mono<CommentRequestResponse.CommentResponse> save(
+      CommentRequestResponse.CreateCommentRequest createCommentRequest) {
     // @spotless:off
     return requestValidator
         .validate(createCommentRequest)
@@ -32,8 +32,8 @@ public record CommentCommandService(
     // @spotless:on
   }
 
-  public Mono<CommentResponse.Comment> update(
-      RequestResponse.UpdateCommentRequest updateCommentRequest) {
+  public Mono<CommentRequestResponse.CommentResponse> update(
+      CommentRequestResponse.UpdateCommentRequest updateCommentRequest) {
     // @spotless:off
     return requestValidator
         .validate(updateCommentRequest)

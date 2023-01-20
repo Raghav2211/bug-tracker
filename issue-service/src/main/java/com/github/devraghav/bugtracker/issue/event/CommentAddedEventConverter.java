@@ -1,6 +1,6 @@
 package com.github.devraghav.bugtracker.issue.event;
 
-import com.github.devraghav.bugtracker.issue.dto.CommentResponse;
+import com.github.devraghav.bugtracker.issue.dto.CommentRequestResponse;
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
 import com.github.devraghav.data_model.event.issue.comment.CommentAdded;
 import com.github.devraghav.data_model.schema.issue.CommentAddedSchema;
@@ -10,7 +10,7 @@ class CommentAddedEventConverter
     implements EventConverter<IssueEvent.CommentAdded, CommentAddedSchema> {
 
   private com.github.devraghav.data_model.domain.issue.comment.Comment getComment(
-      String issueId, CommentResponse.Comment comment) {
+      String issueId, CommentRequestResponse.CommentResponse comment) {
     return com.github.devraghav.data_model.domain.issue.comment.Comment.newBuilder()
         .setId(comment.id())
         .setIssueId(issueId)
