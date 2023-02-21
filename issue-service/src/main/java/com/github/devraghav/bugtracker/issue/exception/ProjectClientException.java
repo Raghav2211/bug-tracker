@@ -16,10 +16,8 @@ public class ProjectClientException extends RuntimeException {
     return new ProjectClientException("Project not found", Map.of("projectId", projectId));
   }
 
-  public static ProjectClientException invalidProjectOrVersion(String projectId, String versionId) {
-    return new ProjectClientException(
-        "Either project or version not found",
-        Map.of("projectId", projectId, "versionId", versionId));
+  public static ProjectClientException invalidVersion(String versionId) {
+    return new ProjectClientException("Version not found", Map.of("versionId", versionId));
   }
 
   public static ProjectClientException unableToConnect(WebClientRequestException exception) {

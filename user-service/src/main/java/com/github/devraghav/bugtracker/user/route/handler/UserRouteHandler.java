@@ -10,6 +10,8 @@ public interface UserRouteHandler {
 
   Mono<ServerResponse> create(ServerRequest request);
 
+  Mono<ServerResponse> update(ServerRequest request);
+
   Mono<ServerResponse> get(ServerRequest request);
 
   Mono<ServerResponse> login(ServerRequest request);

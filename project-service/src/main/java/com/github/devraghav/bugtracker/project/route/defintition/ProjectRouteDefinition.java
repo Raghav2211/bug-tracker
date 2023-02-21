@@ -26,6 +26,7 @@ class ProjectRouteDefinition {
     Supplier<RouterFunction<ServerResponse>> routerByIdSupplier =
         () ->
             SpringdocRouteBuilder.route()
+                .PATCH("", projectRouteHandler::updateProject, docHelper::updateProjectOperationDoc)
                 .GET("", projectRouteHandler::getProject, docHelper::getProjectByIdOperationDoc)
                 .GET(
                     "/version",
@@ -58,6 +59,17 @@ class ProjectRouteDefinition {
                 .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
             routerFunctionSupplier,
             emptyOperationsConsumer)
+        .nest(
+            path("/api/rest/internal/v1/project")
+                .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
+            () ->
+                SpringdocRouteBuilder.route()
+                    .GET(
+                        "/{id}",
+                        projectRouteHandler::getProject,
+                        docHelper::getProjectByIdOperationDoc)
+                    .build(),
+            ops -> ops.hidden(true))
         .build();
   }
 }

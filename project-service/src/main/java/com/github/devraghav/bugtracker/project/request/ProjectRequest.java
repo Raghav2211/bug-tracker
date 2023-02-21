@@ -35,5 +35,12 @@ public final class ProjectRequest {
     }
   }
 
+  public static record UpdateProject(
+      String description, ProjectStatus status, Map<String, Object> tags) {
+    public UpdateProject {
+      tags = Map.copyOf(tags == null ? Map.of() : tags);
+    }
+  }
+
   public static record CreateVersion(String version) {}
 }

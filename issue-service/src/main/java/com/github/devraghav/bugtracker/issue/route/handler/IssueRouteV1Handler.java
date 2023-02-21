@@ -90,7 +90,7 @@ class IssueRouteV1Handler implements IssueRouteHandler {
             getAuthenticatedPrincipal(request),
             request.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {}))
         .map(tuple2 -> new IssueRequest.Monitor(issueId, tuple2.getT2().get("user"), monitorType, tuple2.getT1()))
-        .flatMap(monitor -> issueCommandService.monitor(issueId, monitor))
+        .flatMap(issueCommandService::monitor)
         .then(IssueResponse.noContent())
         .onErrorResume(IssueException.class, exception -> IssueResponse.invalid(request, exception));
     // @spotless:on

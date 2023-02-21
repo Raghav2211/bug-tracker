@@ -2,7 +2,6 @@ package com.github.devraghav.bugtracker.issue.service;
 
 import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
-import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
 import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.mapper.IssueMapper;
 import com.github.devraghav.bugtracker.issue.repository.IssueAttachmentRepository;
@@ -16,7 +15,6 @@ import reactor.core.publisher.Mono;
 @Service
 public record IssueQueryService(
     IssueMapper issueMapper,
-    ProjectReactiveClient projectReactiveClient,
     IssueRepository issueRepository,
     IssueAttachmentRepository issueAttachmentRepository) {
 
@@ -60,19 +58,8 @@ public record IssueQueryService(
   private Flux<IssueResponse.Issue> getAllByReporter(String reporter) {
     return issueRepository.findAllByReporter(reporter).map(issueMapper::issueEntityToIssue);
   }
-
+  // TODO: validate projectId
   private Flux<IssueResponse.Issue> getAllByProjectId(String projectId) {
-    return validateProjectId(projectId)
-        .flatMapMany(
-            unused ->
-                issueRepository.findAllByProjectId(projectId).map(issueMapper::issueEntityToIssue));
-  }
-
-  private Mono<Boolean> validateProjectId(String projectId) {
-    return projectReactiveClient
-        .isProjectExists(projectId)
-        .onErrorResume(
-            ProjectClientException.class,
-            exception -> Mono.error(IssueException.projectServiceException(exception)));
+    return issueRepository.findAllByProjectId(projectId).map(issueMapper::issueEntityToIssue);
   }
 }

@@ -1,34 +1,45 @@
 package com.github.devraghav.bugtracker.issue.validation;
 
-import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.exception.ProjectClientException;
 import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
+import com.github.devraghav.bugtracker.issue.project.ProjectClient;
+import com.github.devraghav.bugtracker.issue.project.ProjectResponse;
 import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import com.github.devraghav.bugtracker.issue.response.IssueResponse;
-import com.github.devraghav.bugtracker.issue.service.ProjectReactiveClient;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 @Component
 @RequiredArgsConstructor
 class CreateIssueRequestValidator
-    implements Validator<IssueRequest.CreateIssue, IssueRequest.CreateIssue> {
-
-  private final ProjectReactiveClient projectReactiveClient;
+    implements Validator<
+        IssueRequest.CreateIssue,
+        Tuple2<
+            IssueRequest.CreateIssue,
+            List<Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version>>>> {
+  private final ProjectClient projectClient;
 
   @Override
-  public Mono<IssueRequest.CreateIssue> validate(IssueRequest.CreateIssue createIssue) {
-    return validateHeader(createIssue.header())
-        .and(validateDescription(createIssue.description()))
-        .and(validatePriority(createIssue.priority()))
-        .and(validateSeverity(createIssue.severity()))
-        .and(validatedProjectInfo(createIssue.projects()))
-        .thenReturn(createIssue);
+  public Mono<
+          Tuple2<
+              IssueRequest.CreateIssue,
+              List<Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version>>>>
+      validate(IssueRequest.CreateIssue createIssue) {
+    var validRequest =
+        validateHeader(createIssue.header())
+            .and(validateDescription(createIssue.description()))
+            .and(validatePriority(createIssue.priority()))
+            .and(validateSeverity(createIssue.severity()))
+            .thenReturn(createIssue);
+    var projectAttachments = validatedProjectAttachments(createIssue.attachments());
+    return validRequest.zipWith(projectAttachments);
   }
 
   private Mono<Void> validateHeader(String header) {
@@ -61,40 +72,33 @@ class CreateIssueRequestValidator
         .then();
   }
 
-  private Mono<Void> validatedProjectInfo(Collection<IssueRequest.ProjectInfo> projectInfos) {
-    return Flux.fromIterable(projectInfos)
+  private Mono<List<Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version>>>
+      validatedProjectAttachments(Collection<IssueRequest.ProjectAttachment> projectAttachments) {
+    return Flux.fromIterable(projectAttachments)
         .switchIfEmpty(Mono.error(IssueException::noProjectAttach))
-        .flatMap(this::validateProjectInfo)
-        .last()
-        .then();
+        .flatMap(this::validateProjectAttachments)
+        .collectList();
   }
 
-  private Mono<Boolean> validateProjectInfo(IssueRequest.ProjectInfo projectInfo) {
-    return Mono.just(projectInfo)
-        .filter(IssueRequest.ProjectInfo::isValid)
-        .flatMap(this::isProjectInfoExists)
-        .switchIfEmpty(Mono.error(() -> IssueException.invalidProject(projectInfo)));
-  }
-
-  private Mono<Boolean> isProjectInfoExists(IssueRequest.ProjectInfo projectInfo) {
+  private Mono<Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version>>
+      validateProjectAttachments(IssueRequest.ProjectAttachment projectAttachment) {
     return Mono.zip(
-            validateProjectId(projectInfo.projectId()),
-            validateProjectVersion(projectInfo.projectId(), projectInfo.versionId()),
-            Boolean::logicalAnd)
-        .map(Boolean::booleanValue);
+        getProject(projectAttachment.projectId()),
+        getProjectVersion(projectAttachment.projectId(), projectAttachment.versionId()));
   }
 
-  private Mono<Boolean> validateProjectId(String projectId) {
-    return projectReactiveClient
-        .isProjectExists(projectId)
+  private Mono<ProjectResponse.Project> getProject(String projectId) {
+    return projectClient
+        .getProjectById(projectId)
         .onErrorResume(
             ProjectClientException.class,
             exception -> Mono.error(IssueException.projectServiceException(exception)));
   }
 
-  private Mono<Boolean> validateProjectVersion(String projectId, String versionId) {
-    return projectReactiveClient
-        .isProjectVersionExists(projectId, versionId)
+  private Mono<ProjectResponse.Project.Version> getProjectVersion(
+      String projectId, String versionId) {
+    return projectClient
+        .getVersionById(projectId, versionId)
         .onErrorResume(
             ProjectClientException.class,
             exception -> Mono.error(IssueException.projectServiceException(exception)));

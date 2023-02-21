@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ProjectEntity {
 
   @Id private String id;
+  private String key;
   private String name;
   private String description;
   private Boolean enabled = true;
@@ -21,5 +22,7 @@ public class ProjectEntity {
   private Map<String, Object> tags;
   private String author;
   private List<ProjectVersionEntity> versions;
+  private String createdBy;
+  private String lastUpdateBy;
   private LocalDateTime createdAt;
 }

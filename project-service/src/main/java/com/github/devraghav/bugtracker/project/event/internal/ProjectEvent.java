@@ -19,6 +19,19 @@ public interface ProjectEvent {
   }
 
   @Getter
+  class Updated extends DomainEvent {
+    private final ProjectResponse.Project project;
+
+    public Updated(ProjectResponse.Project project) {
+      super(
+          project.id(),
+          "Updated",
+          new PublisherInfo("Project", ProjectResponse.Project.class, project.author()));
+      this.project = project;
+    }
+  }
+
+  @Getter
   class VersionCreated extends DomainEvent {
     private final String projectId;
     private final ProjectResponse.Version version;

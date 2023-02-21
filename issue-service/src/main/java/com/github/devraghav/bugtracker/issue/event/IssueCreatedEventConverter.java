@@ -1,9 +1,7 @@
 package com.github.devraghav.bugtracker.issue.event;
 
 import com.github.devraghav.bugtracker.issue.event.internal.IssueEvent;
-import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import com.github.devraghav.bugtracker.issue.response.IssueResponse;
-import com.github.devraghav.data_model.domain.issue.ProjectAttachment;
 import com.github.devraghav.data_model.event.issue.IssueCreated;
 import com.github.devraghav.data_model.schema.issue.IssueCreatedSchema;
 import java.time.ZoneOffset;
@@ -13,14 +11,16 @@ import java.util.stream.Collectors;
 
 class IssueCreatedEventConverter implements EventConverter<IssueEvent.Created, IssueCreatedSchema> {
 
-  private ProjectAttachment getProject(IssueRequest.ProjectInfo project) {
-    return ProjectAttachment.newBuilder()
+  private com.github.devraghav.data_model.domain.issue.ProjectAttachment getProject(
+      IssueResponse.ProjectAttachment project) {
+    return com.github.devraghav.data_model.domain.issue.ProjectAttachment.newBuilder()
         .setProjectId(project.projectId())
-        .setProjectVersionId(project.versionId())
+        .setProjectVersionId(project.version().id())
         .build();
   }
 
-  private List<ProjectAttachment> getProjects(Set<IssueRequest.ProjectInfo> projects) {
+  private List<com.github.devraghav.data_model.domain.issue.ProjectAttachment> getProjects(
+      Set<IssueResponse.ProjectAttachment> projects) {
     return projects.stream().map(this::getProject).collect(Collectors.toList());
   }
 
@@ -34,7 +34,7 @@ class IssueCreatedEventConverter implements EventConverter<IssueEvent.Created, I
             .setPriority(issue.priority().name())
             .setSeverity(issue.severity().name())
             .setAssignee(issue.assignee())
-            .setProjects(getProjects(issue.projects()))
+            .setProjects(getProjects(issue.attachments()))
             .setWatchers(List.copyOf(issue.watchers()))
             .setReporter(issue.reporter())
             .setTags(issue.tags())

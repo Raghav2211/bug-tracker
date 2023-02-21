@@ -11,6 +11,8 @@ public interface ProjectRouteHandler {
 
   Mono<ServerResponse> createProject(ServerRequest request);
 
+  Mono<ServerResponse> updateProject(ServerRequest request);
+
   Mono<ServerResponse> getProject(ServerRequest request);
 
   Mono<ServerResponse> addVersionToProject(ServerRequest request);

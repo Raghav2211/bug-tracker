@@ -49,6 +49,19 @@ class ProjectOpenAPIDocHelper {
                     .implementation(ProjectRequest.CreateVersion.class))));
   }
 
+  void updateProjectOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("update")
+            .security(securityRequirementBuilder().name("bearerAuth"))
+            .response(saveProject201ResponseDoc())
+            .response(project404ResponseDoc())
+            .parameter(parameterBuilder()
+                    .in(ParameterIn.PATH)
+                    .name("id")
+                    .schema(schemaBuilder().type("string")))
+            .requestBody(requestBodyBuilder().content(contentBuilder().schema(schemaBuilder()
+                    .implementation(ProjectRequest.UpdateProject.class))));
+  }
+
   void getProjectByIdOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
     ops.operationId("get")
         .security(securityRequirementBuilder().name("bearerAuth"))

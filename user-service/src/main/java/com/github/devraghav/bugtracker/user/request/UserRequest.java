@@ -13,19 +13,29 @@ public final class UserRequest {
 
   public static record AuthResponse(String token) {}
 
+  public static sealed interface User {
+    String firstName();
+
+    String lastName();
+
+    Role role();
+  }
+
   public static record CreateUser(
-      String firstName, String lastName, String email, String password, Role role) {
+      String firstName, String lastName, String email, String password, Role role) implements User {
     public Role role() {
       return Objects.isNull(role) ? Role.ROLE_READ : role;
     }
   }
 
+  public static record UpdateUser(String firstName, String lastName, Role role) implements User {}
+
   public enum Role {
     ROLE_ADMIN(0),
     ROLE_READ(1),
     ROLE_WRITE(2);
-    @Getter private int value;
-    private static Map<Integer, Role> reverseLookup =
+    @Getter private final int value;
+    private static Map<Integer, Role> VALUE_TO_ENUM =
         Arrays.stream(Role.values())
             .collect(Collectors.toUnmodifiableMap(Role::getValue, Function.identity()));
 
@@ -34,7 +44,7 @@ public final class UserRequest {
     }
 
     public static Role fromValue(int value) {
-      return reverseLookup.getOrDefault(value, Role.ROLE_READ);
+      return VALUE_TO_ENUM.getOrDefault(value, Role.ROLE_READ);
     }
   }
 }
