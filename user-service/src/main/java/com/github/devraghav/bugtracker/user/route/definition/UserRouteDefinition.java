@@ -28,6 +28,7 @@ class UserRouteDefinition {
                 .POST("/login", userRouteHandler::login, docHelper::loginUserOperationDoc)
                 .POST("/signup", userRouteHandler::create, docHelper::signUpUserOperationDoc)
                 .GET("/{id}", userRouteHandler::get, docHelper::getUserByIdOperationDoc)
+                .PATCH("/{id}", userRouteHandler::update, docHelper::updateUserOperationDoc)
                 .build();
     return SpringdocRouteBuilder.route()
         .nest(
@@ -35,6 +36,14 @@ class UserRouteDefinition {
                 .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
             routerFunctionSupplier,
             emptyOperationsConsumer)
+        .nest(
+            path("/api/rest/internal/v1/user")
+                .and(accept(APPLICATION_JSON).or(contentType(APPLICATION_JSON))),
+            () ->
+                SpringdocRouteBuilder.route()
+                    .GET("/{id}", userRouteHandler::get, docHelper::getUserByIdOperationDoc)
+                    .build(),
+            ops -> ops.hidden(true))
         .build();
   }
 }

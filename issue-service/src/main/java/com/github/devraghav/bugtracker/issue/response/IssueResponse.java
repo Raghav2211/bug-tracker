@@ -2,7 +2,6 @@ package com.github.devraghav.bugtracker.issue.response;
 
 import com.github.devraghav.bugtracker.issue.excpetion.IssueException;
 import com.github.devraghav.bugtracker.issue.repository.IssueNotFoundException;
-import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -20,12 +19,16 @@ import reactor.core.publisher.Mono;
 
 public final class IssueResponse {
 
+  public record ProjectAttachment(String projectId, String name, Version version) {}
+
+  public record Version(String id, String version) {}
+
   public static record Issue(
       String id,
       Priority priority,
       Severity severity,
       String businessUnit,
-      Set<IssueRequest.ProjectInfo> projects,
+      Set<ProjectAttachment> attachments,
       String header,
       String description,
       String assignee,

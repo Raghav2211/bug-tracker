@@ -1,13 +1,17 @@
 package com.github.devraghav.bugtracker.issue.mapper;
 
-import com.github.devraghav.bugtracker.issue.dto.*;
 import com.github.devraghav.bugtracker.issue.entity.IssueEntity;
+import com.github.devraghav.bugtracker.issue.project.ProjectResponse;
 import com.github.devraghav.bugtracker.issue.request.IssueRequest;
 import com.github.devraghav.bugtracker.issue.response.IssueResponse;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.mapstruct.*;
+import reactor.util.function.Tuple2;
 
 @Mapper(
     componentModel = "spring",
@@ -35,9 +39,33 @@ public interface IssueMapper {
     @Mapping(target = "watchers", expression = "java(Set.of())"),
     @Mapping(target = "lastUpdateBy", source = "reporter"),
     @Mapping(target = "assignee", ignore = true),
-    @Mapping(target = "endedAt", ignore = true)
+    @Mapping(target = "endedAt", ignore = true),
+    @Mapping(target = "attachments", source = "attachments", qualifiedByName = "convertAttachment")
   })
-  IssueEntity issueRequestToIssueEntity(String reporter, IssueRequest.CreateIssue createIssue);
+  IssueEntity issueRequestToIssueEntity(
+      String reporter,
+      IssueRequest.CreateIssue createIssue,
+      List<Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version>> attachments);
+
+  @Named("convertAttachment")
+  default Set<IssueEntity.ProjectAttachment> convertAttachment(
+      List<Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version>> attachments) {
+
+    return attachments.stream().map(this::getProjectAttachment).collect(Collectors.toSet());
+  }
+
+  private IssueEntity.ProjectAttachment getProjectAttachment(
+      Tuple2<ProjectResponse.Project, ProjectResponse.Project.Version> tuple2) {
+    return IssueEntity.ProjectAttachment.builder()
+        .projectId(tuple2.getT1().id())
+        .name(tuple2.getT1().name())
+        .version(
+            IssueEntity.Version.builder()
+                .id(tuple2.getT2().id())
+                .version(tuple2.getT2().version())
+                .build())
+        .build();
+  }
 
   @Mappings({
     @Mapping(

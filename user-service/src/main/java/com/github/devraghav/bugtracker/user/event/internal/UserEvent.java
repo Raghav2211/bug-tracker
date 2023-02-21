@@ -14,7 +14,20 @@ public interface UserEvent {
       super(
           createdUser.id(),
           "Created",
-          new PublisherInfo("User", UserResponse.User.class, "SYSTEM"));
+          new PublisherInfo("User", UserResponse.User.class, createdUser.id()));
+      this.createdUser = createdUser;
+    }
+  }
+
+  @Getter
+  class Updated extends DomainEvent {
+    private final UserResponse.User createdUser;
+
+    public Updated(UserResponse.User createdUser) {
+      super(
+          createdUser.id(),
+          "Updated",
+          new PublisherInfo("User", UserResponse.User.class, createdUser.id()));
       this.createdUser = createdUser;
     }
   }

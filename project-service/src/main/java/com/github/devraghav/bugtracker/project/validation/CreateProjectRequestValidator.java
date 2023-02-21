@@ -7,7 +7,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 @Component
-public class CreateProjectRequestValidator implements Validator<ProjectRequest.CreateProject> {
+class CreateProjectRequestValidator implements Validator<ProjectRequest.CreateProject> {
   @Override
   public Mono<ProjectRequest.CreateProject> validate(ProjectRequest.CreateProject createProject) {
     return validateName(createProject.name())
@@ -25,7 +25,7 @@ public class CreateProjectRequestValidator implements Validator<ProjectRequest.C
 
   private Mono<Void> validateDescription(String description) {
     return Mono.justOrEmpty(description)
-        .filter(projectDesc -> StringUtils.hasLength(projectDesc) && projectDesc.length() <= 200)
+        .filter(projectDesc -> StringUtils.hasLength(projectDesc) && projectDesc.length() <= 500)
         .switchIfEmpty(Mono.error(() -> ProjectException.invalidDescription(description)))
         .then();
   }

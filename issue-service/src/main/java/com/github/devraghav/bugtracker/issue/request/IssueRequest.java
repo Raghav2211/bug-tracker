@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 
 public final class IssueRequest {
 
-  public record ProjectInfo(String projectId, String versionId) {
+  public record ProjectAttachment(String projectId, String versionId) {
 
     @JsonIgnore
     public boolean isValid() {
@@ -29,12 +29,12 @@ public final class IssueRequest {
       IssueResponse.Priority priority,
       IssueResponse.Severity severity,
       String businessUnit,
-      Set<ProjectInfo> projects,
+      Set<ProjectAttachment> attachments,
       String header,
       String description,
       Map<String, String> tags) {
     public CreateIssue {
-      projects = Set.copyOf(projects == null ? Set.of() : projects);
+      attachments = Set.copyOf(attachments == null ? Set.of() : attachments);
       tags = Map.copyOf(tags == null ? Map.of() : tags);
     }
   }
@@ -62,5 +62,5 @@ public final class IssueRequest {
   }
 
   public static record Monitor(
-      String issueId, String user, MonitorType monitorType, String requestedBy) {}
+      String issueId, String user, MonitorType monitorType, String requestBy) {}
 }

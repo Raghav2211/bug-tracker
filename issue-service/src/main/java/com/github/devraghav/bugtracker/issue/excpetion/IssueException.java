@@ -18,11 +18,6 @@ public class IssueException extends RuntimeException {
     this(message, Map.of());
   }
 
-  public static IssueException invalidComment(String content) {
-    return new IssueException(
-        "Comment should not be null & less than 256 character length", Map.of("comment", content));
-  }
-
   public static IssueException nullSeverity() {
     return new IssueException("Severity not found");
   }
@@ -58,10 +53,10 @@ public class IssueException extends RuntimeException {
     return new IssueException("No project attached");
   }
 
-  public static IssueException invalidProject(IssueRequest.ProjectInfo projectInfo) {
+  public static IssueException invalidProject(IssueRequest.ProjectAttachment projectAttachment) {
     var meta = new HashMap<String, Object>();
-    meta.put("projectId", projectInfo.projectId());
-    meta.put("versionId", projectInfo.versionId());
+    meta.put("projectId", projectAttachment.projectId());
+    meta.put("versionId", projectAttachment.versionId());
     return new IssueException("Either projectId or versionId is invalid", meta);
   }
 }

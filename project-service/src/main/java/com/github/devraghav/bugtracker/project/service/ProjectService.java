@@ -11,19 +11,22 @@ import com.github.devraghav.bugtracker.project.mapper.ProjectVersionMapper;
 import com.github.devraghav.bugtracker.project.repository.ProjectRepository;
 import com.github.devraghav.bugtracker.project.request.ProjectRequest;
 import com.github.devraghav.bugtracker.project.response.ProjectResponse;
-import com.github.devraghav.bugtracker.project.validation.RequestValidator;
+import java.util.function.Consumer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-public record ProjectService(
-    ProjectMapper projectMapper,
-    ProjectVersionMapper projectVersionMapper,
-    RequestValidator requestValidator,
-    ProjectRepository projectRepository,
-    EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher) {
+@RequiredArgsConstructor
+public class ProjectService {
+
+  private final ProjectMapper projectMapper;
+  private final ProjectVersionMapper projectVersionMapper;
+  private final RequestValidator requestValidator;
+  private final ProjectRepository projectRepository;
+  private final EventBus.ReactivePublisher<DomainEvent> eventReactivePublisher;
 
   public Mono<ProjectResponse.Project> save(
       String requestBy, ProjectRequest.CreateProject createProject) {
@@ -31,10 +34,22 @@ public record ProjectService(
     return requestValidator
         .validate(createProject)
         .map(validRequest -> projectMapper.requestToEntity(requestBy, validRequest))
-        .flatMap(this::save)
+        .flatMap(projectEntity ->
+                upsert(projectEntity,project -> eventReactivePublisher.publish(new ProjectEvent.Created(project))))
         .onErrorResume(
             DuplicateKeyException.class,
             exception -> Mono.error(ProjectException.alreadyExistsByName(createProject.name())));
+    // @spotless:on
+  }
+
+  public Mono<ProjectResponse.Project> update(
+      String requestBy, String projectId, ProjectRequest.UpdateProject updateProject) {
+    // @spotless:off
+    return requestValidator
+            .validate(updateProject).zipWith(projectRepository.findById(projectId))
+            .map(tuple2 -> projectMapper.requestToEntity(requestBy, tuple2.getT2(), tuple2.getT1()))
+            .flatMap(projectEntity ->
+                    upsert(projectEntity,project -> eventReactivePublisher.publish(new ProjectEvent.Updated(project))));
     // @spotless:on
   }
 
@@ -77,11 +92,12 @@ public record ProjectService(
         .map(projectVersionMapper::entityToResponse);
   }
 
-  private Mono<ProjectResponse.Project> save(ProjectEntity projectEntity) {
+  private Mono<ProjectResponse.Project> upsert(
+      ProjectEntity projectEntity, Consumer<ProjectResponse.Project> onSuccessConsumer) {
     return projectRepository
         .save(projectEntity)
         .map(author -> projectMapper.entityToResponse(projectEntity))
-        .doOnSuccess(project -> eventReactivePublisher.publish(new ProjectEvent.Created(project)));
+        .doOnSuccess(onSuccessConsumer);
   }
 
   private Mono<ProjectResponse.Version> addVersion(

@@ -42,6 +42,19 @@ class ProjectRouteV1Handler implements ProjectRouteHandler {
   }
 
   @Override
+  public Mono<ServerResponse> updateProject(ServerRequest request) {
+    var projectId = request.pathVariable("id");
+    return Mono.zip(
+            getAuthenticatedPrincipal(request),
+            request.bodyToMono(ProjectRequest.UpdateProject.class))
+        .flatMap(tuple2 -> projectService.update(tuple2.getT1(), projectId, tuple2.getT2()))
+        .flatMap(user -> ProjectResponse.create(request, user))
+        .switchIfEmpty(ProjectResponse.noBody(request))
+        .onErrorResume(
+            ProjectException.class, exception -> ProjectResponse.invalid(request, exception));
+  }
+
+  @Override
   public Mono<ServerResponse> getProject(ServerRequest request) {
     var projectId = request.pathVariable("id");
     // @spotless:off

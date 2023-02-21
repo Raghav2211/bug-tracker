@@ -28,7 +28,7 @@ public interface IssueRepository
   @Update("{ '$pull' : { 'watchers' : '?1' } }")
   Mono<Long> findAndPullWatcherById(String id, String userId);
 
-  @Query("{ 'projects.projectId' : '?0'}")
+  @Query("{ 'attachments.projectId' : '?0'}")
   Flux<IssueEntity> findAllByProjectId(String projectId);
 
   Flux<IssueEntity> findAllByReporter(String reporter);

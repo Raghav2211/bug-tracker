@@ -36,6 +36,17 @@ class UserRouteV1Handler implements UserRouteHandler {
   }
 
   @Override
+  public Mono<ServerResponse> update(ServerRequest request) {
+    var userId = request.pathVariable("id");
+    return request
+        .bodyToMono(UserRequest.UpdateUser.class)
+        .flatMap(updateUser -> userService.update(userId, updateUser))
+        .flatMap(user -> UserResponse.create(request, user))
+        .switchIfEmpty(UserResponse.noBody(request))
+        .onErrorResume(UserException.class, exception -> UserResponse.invalid(request, exception));
+  }
+
+  @Override
   public Mono<ServerResponse> get(ServerRequest request) {
     return userService
         .findById(request.pathVariable("id"))

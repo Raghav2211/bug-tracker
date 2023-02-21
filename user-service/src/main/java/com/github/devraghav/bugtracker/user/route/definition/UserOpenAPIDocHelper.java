@@ -68,6 +68,23 @@ class UserOpenAPIDocHelper {
         .build();
   }
 
+  void updateUserOperationDoc(org.springdoc.core.fn.builders.operation.Builder ops) {
+    ops.operationId("update")
+            .summary("Update user by its id")
+            .security(securityRequirementBuilder().name("bearerAuth"))
+            .requestBody(requestBodyBuilder()
+                    .content(contentBuilder()
+                            .schema(schemaBuilder().implementation(UserRequest.UpdateUser.class))))
+            .response(getUserById200ResponseDoc())
+            .response(getUserById404ResponseDoc())
+            .response(responseBuilder().responseCode("401").description("Unauthorized user"))
+            .parameter(parameterBuilder()
+                    .in(ParameterIn.PATH)
+                    .name("id")
+                    .schema(schemaBuilder().type("string")))
+            .build();
+  }
+
   private Builder saveUser201ResponseDoc() {
     return responseBuilder()
         .responseCode("201")
